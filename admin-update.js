@@ -6,6 +6,7 @@
   const API='https://kfpxheegmeupnuzqjqqt.supabase.co/functions/v1/report-update-request';
   const BASELINE_KEY='go-eschenbach-before-generated-at';
   const REQUEST_KEY='go-eschenbach-last-update-request';
+  const ADMIN_TOKEN_KEY='go-eschenbach-comment-admin-token';
   let pollTimer=null;
   let reportWatchTimer=null;
   let holdTimer=null;
@@ -147,10 +148,11 @@
     beforeGeneratedAt=await getReportVersion();
     if(beforeGeneratedAt)localStorage.setItem(BASELINE_KEY,beforeGeneratedAt);
     try{
+      const adminToken=localStorage.getItem(ADMIN_TOKEN_KEY)||'';
       let r=await fetch(API,{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({action:'request'})
+        body:JSON.stringify({action:'request',admin_token:adminToken})
       });
       let d=await r.json().catch(()=>({}));
 
@@ -172,7 +174,9 @@
       if(!r.ok||!d.pending)throw Error();
       requestedAt=d.requested_at||new Date().toISOString();
       localStorage.setItem(REQUEST_KEY,requestedAt);
-      setStatus(d.phase==='running'?'Aktualisierung läuft …':'Update gestartet …','running');
+      const comments=Number(d.comments_count||0);
+      if(comments>0)setStatus(`Update mit ${comments} Matchkommentar${comments===1?'':'en'} gestartet …`,'running');
+      else setStatus(d.phase==='running'?'Aktualisierung läuft …':'Update gestartet …','running');
       el.textContent='Läuft …';
       watchPublishedReport();
       poll();
