@@ -8,6 +8,10 @@ on:
         description: Interne ID des App-Updates
         required: false
         type: string
+      comments_token:
+        description: Kurzlebiger Zugriff auf freigegebene Matchkommentare
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -26,9 +30,17 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Freigegebene Matchkommentare laden
+        env:
+          REQUEST_ID: ${{ inputs.request_id }}
+          COMMENTS_TOKEN: ${{ inputs.comments_token }}
+          MATCH_COMMENTS_FILE: /tmp/go-eschenbach-match-comments.json
+        run: python scripts/fetch_match_comments.py
+
       - name: Recherche und Bericht
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          MATCH_COMMENTS_FILE: /tmp/go-eschenbach-match-comments.json
         run: python scripts/update_report.py
 
       - name: Bericht speichern
