@@ -17,6 +17,30 @@ try:
 except Exception:
     previous_data={}
 
+match_comments=[]
+comments_path=os.environ.get('MATCH_COMMENTS_FILE','').strip()
+if comments_path:
+    try:
+        with open(comments_path,'r',encoding='utf-8') as f:
+            raw_comments=json.load(f)
+        if isinstance(raw_comments,list):
+            for item in raw_comments:
+                if not isinstance(item,dict):
+                    continue
+                transcript=' '.join(str(item.get('transcript','')).split()).strip()
+                if not transcript:
+                    continue
+                match_comments.append({
+                    'match_label':str(item.get('match_label','')).strip(),
+                    'match_date':str(item.get('match_date','')).strip(),
+                    'match_time':str(item.get('match_time','')).strip(),
+                    'spoken_at':str(item.get('spoken_at','')).strip(),
+                    'transcript':transcript
+                })
+    except Exception as exc:
+        print('Matchkommentare konnten nicht eingelesen werden:',exc)
+
+
 def call_json(prompt_text, timeout=180, use_web=False):
     payload={
         'model':'gpt-5.6-luna',
@@ -54,6 +78,7 @@ def call_json(prompt_text, timeout=180, use_web=False):
             text=text[4:].lstrip()
     return json.loads(text)
 
+
 def normalize_scorers(items):
     merged={}
     names={}
@@ -76,13 +101,16 @@ def normalize_scorers(items):
     result.sort(key=lambda x:(-x['goals'],x['name'].casefold()))
     return result
 
+
 TABLE_FIELDS=('rank','played','wins','draws','losses','penalty_points','goals_for','goals_against','goal_difference','points')
+
 
 def complete_standing_rows(rows):
     return sum(
         1 for row in rows or []
         if isinstance(row,dict) and row.get('team') and all(row.get(k) is not None for k in TABLE_FIELDS)
     )
+
 
 def preserve_last_complete_table(data, previous):
     new_rows=data.get('standings') if isinstance(data.get('standings'),list) else []
@@ -97,6 +125,9 @@ def preserve_last_complete_table(data, previous):
                     target[key]=esch.get(key)
     return data
 
+
+comment_context=json.dumps(match_comments,ensure_ascii=False) if match_comments else 'Keine eigenen Matchkommentare vorhanden.'
+
 prompt=f'''Du bist Sportredaktor für den Schweizer Amateurfussball. Recherchiere mit Websuche die aktuelle Situation der IFV 5. Liga, Gruppe 4, Saison 2026/27. Fokus klar auf FC Eschenbach II.
 
 Stichtag: {date_display} (Europe/Zurich).
@@ -108,6 +139,11 @@ RECHERCHE – VERBINDLICH:
 4. Ergänze bei Bedarf seriöse lokale Quellen. Bei Widersprüchen haben IFV-Resultat- und Tabellendaten Vorrang.
 5. Nichts erfinden. Torschützen, Spielverläufe oder andere Details nur verwenden, wenn sie eindeutig belegt sind.
 
+EIGENE MATCHKOMMENTARE DES APP-REDAKTORS:
+{comment_context}
+
+Diese Kommentare sind persönliche Beobachtungen direkt vom Spiel. Wenn sie zu einem aktuellen Eschenbach-Spiel gehören, nutze sie für den spielerischen Verlauf, Chancen, Druckphasen, Stimmung oder andere beobachtete Eindrücke im Feld review. Resultat, Torschützen und Tabellenfakten müssen trotzdem mit den offiziellen Daten übereinstimmen. Bei einem Widerspruch haben die offiziellen Fakten Vorrang. Erwähne in der App nicht, dass die Informationen aus Sprachkommentaren stammen.
+
 LESERTEXTE – BESONDERS WICHTIG:
 Die Felder title, lead, review, current_situation und outlook werden direkt in der App angezeigt. Sie müssen wie ein kurzer, gut geschriebener Sportbericht klingen.
 - Schreibe natürlich, knapp und verständlich. Keine bürokratische oder technische Sprache.
@@ -116,7 +152,7 @@ Die Felder title, lead, review, current_situation und outlook werden direkt in d
 - Wenn eine Information nicht sicher vorliegt, lasse sie einfach weg. Erkläre dem Leser nicht, warum sie fehlt.
 - title: prägnant, sportlich, maximal ca. 70 Zeichen.
 - lead: 2 kurze Sätze, Kernaussage zu Eschenbach II.
-- review: 3–5 flüssige Sätze. Eschenbach II zuerst; nur relevante weitere Gruppenspiele erwähnen.
+- review: 3–5 flüssige Sätze; bei vorhandenen eigenen Matchkommentaren darf der Rückblick 4–7 Sätze umfassen. Eschenbach II zuerst; nur relevante weitere Gruppenspiele erwähnen.
 - current_situation: 3–4 Sätze zur Tabelle/Form, ohne Quellenhinweise.
 - outlook: 2–4 Sätze, Schwerpunkt auf dem nächsten Spiel von Eschenbach II.
 - Daten in lesefreundlicher Form schreiben, z. B. „am 12. September“ statt unnötig vieler technischer Datumsangaben.
@@ -230,7 +266,8 @@ editorial_facts={
     'recent_results':data.get('recent_results',[]),
     'standings':data.get('standings',[]),
     'upcoming_matches':data.get('upcoming_matches',[]),
-    'scorer_audit':data.get('scorer_audit',{})
+    'scorer_audit':data.get('scorer_audit',{}),
+    'admin_match_comments':match_comments
 }
 editorial_prompt=f'''Du bist Redaktor einer mobilen Fussball-App für Fans von FC Eschenbach II. Überarbeite ausschliesslich die fünf Lesertexte anhand der gelieferten Fakten.
 
@@ -243,9 +280,12 @@ REGELN:
 - Kein Recherche- oder Quellenjargon.
 - In keinem Feld Wörter/Begriffe wie IFV, Matchcenter, Quelle, Website, Datensatz, Recherche, Stichtag, verifiziert, geprüft, öffentlich abrufbar, verfügbar oder nicht ermittelbar.
 - Wenn ein Fakt unsicher oder fehlend ist, nicht erwähnen und keine Erklärung dazu schreiben.
+- Wenn admin_match_comments vorhanden sind und zum jüngsten Eschenbach-Spiel passen, bilden sie die wichtigste Grundlage für den erzählerischen Rückblick: Spielverlauf, Druckphasen, Chancen, Stimmung und beobachtete Eindrücke konkret und flüssig einarbeiten.
+- Die Matchkommentare sind direkte Beobachtungen des App-Redaktors. Nicht als Zitate oder als „Kommentare“ kennzeichnen und den Autor nicht erwähnen.
+- Resultat, Torschützen und Tabellenwerte aus den offiziellen Daten haben bei Widersprüchen Vorrang vor den Matchkommentaren.
 - title maximal ca. 70 Zeichen.
 - lead genau 2 kurze Sätze.
-- review 3–5 Sätze, Fokus Eschenbach II.
+- review 3–5 Sätze; mit admin_match_comments 4–7 Sätze, Fokus Eschenbach II.
 - current_situation 3–4 Sätze.
 - outlook 2–4 Sätze, nächstes Eschenbach-Spiel im Zentrum.
 - Keine abgebrochenen Sätze und keine Listen in den Textfeldern.
@@ -273,4 +313,5 @@ with open('data/report.json','w',encoding='utf-8') as f:
     f.write('\n')
 
 print('Bericht aktualisiert:', date_display)
+print('Matchkommentare verwendet:',len(match_comments))
 print('Torschützen-Audit:', 'vollständig' if complete else 'unvollständig', f'({accounted}/{expected_goals})')
