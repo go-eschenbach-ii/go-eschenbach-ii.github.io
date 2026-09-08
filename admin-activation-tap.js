@@ -32,22 +32,43 @@
     }
   }
 
+  function registerTap(){
+    if(localStorage.getItem(TOKEN_KEY))return;
+    const now=Date.now();
+    taps=taps.filter(t=>now-t<TAP_WINDOW);
+    taps.push(now);
+    if(taps.length>=TAP_LIMIT){
+      taps=[];
+      activate();
+    }
+  }
+
   function install(){
     const title=document.querySelector('.hero h1');
-    if(!title)return;
-    title.style.webkitUserSelect='none';
-    title.style.userSelect='none';
-    title.style.webkitTouchCallout='none';
-    title.addEventListener('click',()=>{
-      if(localStorage.getItem(TOKEN_KEY))return;
-      const now=Date.now();
-      taps=taps.filter(t=>now-t<TAP_WINDOW);
-      taps.push(now);
-      if(taps.length>=TAP_LIMIT){
-        taps=[];
-        activate();
-      }
+    const logo=document.getElementById('logoButton');
+    const logoImg=logo?.querySelector('img');
+
+    [title,logo,logoImg].filter(Boolean).forEach(el=>{
+      el.style.webkitUserSelect='none';
+      el.style.userSelect='none';
+      el.style.webkitTouchCallout='none';
+      el.style.touchAction='manipulation';
     });
+
+    title?.addEventListener('click',registerTap);
+
+    logo?.addEventListener('click',e=>{
+      if(localStorage.getItem(TOKEN_KEY))return;
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      registerTap();
+    },true);
+
+    logo?.addEventListener('contextmenu',e=>{
+      if(localStorage.getItem(TOKEN_KEY))return;
+      e.preventDefault();
+    },true);
   }
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});
