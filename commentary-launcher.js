@@ -1,5 +1,4 @@
 (()=>{
-  const API='https://kfpxheegmeupnuzqjqqt.supabase.co/functions/v1/match-comments-admin';
   const TOKEN_KEY='go-eschenbach-comment-admin-token';
   const AFTER_RELOAD_KEY='go-eschenbach-comment-open-after-reload';
   let button=null;
@@ -61,7 +60,7 @@
   function updateButtonState(){
     if(!button)return;
     button.classList.toggle('has-panel',!!panel());
-    button.title=panel()?'Match kommentieren':'Matchkommentar freischalten';
+    button.title='Match kommentieren';
   }
 
   function openPanel(startSpeech=false){
@@ -88,48 +87,24 @@
     setTimeout(()=>obs.disconnect(),timeout);
   }
 
-  async function activate(){
-    const code=window.prompt('Matchkommentar freischalten: Aktivierungscode eingeben');
-    if(!code)return;
-    setBusy(true);
-    try{
-      const r=await fetch(API,{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({action:'activate',activation_code:code.trim(),label:'Marc iPhone'})
-      });
-      const d=await r.json().catch(()=>({}));
-      if(!r.ok||!d.admin_token){
-        window.alert('Aktivierungscode stimmt nicht oder wurde bereits verwendet.');
-        return;
-      }
-      localStorage.setItem(TOKEN_KEY,d.admin_token);
-      sessionStorage.setItem(AFTER_RELOAD_KEY,'1');
-      window.location.reload();
-    }catch{
-      window.alert('Freischaltung konnte gerade nicht abgeschlossen werden.');
-    }finally{
-      setBusy(false);
-    }
-  }
-
-  async function handleClick(){
+  function handleClick(){
     if(busy)return;
     if(openPanel(true)){
       updateButtonState();
       return;
     }
-    if(localStorage.getItem(TOKEN_KEY)){
-      setBusy(true);
-      waitForPanel({startSpeech:true,timeout:7000});
-      setTimeout(()=>setBusy(false),1300);
-      return;
-    }
-    await activate();
+    setBusy(true);
+    waitForPanel({startSpeech:true,timeout:7000});
+    setTimeout(()=>setBusy(false),1300);
   }
 
   function mount(){
     if(button)return;
+
+    // Das Mikrofon ist ausschliesslich auf bereits freigeschalteten Geräten sichtbar.
+    // Besucher ohne lokalen Admin-Token sehen keinerlei Mikrofon- oder Admin-Element.
+    if(!localStorage.getItem(TOKEN_KEY))return;
+
     injectStyles();
     button=document.createElement('button');
     button.id='commentaryMicLauncher';
@@ -137,7 +112,7 @@
     button.type='button';
     button.textContent='🎙️';
     button.setAttribute('aria-label','Match kommentieren – Mikrofon');
-    button.title='Matchkommentar freischalten';
+    button.title='Match kommentieren';
     button.addEventListener('click',handleClick);
     document.body.appendChild(button);
     updateButtonState();
