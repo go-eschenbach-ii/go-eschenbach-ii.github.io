@@ -2,12 +2,13 @@
   const API='https://kfpxheegmeupnuzqjqqt.supabase.co/functions/v1/match-tips-public';
   const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt',"'":'&#39;','"':'&quot;'}[c]));
   const parseKickoff=(date,time)=>{const m=String(date||'').match(/^(\d{2})\.(\d{2})\.(\d{4})$/);const t=String(time||'').match(/^(\d{1,2}):(\d{2})/);if(!m)return null;return new Date(Number(m[3]),Number(m[2])-1,Number(m[1]),t?Number(t[1]):0,t?Number(t[2]):0,0,0)};
+  const isEschenbach=m=>/FC\s+Eschenbach\s+II/i.test(String(m?.home||''))||/FC\s+Eschenbach\s+II/i.test(String(m?.away||''));
   const clamp=v=>Math.max(0,Math.min(20,Number(v)||0));
   async function loadStats(matchKey,box){try{const r=await fetch(`${API}?match_key=${encodeURIComponent(matchKey)}`);if(!r.ok)throw Error();const d=await r.json();box.textContent=d.total?`${d.total} ${d.total===1?'Tipp':'Tipps'}${d.top?` · häufigster Tipp ${d.top}`:''}`:'Noch keine Tipps – sei der Erste!'}catch{box.textContent='Tipp-Zählung gerade nicht verfügbar.'}}
   async function saveTip(matchKey,tip){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({match_key:matchKey,home_goals:tip.home,away_goals:tip.away})});if(!r.ok)throw Error()}
   function mount(d){
     if(document.querySelector('.match-tip-card'))return true;
-    const match=Array.isArray(d.upcoming_matches)?d.upcoming_matches[0]:null;if(!match)return false;
+    const match=Array.isArray(d.upcoming_matches)?d.upcoming_matches.find(isEschenbach):null;if(!match)return false;
     const app=document.getElementById('app');if(!app)return false;
     const outlook=[...app.querySelectorAll(':scope > section.card')].find(s=>s.querySelector(':scope > h2')?.textContent?.trim()==='Ausblick');if(!outlook)return false;
     const id=[match.date,match.time,match.home,match.away].join('|');const key='go-eschenbach-match-tip:'+id;
