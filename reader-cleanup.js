@@ -15,6 +15,13 @@
     return note;
   };
 
+  const kickoffValue=match=>{
+    const dm=String(match?.date||'').match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+    if(!dm)return Number.MAX_SAFE_INTEGER;
+    const tm=String(match?.time||'00:00').match(/^(\d{1,2}):(\d{2})$/);
+    return new Date(Number(dm[3]),Number(dm[2])-1,Number(dm[1]),tm?Number(tm[1]):0,tm?Number(tm[2]):0,0,0).getTime();
+  };
+
   const prepareReport=data=>{
     if(!data||typeof data!=='object')return data;
     const auditMatches=Array.isArray(data.scorer_audit?.checked_matches)?data.scorer_audit.checked_matches:[];
@@ -23,8 +30,8 @@
     }
     if(Array.isArray(data.upcoming_matches)){
       data.upcoming_matches=data.upcoming_matches
-        .filter(isEschenbachMatch)
-        .map(match=>({...match,note:''}));
+        .map(match=>({...match,note:''}))
+        .sort((a,b)=>kickoffValue(a)-kickoffValue(b));
     }
     return data;
   };
