@@ -56,11 +56,19 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python scripts/finalize_today.py
 
-      - name: IFV-Livedaten verbindlich abgleichen
+      - name: IFV-Livedaten versuchen
+        id: ifv_live
+        continue-on-error: true
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           REPORT_BASELINE: /tmp/report-before-update.json
         run: python scripts/ifv_live_refresh.py
+
+      - name: Letzten korrekten Stand gegen Rueckschritte schuetzen
+        if: always()
+        env:
+          REPORT_BASELINE: /tmp/report-before-update.json
+        run: python scripts/protect_report_baseline.py
 
       - name: Bericht auf Widersprüche prüfen
         run: python scripts/validate_report.py
