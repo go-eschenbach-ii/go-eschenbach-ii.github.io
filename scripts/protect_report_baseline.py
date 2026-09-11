@@ -1,5 +1,6 @@
 import json, os
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 PATH='data/report.json'
 BASELINE=os.environ.get('REPORT_BASELINE','/tmp/report-before-update.json')
@@ -103,7 +104,8 @@ else:
 
 # Ein erfolgreicher Update-Lauf soll in der App als neuer Lauf erkennbar sein,
 # auch wenn wegen einer IFV-Sperre bewusst der letzte bestaetigte Stand erhalten blieb.
-protected['generated_at']=datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+# Die Anzeige verwendet immer Schweizer Lokalzeit inklusive Sommer-/Winterzeit.
+protected['generated_at']=datetime.now(ZoneInfo('Europe/Zurich')).strftime('%d.%m.%Y %H:%M:%S')
 
 with open(PATH,'w',encoding='utf-8') as f:
     json.dump(protected,f,ensure_ascii=False,indent=2)
