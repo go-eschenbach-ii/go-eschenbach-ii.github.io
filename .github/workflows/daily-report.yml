@@ -48,6 +48,9 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python scripts/enrich_report.py
 
+      - name: Bericht auf Widersprüche prüfen
+        run: python scripts/validate_report.py
+
       - name: Bericht speichern
         run: |
           if git diff --quiet -- data/report.json; then
@@ -55,7 +58,7 @@ jobs:
             exit 0
           fi
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898218+github-actions[bot]@users.noreply.github.com"
           git add data/report.json
           git commit -m "Liga-4-Bericht aus der App aktualisiert"
           git push
