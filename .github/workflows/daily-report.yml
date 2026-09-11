@@ -48,6 +48,11 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python scripts/enrich_report.py
 
+      - name: Heutigen Spieltag abschliessend prüfen
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python scripts/finalize_today.py
+
       - name: Bericht auf Widersprüche prüfen
         run: python scripts/validate_report.py
 
