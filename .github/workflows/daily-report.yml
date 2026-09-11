@@ -30,6 +30,9 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Ausgangsstand sichern
+        run: cp data/report.json /tmp/report-before-update.json
+
       - name: Freigegebene Matchkommentare laden
         env:
           REQUEST_ID: ${{ inputs.request_id }}
@@ -52,6 +55,12 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python scripts/finalize_today.py
+
+      - name: IFV-Livedaten verbindlich abgleichen
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          REPORT_BASELINE: /tmp/report-before-update.json
+        run: python scripts/ifv_live_refresh.py
 
       - name: Bericht auf Widersprüche prüfen
         run: python scripts/validate_report.py
