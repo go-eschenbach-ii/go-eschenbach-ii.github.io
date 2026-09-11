@@ -1,4 +1,4 @@
-import json, os, re, urllib.request
+import json, os, re, urllib.request, html as html_lib
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
 from zoneinfo import ZoneInfo
@@ -38,6 +38,26 @@ def call_json(prompt, web=False, timeout=180):
         text=re.sub(r'^```(?:json)?\s*|\s*```$','',text,flags=re.S).strip()
     return json.loads(text)
 
+def fetch_live_page(url, timeout=45):
+    sep='&' if '?' in url else '?'
+    req=urllib.request.Request(
+        f'{url}{sep}_ts={int(now.timestamp())}',
+        headers={
+            'User-Agent':'Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1',
+            'Cache-Control':'no-cache, no-store, max-age=0',
+            'Pragma':'no-cache',
+            'Accept-Language':'de-CH,de;q=0.9'
+        }
+    )
+    with urllib.request.urlopen(req,timeout=timeout) as r:
+        raw=r.read().decode('utf-8','ignore')
+    raw=re.sub(r'(?is)<script\b.*?</script>',' ',raw)
+    raw=re.sub(r'(?is)<style\b.*?</style>',' ',raw)
+    text=re.sub(r'(?s)<[^>]+>','\n',raw)
+    text=html_lib.unescape(text).replace('\xa0',' ')
+    lines=[' '.join(line.split()) for line in text.splitlines()]
+    return '\n'.join(line for line in lines if line)[:120000]
+
 def dmy(v):
     try:return datetime.strptime(str(v),'%d.%m.%Y').date()
     except:return None
@@ -66,20 +86,11 @@ def official_url(url):
 def verify_score(url, home, away, hg, ag):
     if not official_url(url):return False
     try:
-        sep='&' if '?' in url else '?'
-        req=urllib.request.Request(
-            f'{url}{sep}_ts={int(now.timestamp())}',
-            headers={'User-Agent':'Mozilla/5.0','Cache-Control':'no-cache','Pragma':'no-cache'}
-        )
-        with urllib.request.urlopen(req,timeout=35) as r:
-            raw=r.read().decode('utf-8','ignore')
-        text=re.sub(r'(?is)<script\b.*?</script>|<style\b.*?</style>',' ',raw)
-        text=re.sub(r'(?s)<[^>]+>',' ',text)
-        text=re.sub(r'\s+',' ',text).casefold()
+        text=fetch_live_page(url,timeout=35).casefold()
         h=home.casefold(); a=away.casefold()
         pos=text.find(h)
         while pos!=-1:
-            seg=text[pos:pos+1200]
+            seg=text[pos:pos+1400]
             if a in seg and re.search(rf'\b{hg}\s*[:\-]\s*{ag}\b|\b{hg}\s+{ag}\b',seg):
                 return True
             pos=text.find(h,pos+1)
@@ -89,8 +100,54 @@ def verify_score(url, home, away, hg, ag):
 
 teams=[r.get('team') for r in data.get('standings',[]) if isinstance(r,dict) and r.get('team')]
 teamset=set(teams)
+schema='''{
+ "today_matches":[{"date":"DD.MM.YYYY","time":"HH:MM","home":"...","away":"...","confirmed":false,"home_goals":null,"away_goals":null,"source_url":""}],
+ "standings":[{"rank":1,"team":"...","played":0,"wins":0,"draws":0,"losses":0,"penalty_points":0,"goals_for":0,"goals_against":0,"goal_difference":0,"points":0,"is_eschenbach":false}]
+}'''
 
-prompt=f'''Prüfe den HEUTIGEN Spieltag der IFV 5. Liga, Gruppe 4, Saison 2026/27.
+# Zuerst die gleiche live gerenderte Gruppenansicht direkt abrufen, die auch im Browser
+# angezeigt wird. Erst wenn dort keine brauchbaren Daten gewonnen werden, folgt Websuche.
+live_pages=[]
+for url in (
+    'https://matchcenter.ifv.ch/Default.aspx?ln=13040&lng=1&oid=7&s=2027',
+    'https://matchcenter.ifv.ch/Default.aspx?ln=13040&lng=3&oid=7&s=2027'
+):
+    try:
+        txt=fetch_live_page(url)
+        if txt:
+            live_pages.append((url,txt))
+    except Exception as exc:
+        print('Direkter IFV-Gruppenabruf fehlgeschlagen:',url,exc)
+
+fresh={}
+if live_pages:
+    live_blob='\n\n---\n\n'.join(f'URL: {url}\n{text}' for url,text in live_pages)
+    prompt=f'''Lies den unten DIREKT abgerufenen Text aus dem offiziellen IFV-Matchcenter.
+Gesucht ist ausschliesslich die 5. Liga, Gruppe 4, Saison 2026/27. Heute ist {today_s}.
+Gruppenteams: {json.dumps(teams,ensure_ascii=False)}
+
+WICHTIG:
+- Gib ALLE heute angesetzten Gruppenspiele zurück.
+- Wenn im gelieferten Text ein Endresultat mit beiden Torzahlen sichtbar ist, confirmed=true und beide Torzahlen exakt übernehmen.
+- source_url muss diejenige der unten angegebenen offiziellen URLs sein, in deren Text das Resultat sichtbar ist.
+- Wenn kein Endresultat sichtbar ist, confirmed=false. Niemals raten.
+- Gib die Rangliste nur zurück, wenn alle 10 Teams und alle Werte im gelieferten Text sichtbar sind.
+- Strafpunkte sind die Zahl in Klammern.
+- Keine andere Liga, Gruppe oder Mannschaftsstufe verwenden.
+
+DIREKT ABGERUFENER IFV-TEXT:
+{live_blob}
+
+JSON:
+{schema}'''
+    try:
+        fresh=call_json(prompt,web=False,timeout=160)
+    except Exception as exc:
+        print('Direkte IFV-Auswertung fehlgeschlagen:',exc)
+        fresh={}
+
+if not isinstance(fresh.get('today_matches'),list) or not fresh.get('today_matches'):
+    prompt=f'''Prüfe den HEUTIGEN Spieltag der IFV 5. Liga, Gruppe 4, Saison 2026/27.
 Heute ist {today_s}.
 
 Verwende ausschliesslich offizielle Seiten von ifv.ch, matchcenter.ifv.ch oder football.ch.
@@ -98,22 +155,18 @@ Gruppenteams: {json.dumps(teams,ensure_ascii=False)}
 
 WICHTIG:
 - Gib ALLE heute angesetzten Gruppenspiele zurück, auch wenn die Anspielzeit vorbei ist.
-- Wenn ein offizielles Endresultat sichtbar ist, setze confirmed=true, nenne beide Torzahlen und die exakte offizielle source_url, auf der das Resultat sichtbar ist.
+- Wenn ein offizielles Endresultat sichtbar ist, setze confirmed=true, nenne beide Torzahlen und die exakte offizielle source_url.
 - Wenn kein offizielles Endresultat sichtbar ist, confirmed=false. Niemals raten.
 - Gib zusätzlich die aktuellste vollständige Rangliste zurück, aber nur wenn alle 10 Teams und alle Werte sichtbar sind.
 - Keine andere Liga oder Mannschaftsstufe verwenden.
 
 JSON:
-{{
- "today_matches":[{{"date":"DD.MM.YYYY","time":"HH:MM","home":"...","away":"...","confirmed":false,"home_goals":null,"away_goals":null,"source_url":""}}],
- "standings":[{{"rank":1,"team":"...","played":0,"wins":0,"draws":0,"losses":0,"penalty_points":0,"goals_for":0,"goals_against":0,"goal_difference":0,"points":0,"is_eschenbach":false}}]
-}}'''
-
-try:
-    fresh=call_json(prompt,web=True,timeout=180)
-except Exception as exc:
-    print('Heutige Schlussprüfung fehlgeschlagen:',exc)
-    fresh={}
+{schema}'''
+    try:
+        fresh=call_json(prompt,web=True,timeout=180)
+    except Exception as exc:
+        print('Heutige Web-Fallback-Prüfung fehlgeschlagen:',exc)
+        fresh={}
 
 results={}
 for m in data.get('recent_results',[]) if isinstance(data.get('recent_results'),list) else []:
@@ -148,7 +201,7 @@ for k,m in list(upcoming.items()):
         m['note']='Resultat noch nicht synchronisiert'
         upcoming[k]=m
 
-data['recent_results']=sorted(results.values(),key=lambda m:(dmy(m.get('date')) or today,m.get('time',''),m.get('home','')))
+data['recent_results']=sorted(results.values(),key=lambda m:(dmy(m.get('date')) or today,m.get('time',''),m.get('home','')),reverse=True)
 data['upcoming_matches']=sorted(upcoming.values(),key=lambda m:(dmy(m.get('date')) or today,m.get('time',''),m.get('home','')))
 
 candidate=[]
