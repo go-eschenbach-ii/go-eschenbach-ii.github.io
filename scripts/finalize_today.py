@@ -1,5 +1,6 @@
 import json, os, re, urllib.request
 from datetime import datetime, timedelta
+from urllib.parse import urlparse
 from zoneinfo import ZoneInfo
 
 PATH='data/report.json'
@@ -55,6 +56,37 @@ def kickoff_over(m):
     ko=datetime(d.year,d.month,d.day,int(mt.group(1)),int(mt.group(2)),tzinfo=ZoneInfo('Europe/Zurich'))
     return now>=ko+timedelta(minutes=150)
 
+def official_url(url):
+    try:
+        host=(urlparse(str(url)).hostname or '').lower()
+    except Exception:
+        return False
+    return host.endswith('ifv.ch') or host.endswith('football.ch')
+
+def verify_score(url, home, away, hg, ag):
+    if not official_url(url):return False
+    try:
+        sep='&' if '?' in url else '?'
+        req=urllib.request.Request(
+            f'{url}{sep}_ts={int(now.timestamp())}',
+            headers={'User-Agent':'Mozilla/5.0','Cache-Control':'no-cache','Pragma':'no-cache'}
+        )
+        with urllib.request.urlopen(req,timeout=35) as r:
+            raw=r.read().decode('utf-8','ignore')
+        text=re.sub(r'(?is)<script\b.*?</script>|<style\b.*?</style>',' ',raw)
+        text=re.sub(r'(?s)<[^>]+>',' ',text)
+        text=re.sub(r'\s+',' ',text).casefold()
+        h=home.casefold(); a=away.casefold()
+        pos=text.find(h)
+        while pos!=-1:
+            seg=text[pos:pos+1200]
+            if a in seg and re.search(rf'\b{hg}\s*[:\-]\s*{ag}\b|\b{hg}\s+{ag}\b',seg):
+                return True
+            pos=text.find(h,pos+1)
+    except Exception:
+        return False
+    return False
+
 teams=[r.get('team') for r in data.get('standings',[]) if isinstance(r,dict) and r.get('team')]
 teamset=set(teams)
 
@@ -66,14 +98,14 @@ Gruppenteams: {json.dumps(teams,ensure_ascii=False)}
 
 WICHTIG:
 - Gib ALLE heute angesetzten Gruppenspiele zurück, auch wenn die Anspielzeit vorbei ist.
-- Wenn ein offizielles Endresultat sichtbar ist, setze confirmed=true und nenne beide Torzahlen.
+- Wenn ein offizielles Endresultat sichtbar ist, setze confirmed=true, nenne beide Torzahlen und die exakte offizielle source_url, auf der das Resultat sichtbar ist.
 - Wenn kein offizielles Endresultat sichtbar ist, confirmed=false. Niemals raten.
 - Gib zusätzlich die aktuellste vollständige Rangliste zurück, aber nur wenn alle 10 Teams und alle Werte sichtbar sind.
 - Keine andere Liga oder Mannschaftsstufe verwenden.
 
 JSON:
 {{
- "today_matches":[{{"date":"DD.MM.YYYY","time":"HH:MM","home":"...","away":"...","confirmed":false,"home_goals":null,"away_goals":null}}],
+ "today_matches":[{{"date":"DD.MM.YYYY","time":"HH:MM","home":"...","away":"...","confirmed":false,"home_goals":null,"away_goals":null,"source_url":""}}],
  "standings":[{{"rank":1,"team":"...","played":0,"wins":0,"draws":0,"losses":0,"penalty_points":0,"goals_for":0,"goals_against":0,"goal_difference":0,"points":0,"is_eschenbach":false}}]
 }}'''
 
@@ -100,14 +132,15 @@ for raw in fresh.get('today_matches',[]) if isinstance(fresh.get('today_matches'
     m={'date':today_s,'time':str(raw.get('time','')).strip(),'home':home,'away':away,'note':''}
     k=key(m)
     hg=num(raw.get('home_goals')); ag=num(raw.get('away_goals'))
-    if raw.get('confirmed') is True and hg is not None and ag is not None and hg>=0 and ag>=0:
+    source=str(raw.get('source_url','')).strip()
+    confirmed=(raw.get('confirmed') is True and hg is not None and ag is not None and hg>=0 and ag>=0 and verify_score(source,home,away,hg,ag))
+    if confirmed:
         results[k]={**m,'home_goals':hg,'away_goals':ag}
         upcoming.pop(k,None)
-    else:
-        if k not in results:
-            if kickoff_over(m):
-                m['note']='Resultat noch nicht synchronisiert'
-            upcoming[k]=m
+    elif k not in results:
+        if kickoff_over(m):
+            m['note']='Resultat noch nicht synchronisiert'
+        upcoming[k]=m
 
 for k,m in list(upcoming.items()):
     if dmy(m.get('date'))==today and kickoff_over(m) and k not in results:
