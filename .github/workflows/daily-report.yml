@@ -43,6 +43,11 @@ jobs:
           MATCH_COMMENTS_FILE: /tmp/go-eschenbach-match-comments.json
         run: python scripts/update_report.py
 
+      - name: Spielplan prüfen und Bericht vertiefen
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python scripts/enrich_report.py
+
       - name: Bericht speichern
         run: |
           if git diff --quiet -- data/report.json; then
