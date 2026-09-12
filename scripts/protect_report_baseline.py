@@ -83,13 +83,17 @@ base_q=freshness(baseline)
 cur_q=freshness(current)
 
 if baseline and base_q > cur_q:
-    # Der neue Lauf ist objektiv älter/unvollständiger als der bereits bestätigte Stand.
-    # In diesem Fall wird der komplette konsistente Ausgangsstand bewahrt.
-    protected=baseline
-    print(f'Aelteren Datenstand verworfen: neu={cur_q}, bestaetigt={base_q}')
+    # Strukturierte Tabellen-/Resultatdaten aus dem bestaetigten Stand bewahren,
+    # aber redaktionelle Neuerungen des aktuellen Laufs (insbesondere den
+    # aus Matchkommentaren erzeugten Rueckblick) niemals zuruecksetzen.
+    protected=dict(baseline)
+    current_review=str(current.get('review','')).strip()
+    if current_review:
+        protected['review']=current_review
+    print(f'Aeltere Strukturdaten verworfen, aktueller Rueckblick erhalten: neu={cur_q}, bestaetigt={base_q}')
 else:
     protected=current
-    # Auch bei einem neueren Stand dürfen bereits bestätigte Resultate nicht verschwinden.
+    # Auch bei einem neueren Stand duerfen bereits bestaetigte Resultate nicht verschwinden.
     merged={}
     for source in (confirmed_results(baseline),confirmed_results(current)):
         for m in source:
@@ -103,8 +107,7 @@ else:
     print(f'Datenstand akzeptiert: neu={cur_q}, bestaetigt={base_q}')
 
 # Ein erfolgreicher Update-Lauf soll in der App als neuer Lauf erkennbar sein,
-# auch wenn wegen einer IFV-Sperre bewusst der letzte bestaetigte Stand erhalten blieb.
-# Die Anzeige verwendet immer Schweizer Lokalzeit inklusive Sommer-/Winterzeit.
+# auch wenn wegen einer IFV-Sperre bewusst der letzte bestaetigte Strukturstand erhalten blieb.
 protected['generated_at']=datetime.now(ZoneInfo('Europe/Zurich')).strftime('%d.%m.%Y %H:%M:%S')
 
 with open(PATH,'w',encoding='utf-8') as f:
