@@ -33,11 +33,12 @@ const fullRow=r=>({...legacyStats[r.team],...r});
 
 function freshnessInfo(value){
   if(!value)return{date:'unbekannt',time:'',tone:'stale'};
-  const m=String(value).match(/^(\d{2})\.(\d{2})\.(\d{4})\s+(\d{2}):(\d{2})$/);
-  if(!m)return{date:esc(value),time:'',tone:'fresh'};
-  const dt=new Date(Number(m[3]),Number(m[2])-1,Number(m[1]),Number(m[4]),Number(m[5]));
+  const text=String(value).trim();
+  const m=text.match(/^(\d{2})\.(\d{2})\.(\d{4})(?:\s+(\d{2}):(\d{2})(?::(\d{2}))?)?/);
+  if(!m)return{date:esc(text),time:'',tone:'fresh'};
+  const dt=new Date(Number(m[3]),Number(m[2])-1,Number(m[1]),Number(m[4]||0),Number(m[5]||0),Number(m[6]||0));
   const hours=(new Date()-dt)/3600000;
-  return{date:`${m[1]}.${m[2]}.${m[3]}`,time:`${m[4]}:${m[5]} Uhr`,tone:hours<24?'fresh':hours<72?'warm':'stale'};
+  return{date:`${m[1]}.${m[2]}.${m[3]}`,time:'',tone:hours<24?'fresh':hours<72?'warm':'stale'};
 }
 
 function scorerSummary(d){
@@ -108,4 +109,4 @@ logoButton?.addEventListener('click',openLogo);
 logoClose?.addEventListener('click',closeLogo);
 logoModal?.addEventListener('click',e=>{if(e.target===logoModal)closeLogo();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&logoModal&&!logoModal.hidden)closeLogo();});
-if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js?v=21').catch(()=>{})}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js?v=22').catch(()=>{})}
