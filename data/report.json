@@ -325,9 +325,9 @@
   "scorer_audit": {
     "complete": false,
     "expected_goals": 17,
-    "player_goals": 13,
-    "own_goals": 1,
-    "accounted_goals": 14,
+    "player_goals": 0,
+    "own_goals": 0,
+    "accounted_goals": 0,
     "checked_matches": [
       {
         "date": "22.08.2026",
@@ -359,5 +359,5 @@
       }
     ]
   },
-  "generated_at": "12.09.2026 21:53"
+  "generated_at": "12.09.2026 22:15:59"
 }
