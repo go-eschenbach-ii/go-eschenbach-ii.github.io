@@ -38,7 +38,8 @@ function freshnessInfo(value){
   if(!m)return{date:esc(text),time:'',tone:'fresh'};
   const dt=new Date(Number(m[3]),Number(m[2])-1,Number(m[1]),Number(m[4]||0),Number(m[5]||0),Number(m[6]||0));
   const hours=(new Date()-dt)/3600000;
-  return{date:`${m[1]}.${m[2]}.${m[3]}`,time:'',tone:hours<24?'fresh':hours<72?'warm':'stale'};
+  const time=m[4]&&m[5]?`${m[4]}:${m[5]} Uhr`:'';
+  return{date:`${m[1]}.${m[2]}.${m[3]}`,time,tone:hours<24?'fresh':hours<72?'warm':'stale'};
 }
 
 function scorerSummary(d){
@@ -83,9 +84,9 @@ function render(d){
   <div class="team-photo-source"><a href="https://fceschenbach.ch/aktive/2-mannschaft" target="_blank" rel="noopener">Quelle</a></div>
 </section>
 <section class="card report-card">
-  <div class="update-sticker ${fresh.tone}" aria-label="Aktualisiert am ${fresh.date}">
+  <div class="update-sticker ${fresh.tone}" aria-label="Aktualisiert am ${fresh.date}${fresh.time?` um ${fresh.time.replace(' Uhr','')}`:''}">
     <span class="update-sticker-icon" aria-hidden="true">↻</span>
-    <div class="update-sticker-copy"><span>AKTUALISIERT AM</span><strong>${fresh.date}</strong></div>
+    <div class="update-sticker-copy"><span>AKTUALISIERT AM</span><strong>${fresh.date}</strong>${fresh.time?`<small>${fresh.time}</small>`:''}</div>
   </div>
   <span class="pill">FC ESCHENBACH II</span><h2 style="font-size:27px;margin-top:10px">${esc(d.title)}</h2><p class="lead">${esc(lead)}</p>
 </section>
@@ -109,4 +110,4 @@ logoButton?.addEventListener('click',openLogo);
 logoClose?.addEventListener('click',closeLogo);
 logoModal?.addEventListener('click',e=>{if(e.target===logoModal)closeLogo();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&logoModal&&!logoModal.hidden)closeLogo();});
-if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js?v=22').catch(()=>{})}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js?v=23').catch(()=>{})}
