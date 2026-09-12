@@ -36,6 +36,9 @@ try:
 except Exception as exc:
     print('Matchkommentare konnten nicht geladen werden:',exc)
 
+comments.sort(key=lambda x:x.get('spoken_at',''))
+priority_comments=comments[-8:]
+
 
 def is_eschenbach_match(item):
     if not isinstance(item,dict):
@@ -51,7 +54,8 @@ facts={
     'season_summary':data.get('eschenbach',{}),
     'eschenbach_results':eschenbach_results,
     'standings':data.get('standings',[]),
-    'match_comments':comments
+    'match_comments':comments,
+    'priority_latest_comments':priority_comments
 }
 
 prompt=f'''Du bist Redaktor einer mobilen Fussball-App für FC Eschenbach II. Schreibe NUR den Rückblick neu.
@@ -65,12 +69,14 @@ VERBINDLICH – KEINE AUSNAHMEN:
 - Behaupte insbesondere keine Begegnung zwischen Eschenbach und einem Team, nur weil dieses Team in standings oder in einem anderen recent_result vorkommt.
 - Der Schwerpunkt liegt auf dem jüngsten Eintrag in eschenbach_results.
 - Wenn match_comments zu diesem Spiel vorhanden sind, sind sie direkte Beobachtungen vom Platz und müssen den erzählerischen Rückblick prägen: Spielverlauf, Druckphasen, Chancen, Aluminiumtreffer, auffällige Leistungen und Stimmung nur soweit tatsächlich genannt.
+- priority_latest_comments enthält die neuesten Beobachtungen und Zusammenfassungen des App-Redaktors. Jede inhaltlich relevante Information daraus MUSS im Rückblick vorkommen, sofern sie nicht einem gesicherten Resultat widerspricht. Besonders Schlussfazit, Gesamtbeurteilung und Hinweise auf herausragende Spieler dürfen nicht weggelassen werden.
+- Mehrere ähnliche Kommentare dürfen zu einer flüssigen Aussage zusammengeführt werden; wesentliche neue Aussagen dürfen dadurch aber nicht verschwinden.
 - Gib Matchkommentare nicht als Zitate wieder und erwähne weder den Autor noch das Wort «Kommentar».
-- Offizielles Resultat aus eschenbach_results hat Vorrang. Bei Torschützennamen aus der Spracherkennung nur eindeutig verständliche Namen verwenden; bei Unsicherheit den Namen weglassen statt raten.
+- Offizielles Resultat aus eschenbach_results hat Vorrang. Torschützenangaben aus direkten Platzbeobachtungen dürfen verwendet werden, sofern keine gesicherte offizielle Angabe widerspricht. Bei unklarer Spracherkennung Namen nicht erraten.
 - Erfinde keine zusätzlichen Chancen, Tore, Torschützen, taktischen Details, Ursachen oder früheren Partien.
 - Saisonwerte wie Anzahl Siege, Tore oder Punkte dürfen aus season_summary genannt werden, ohne daraus unbekannte Gegner abzuleiten.
 - Schweizer Rechtschreibung, sportlich, natürlich und gut lesbar.
-- 6 bis 9 Sätze. Keine Listen und kein Quellen- oder Recherchejargon.
+- 7 bis 10 Sätze. Keine Listen und kein Quellen- oder Recherchejargon.
 
 Antworte ausschliesslich als valides JSON:
 {{"review":"..."}}
@@ -110,7 +116,7 @@ try:
         with open(REPORT_PATH,'w',encoding='utf-8') as f:
             json.dump(data,f,ensure_ascii=False,indent=2)
             f.write('\n')
-        print(f'Sicherer Rückblick erstellt: {len(eschenbach_results)} echte Eschenbach-Resultate, {len(comments)} Matchkommentare.')
+        print(f'Sicherer Rückblick erstellt: {len(eschenbach_results)} echte Eschenbach-Resultate, {len(comments)} Matchkommentare, {len(priority_comments)} priorisierte Schlusskommentare.')
     else:
         print('Schlussredaktion lieferte keinen Rückblick – bestehender Text bleibt.')
 except Exception as exc:
