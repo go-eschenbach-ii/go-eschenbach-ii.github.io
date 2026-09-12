@@ -82,9 +82,9 @@ function render(d){
   <div class="team-photo-source"><a href="https://fceschenbach.ch/aktive/2-mannschaft" target="_blank" rel="noopener">Quelle</a></div>
 </section>
 <section class="card report-card">
-  <div class="update-sticker ${fresh.tone}" aria-label="Aktualisiert am ${fresh.date} ${fresh.time}">
+  <div class="update-sticker ${fresh.tone}" aria-label="Aktualisiert am ${fresh.date}">
     <span class="update-sticker-icon" aria-hidden="true">↻</span>
-    <div class="update-sticker-copy"><span>AKTUALISIERT AM</span><strong>${fresh.date}</strong>${fresh.time?`<small>${fresh.time}</small>`:''}</div>
+    <div class="update-sticker-copy"><span>AKTUALISIERT AM</span><strong>${fresh.date}</strong></div>
   </div>
   <span class="pill">FC ESCHENBACH II</span><h2 style="font-size:27px;margin-top:10px">${esc(d.title)}</h2><p class="lead">${esc(lead)}</p>
 </section>
