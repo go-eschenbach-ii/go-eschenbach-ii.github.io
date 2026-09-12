@@ -64,6 +64,12 @@ jobs:
           REPORT_BASELINE: /tmp/report-before-update.json
         run: python scripts/ifv_live_refresh.py
 
+      - name: Matchkommentare endgültig in Rückblick einarbeiten
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          MATCH_COMMENTS_FILE: /tmp/go-eschenbach-match-comments.json
+        run: python scripts/apply_match_comments.py
+
       - name: Letzten korrekten Stand gegen Rueckschritte schuetzen
         if: always()
         env:
