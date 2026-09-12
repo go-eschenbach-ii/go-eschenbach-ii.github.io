@@ -2,7 +2,7 @@
   "report_date": "12.09.2026",
   "title": "FC Eschenbach II bleibt makellos an der Spitze",
   "lead": "Der FC Eschenbach II führt die Tabelle nach vier Spieltagen mit zwölf Punkten an. Vier Siege aus vier Partien und ein Torverhältnis von 17:4 unterstreichen den starken Saisonstart. Zuletzt setzte sich das Team mit 3:0 gegen den FC Knutwil II durch. Damit bleibt Eschenbach vor dem FC Dagmersellen und dem FC Hochdorf III an der Tabellenspitze.",
-  "review": "Der FC Eschenbach II hat seine Erfolgsserie auf vier Siege ausgebaut. Nach den Siegen gegen den FC Ruswil III, den FC Dagmersellen und den FC Hochdorf III folgte zuletzt ein 3:0 gegen den FC Knutwil II. Insgesamt erzielte Eschenbach bisher 17 Tore und kassierte vier Gegentreffer. Die Konkurrenz punktete ebenfalls: Der FC Dagmersellen gewann mit 7:0 gegen den FC Grosswangen-Ettiswil, während sich der FC Hochdorf III mit 3:2 gegen den FC Wauwil-Egolzwil durchsetzte. Beide Teams liegen dennoch drei Punkte hinter Eschenbach. Dagmersellen hat allerdings erst drei Spiele absolviert, Hochdorf deren vier. Der bisherige Saisonverlauf zeigt damit ein Spitzentrio, in dem Eschenbach aktuell die meisten Punkte gesammelt hat.",
+  "review": "Eschenbach erwischte gegen den FC Knutwil II einen perfekten Start und ging bereits in der dritten Minute in Führung. In der Anfangsphase bestimmte Eschenbach das Geschehen, Captain Muff dirigierte das Team mit Übersicht und der Spielaufbau von hinten wirkte gepflegt. Ab etwa der 25. Minute fand Knutwil jedoch immer besser in die Partie und kam seinerseits zu gefährlichen Abschlüssen; in der 30. Minute landete ein Ball an der Latte. Auch nach der Pause hatte Knutwil gute Möglichkeiten, doch Eschenbach überstand diese Druckphase. Entgegen dem Spielverlauf erhöhte Nabulon mit einem Volleyschuss, ehe Knutwil in der 77. Minute mit einem direkt getretenen Freistoss erneut nur die Latte traf. In der 83. Minute verwandelte Nabulon einen Penalty zum 3:0-Endstand. Damit feierte Eschenbach den vierten Sieg im vierten Saisonspiel und blieb zum zweiten Mal ohne Gegentor.",
   "current_situation": "Mit zwölf Punkten aus vier Partien steht der FC Eschenbach II auf Rang eins. Der Vorsprung auf den FC Dagmersellen und den FC Hochdorf III beträgt drei Punkte. Beim Torverhältnis liegt Eschenbach mit 17:4 und einer Differenz von plus 13 hinter Hochdorf III, das eine Differenz von plus 21 aufweist, sowie knapp hinter Dagmersellen mit plus 14. Entscheidend bleibt jedoch die makellose Bilanz: Eschenbach hat bisher alle vier Spiele gewonnen und noch keinen Punkt abgegeben. Der jüngste 3:0-Erfolg gegen den FC Knutwil II bestätigte diese Serie.",
   "outlook": "Im weiteren Spielplan trifft der FC Eschenbach II am 26. September um 17.00 Uhr auswärts auf den SC Nebikon. Nebikon steht nach zwei Spielen mit einem Punkt auf Rang acht und weist ein Torverhältnis von 3:6 auf. Für Eschenbach bietet sich damit die nächste Gelegenheit, die Siegesserie fortzusetzen und die Tabellenführung zu behaupten. Da der FC Dagmersellen erst drei Spiele absolviert hat und weitere Partien anstehen, kann sich die Tabellensituation noch verändern. Eschenbach geht jedoch mit zwölf Punkten aus vier Spielen in die nächste Aufgabe.",
   "eschenbach": {
@@ -245,13 +245,6 @@
   ],
   "upcoming_matches": [
     {
-      "date": "12.09.2026",
-      "time": "19:00",
-      "home": "FC Eschenbach II",
-      "away": "FC Knutwil II",
-      "note": ""
-    },
-    {
       "date": "17.09.2026",
       "time": "20:00",
       "home": "SC Nebikon",
@@ -366,5 +359,5 @@
       }
     ]
   },
-  "generated_at": "12.09.2026 21:43:35"
+  "generated_at": "12.09.2026 21:53"
 }
