@@ -76,6 +76,12 @@ jobs:
           REPORT_BASELINE: /tmp/report-before-update.json
         run: python scripts/protect_report_baseline.py
 
+      - name: Torschützen gegen Rückschritte schützen
+        if: always()
+        env:
+          REPORT_BASELINE: /tmp/report-before-update.json
+        run: python scripts/protect_scorers.py
+
       - name: Bericht auf Widersprüche prüfen
         run: python scripts/validate_report.py
 
