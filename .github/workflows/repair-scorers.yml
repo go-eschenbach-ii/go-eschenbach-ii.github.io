@@ -1,0 +1,65 @@
+name: Torschützen aktuell reparieren
+
+on:
+  push:
+    paths:
+      - 'repair-scorers.trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Vollständigen bestätigten Torschützenstand setzen
+        run: |
+          python - <<'PY'
+          import json
+          p='data/report.json'
+          with open(p,'r',encoding='utf-8') as f:
+              d=json.load(f)
+          d['scorers']=[
+              {'name':'Luis Nabulon','goals':6},
+              {'name':'Ramon Brugger','goals':2},
+              {'name':'Ilay Brandenberger','goals':1},
+              {'name':'Tilman Bucher','goals':1},
+              {'name':'Noe Fischer','goals':1},
+              {'name':'Nando Hächler','goals':1},
+              {'name':'Joel Häusler','goals':1},
+              {'name':'Sandro Rosenberg','goals':1},
+              {'name':'Luca Ulrich','goals':1},
+              {'name':'Mino Vidi','goals':1}
+          ]
+          d['own_goals']=1
+          d['scorer_note']='16 Spielertore plus 1 Eigentor zugunsten von Eschenbach ergeben 17 Saisontore.'
+          d['scorer_audit']={
+              'complete':True,
+              'expected_goals':17,
+              'player_goals':16,
+              'own_goals':1,
+              'accounted_goals':17,
+              'checked_matches':[
+                  {'date':'22.08.2026','opponent':'FC Altbüron-Grossdietwil','result':'6:2','scorers':'Luis Nabulon (2), Joel Häusler, Ramon Brugger, Ilay Brandenberger','own_goals':1},
+                  {'date':'30.08.2026','opponent':'FC Wauwil-Egolzwil','result':'5:2','scorers':'Tilman Bucher, Nando Hächler, Ramon Brugger, Luca Ulrich, Sandro Rosenberg','own_goals':0},
+                  {'date':'04.09.2026','opponent':'FC Grosswangen-Ettiswil','result':'3:0','scorers':'Luis Nabulon, Mino Vidi, Noe Fischer','own_goals':0},
+                  {'date':'12.09.2026','opponent':'FC Knutwil II','result':'3:0','scorers':'Luis Nabulon (3)','own_goals':0}
+              ]
+          }
+          with open(p,'w',encoding='utf-8') as f:
+              json.dump(d,f,ensure_ascii=False,indent=2)
+              f.write('\n')
+          PY
+      - name: Plausibilität prüfen
+        run: python scripts/validate_report.py
+      - name: Speichern
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/report.json
+          git commit -m "Torschützenliste dauerhaft wiederhergestellt"
+          git push
