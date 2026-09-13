@@ -301,8 +301,49 @@
       "note": ""
     }
   ],
-  "scorers": [],
-  "scorer_note": "Torschützen werden erst wieder angezeigt, wenn die Kontrollsumme eindeutig stimmt.",
+  "scorers": [
+    {
+      "name": "Luis Nabulon",
+      "goals": 6
+    },
+    {
+      "name": "Ramon Brugger",
+      "goals": 2
+    },
+    {
+      "name": "Ilay Brandenberger",
+      "goals": 1
+    },
+    {
+      "name": "Tilman Bucher",
+      "goals": 1
+    },
+    {
+      "name": "Noe Fischer",
+      "goals": 1
+    },
+    {
+      "name": "Nando Hächler",
+      "goals": 1
+    },
+    {
+      "name": "Joel Häusler",
+      "goals": 1
+    },
+    {
+      "name": "Sandro Rosenberg",
+      "goals": 1
+    },
+    {
+      "name": "Luca Ulrich",
+      "goals": 1
+    },
+    {
+      "name": "Mino Vidi",
+      "goals": 1
+    }
+  ],
+  "scorer_note": "16 Spielertore plus 1 Eigentor zugunsten von Eschenbach ergeben 17 Saisontore.",
   "sources": [
     {
       "title": "IFV Matchcenter – 5. Liga Gruppe 4, Resultate und Rangliste",
@@ -321,13 +362,13 @@
       "url": "https://eschenbach.clubdesk.com/herren"
     }
   ],
-  "own_goals": 0,
+  "own_goals": 1,
   "scorer_audit": {
-    "complete": false,
+    "complete": true,
     "expected_goals": 17,
-    "player_goals": 0,
-    "own_goals": 0,
-    "accounted_goals": 0,
+    "player_goals": 16,
+    "own_goals": 1,
+    "accounted_goals": 17,
     "checked_matches": [
       {
         "date": "22.08.2026",
@@ -354,7 +395,7 @@
         "date": "12.09.2026",
         "opponent": "FC Knutwil II",
         "result": "3:0",
-        "scorers": "nicht ermittelbar",
+        "scorers": "Luis Nabulon (3)",
         "own_goals": 0
       }
     ]
