@@ -70,6 +70,11 @@ jobs:
           MATCH_COMMENTS_FILE: /tmp/go-eschenbach-match-comments.json
         run: python scripts/apply_match_comments.py
 
+      - name: Sprachliche Schlussredaktion
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python scripts/polish_language.py
+
       - name: Letzten korrekten Stand gegen Rueckschritte schuetzen
         if: always()
         env:
