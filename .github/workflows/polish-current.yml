@@ -1,0 +1,33 @@
+name: Aktuellen Bericht sprachlich glätten
+
+on:
+  push:
+    paths:
+      - 'polish-current.trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  polish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Sprachliche Schlussredaktion
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python scripts/polish_language.py
+      - name: Bericht speichern
+        run: |
+          if git diff --quiet -- data/report.json; then
+            echo "Keine Änderung nötig."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/report.json
+          git commit -m "Aktuellen Bericht sprachlich geglättet"
+          git push
