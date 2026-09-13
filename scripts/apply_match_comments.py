@@ -24,6 +24,7 @@ try:
             if not isinstance(item,dict):
                 continue
             transcript=' '.join(str(item.get('transcript','')).split()).strip()
+            transcript=re.sub(r'\bGerber\b','Gürber',transcript)
             if not transcript:
                 continue
             comments.append({
@@ -64,6 +65,7 @@ FAKTENPAKET:
 {json.dumps(facts,ensure_ascii=False)}
 
 VERBINDLICH – KEINE AUSNAHMEN:
+- Der Spielername lautet Gürber, niemals Gerber.
 - Ein Gegner darf nur dann als bereits gespielter Gegner von FC Eschenbach II bezeichnet werden, wenn die entsprechende Partie ausdrücklich in eschenbach_results steht.
 - Resultate anderer Ligaspiele und die Rangliste dürfen NIEMALS verwendet werden, um frühere Gegner von Eschenbach zu erraten oder abzuleiten.
 - Behaupte insbesondere keine Begegnung zwischen Eschenbach und einem Team, nur weil dieses Team in standings oder in einem anderen recent_result vorkommt.
@@ -112,6 +114,7 @@ try:
     edited=json.loads(text)
     review=' '.join(str(edited.get('review','')).split()).strip()
     if review:
+        review=re.sub(r'\bGerber\b','Gürber',review)
         data['review']=review
         with open(REPORT_PATH,'w',encoding='utf-8') as f:
             json.dump(data,f,ensure_ascii=False,indent=2)
