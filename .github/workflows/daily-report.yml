@@ -12,6 +12,11 @@ on:
         description: Kurzlebiger Zugriff auf freigegebene Matchkommentare
         required: false
         type: string
+      update_review:
+        description: Rückblick bei diesem Update erneuern
+        required: false
+        default: true
+        type: boolean
 
 permissions:
   contents: write
@@ -89,6 +94,28 @@ jobs:
 
       - name: Bericht auf Widersprüche prüfen
         run: python scripts/validate_report.py
+
+      - name: Rückblick auf bisherigen Stand zurücksetzen
+        if: ${{ inputs.update_review == false }}
+        env:
+          REPORT_BASELINE: /tmp/report-before-update.json
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          report_path = Path('data/report.json')
+          baseline_path = Path(os.environ['REPORT_BASELINE'])
+          report = json.loads(report_path.read_text(encoding='utf-8'))
+          baseline = json.loads(baseline_path.read_text(encoding='utf-8'))
+          if 'review' in baseline:
+              report['review'] = baseline['review']
+              report_path.write_text(
+                  json.dumps(report, ensure_ascii=False, indent=2) + '\n',
+                  encoding='utf-8'
+              )
+          PY
 
       - name: Bericht speichern
         run: |
