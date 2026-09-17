@@ -3,7 +3,7 @@
   const statusEl=document.getElementById('bottomUpdateStatus');
   if(!el)return;
 
-  const API='https://kfpxheegmeupnuzqjqqt.supabase.co/functions/v1/report-update-request';
+  const API='https://kfpxheegmeupnuzqjqqt.supabase.co/functions/v1/report-update-request-v2';
   const BASELINE_KEY='go-eschenbach-before-generated-at';
   const REQUEST_KEY='go-eschenbach-last-update-request';
   const ADMIN_TOKEN_KEY='go-eschenbach-comment-admin-token';
@@ -12,12 +12,75 @@
   let holdTimer=null;
   let requestedAt=null;
   let beforeGeneratedAt='';
+  let decisionPending=false;
 
   const setStatus=(text,state='')=>{
     if(!statusEl)return;
     statusEl.textContent=text||'';
     statusEl.dataset.state=state;
   };
+
+  const askReviewUpdate=()=>new Promise(resolve=>{
+    const overlay=document.createElement('div');
+    overlay.setAttribute('role','dialog');
+    overlay.setAttribute('aria-modal','true');
+    overlay.setAttribute('aria-label','Rückblick aktualisieren');
+    Object.assign(overlay.style,{
+      position:'fixed',inset:'0',zIndex:'99999',display:'flex',alignItems:'center',justifyContent:'center',
+      padding:'24px',background:'rgba(0,0,0,.48)'
+    });
+
+    const box=document.createElement('div');
+    Object.assign(box.style,{
+      width:'min(360px,100%)',background:'#fff',color:'#111',borderRadius:'16px',padding:'20px',
+      boxShadow:'0 18px 50px rgba(0,0,0,.28)',fontFamily:'inherit'
+    });
+
+    const title=document.createElement('div');
+    title.textContent='Rückblick aktualisieren?';
+    Object.assign(title.style,{fontSize:'19px',fontWeight:'700',marginBottom:'8px'});
+
+    const text=document.createElement('div');
+    text.textContent='Soll der Text «Rückblick» bei diesem Update ebenfalls erneuert werden?';
+    Object.assign(text.style,{fontSize:'15px',lineHeight:'1.4',marginBottom:'18px'});
+
+    const buttons=document.createElement('div');
+    Object.assign(buttons.style,{display:'flex',gap:'10px'});
+
+    const finish=value=>{
+      document.removeEventListener('keydown',onKey);
+      overlay.remove();
+      resolve(value);
+    };
+    const onKey=e=>{
+      if(e.key==='Escape')finish(false);
+    };
+
+    const no=document.createElement('button');
+    no.type='button';
+    no.textContent='Nein, beibehalten';
+    Object.assign(no.style,{
+      flex:'1',padding:'11px 10px',border:'1px solid #ccc',borderRadius:'10px',background:'#fff',
+      color:'#111',font:'inherit',fontWeight:'600'
+    });
+    no.addEventListener('click',()=>finish(false));
+
+    const yes=document.createElement('button');
+    yes.type='button';
+    yes.textContent='Ja, erneuern';
+    Object.assign(yes.style,{
+      flex:'1',padding:'11px 10px',border:'0',borderRadius:'10px',background:'#111',
+      color:'#fff',font:'inherit',fontWeight:'700'
+    });
+    yes.addEventListener('click',()=>finish(true));
+
+    buttons.append(no,yes);
+    box.append(title,text,buttons);
+    overlay.append(box);
+    document.body.append(overlay);
+    document.addEventListener('keydown',onKey);
+    yes.focus();
+  });
 
   const getReportVersion=async()=>{
     try{
@@ -140,11 +203,21 @@
     }
   };
 
-  const requestUpdate=async()=>{
+  const requestUpdate=async(updateReview=null)=>{
+    if(el.disabled||decisionPending)return;
+    if(updateReview===null){
+      decisionPending=true;
+      try{
+        updateReview=await askReviewUpdate();
+      }finally{
+        decisionPending=false;
+      }
+    }
     if(el.disabled)return;
+
     el.disabled=true;
     el.textContent='Startet …';
-    setStatus('Update wird gestartet …','running');
+    setStatus(updateReview?'Update wird gestartet …':'Update wird gestartet – Rückblick bleibt bestehen …','running');
     beforeGeneratedAt=await getReportVersion();
     if(beforeGeneratedAt)localStorage.setItem(BASELINE_KEY,beforeGeneratedAt);
     try{
@@ -152,7 +225,7 @@
       let r=await fetch(API,{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({action:'request',admin_token:adminToken})
+        body:JSON.stringify({action:'request',admin_token:adminToken,update_review:updateReview})
       });
       let d=await r.json().catch(()=>({}));
 
@@ -161,7 +234,7 @@
         el.textContent='Update';
         setStatus('Einmalige GitHub-Verbindung nötig.','info');
         const configured=await setupGitHub();
-        if(configured)setTimeout(requestUpdate,400);
+        if(configured)setTimeout(()=>requestUpdate(updateReview),400);
         return;
       }
       if(r.status===429){
@@ -175,8 +248,15 @@
       requestedAt=d.requested_at||new Date().toISOString();
       localStorage.setItem(REQUEST_KEY,requestedAt);
       const comments=Number(d.comments_count||0);
-      if(comments>0)setStatus(`Update mit ${comments} Matchkommentar${comments===1?'':'en'} gestartet …`,'running');
-      else setStatus(d.phase==='running'?'Aktualisierung läuft …':'Update gestartet …','running');
+      if(comments>0){
+        setStatus(updateReview
+          ?`Update mit ${comments} Matchkommentar${comments===1?'':'en'} gestartet …`
+          :`Update mit ${comments} Matchkommentar${comments===1?'':'en'} gestartet – Rückblick bleibt bestehen …`,'running');
+      }else{
+        setStatus(updateReview
+          ?(d.phase==='running'?'Aktualisierung läuft …':'Update gestartet …')
+          :(d.phase==='running'?'Aktualisierung läuft – Rückblick bleibt bestehen …':'Update gestartet – Rückblick bleibt bestehen …'),'running');
+      }
       el.textContent='Läuft …';
       watchPublishedReport();
       poll();
@@ -192,7 +272,7 @@
   el.addEventListener('contextmenu',e=>e.preventDefault());
   el.addEventListener('pointerdown',()=>{
     cancelHold();
-    if(el.disabled)return;
+    if(el.disabled||decisionPending)return;
     holdTimer=setTimeout(()=>{holdTimer=null;requestUpdate();},1200);
   });
   el.addEventListener('pointerup',cancelHold);
