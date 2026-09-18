@@ -1,4 +1,4 @@
-const CACHE='liga4daily-v68';
+const CACHE='liga4daily-v69';
 const ASSETS=[
   './','index.html','styles.css','stats-flip.css','theme-yellowblack.css','bottom-update.css',
   'team-photo-source.css','match-tip.css','app-menu.css','mood-meter.css','scorer-hearts.css',
