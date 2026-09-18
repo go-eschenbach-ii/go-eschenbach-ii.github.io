@@ -117,6 +117,62 @@ jobs:
               )
           PY
 
+
+      - name: Herz-Zyklus an Rückblick koppeln
+        env:
+          REPORT_BASELINE: /tmp/report-before-update.json
+          UPDATE_REVIEW: ${{ inputs.update_review }}
+          REQUEST_ID: ${{ inputs.request_id }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from datetime import datetime
+          from pathlib import Path
+
+          report_path = Path('data/report.json')
+          baseline_path = Path(os.environ['REPORT_BASELINE'])
+          report = json.loads(report_path.read_text(encoding='utf-8'))
+          baseline = json.loads(baseline_path.read_text(encoding='utf-8'))
+
+          def legacy_cycle(obj):
+              matches = []
+              for m in obj.get('recent_results', []) if isinstance(obj, dict) else []:
+                  if not isinstance(m, dict):
+                      continue
+                  home = str(m.get('home', '')).strip().casefold()
+                  away = str(m.get('away', '')).strip().casefold()
+                  if 'fc eschenbach ii' not in (home, away):
+                      continue
+                  try:
+                      dt = datetime.strptime(
+                          f"{str(m.get('date', '')).strip()} {str(m.get('time', '') or '00:00').strip()}",
+                          '%d.%m.%Y %H:%M'
+                      )
+                  except Exception:
+                      continue
+                  hhmm = str(m.get('time', '') or '00:00').strip()
+                  matches.append((dt, f"eschenbach:{str(m.get('date', '')).strip()} {hhmm}"))
+              if matches:
+                  return max(matches, key=lambda x: x[0])[1][:220]
+              return 'saisonstart'
+
+          update_review = os.environ.get('UPDATE_REVIEW', 'true').strip().lower() == 'true'
+          old_key = str(baseline.get('heart_cycle_key', '')).strip() or legacy_cycle(baseline)
+
+          if update_review:
+              request_id = os.environ.get('REQUEST_ID', '').strip()
+              seed = request_id or str(report.get('generated_at', '')).strip() or datetime.now().isoformat()
+              report['heart_cycle_key'] = f"review:{seed}"[:220]
+          else:
+              report['heart_cycle_key'] = old_key[:220]
+
+          report_path.write_text(
+              json.dumps(report, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8'
+          )
+          PY
+
       - name: Bericht speichern
         run: |
           if git diff --quiet -- data/report.json; then
