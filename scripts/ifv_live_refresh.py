@@ -164,6 +164,37 @@ JSON:
 {{"recent_results":[{{"date":"DD.MM.YYYY","time":"HH:MM","home":"...","away":"...","home_goals":0,"away_goals":0}}],"upcoming_matches":[{{"date":"DD.MM.YYYY","time":"HH:MM","home":"...","away":"..."}}],"standings":[{{"rank":1,"team":"...","played":0,"wins":0,"draws":0,"losses":0,"penalty_points":0,"goals_for":0,"goals_against":0,"goal_difference":0,"points":0}}]}}'''
 fresh=call_json(prompt,timeout=180)
 
+# Falls die kombinierte Extraktion bei der Rangliste unvollständig ist, die Tabelle
+# separat und mit engerem Auftrag nochmals lesen. So kann ein neues Resultat nicht
+# mit einer veralteten Tabelle veröffentlicht werden.
+if not complete_table(fresh,teamset):
+    table_prompt=f'''Lies ausschliesslich die aktuelle Rangliste der IFV 5. Liga, Gruppe 4, Saison 2026/27 aus dem unten eingefügten offiziellen Seitentext.
+
+Gruppenteams: {json.dumps(teams,ensure_ascii=False)}
+
+Regeln:
+- Genau alle Gruppenteams liefern.
+- Für jedes Team: Rang, Spiele, Siege, Unentschieden, Niederlagen, Strafpunkte, Tore erzielt, Tore erhalten, Tordifferenz und Punkte.
+- Strafpunkte sind die Zahl in Klammern.
+- Keine Resultate, keinen Spielplan und keine anderen Gruppen ausgeben.
+- Nichts schätzen oder ergänzen.
+
+OFFIZIELLER IFV-TEXT:
+{result_text[:110000]}
+
+JSON:
+{{"standings":[{{"rank":1,"team":"...","played":0,"wins":0,"draws":0,"losses":0,"penalty_points":0,"goals_for":0,"goals_against":0,"goal_difference":0,"points":0}}]}}'''
+    for attempt in range(2):
+        try:
+            retry=call_json(table_prompt,timeout=140)
+            rows=complete_table(retry,teamset)
+            if rows:
+                fresh['standings']=rows
+                print(f'Rangliste im separaten Versuch {attempt+1} vollständig gelesen.')
+                break
+        except Exception as exc:
+            print(f'Separater Ranglistenversuch {attempt+1} fehlgeschlagen:',exc)
+
 # Bestätigte Resultate niemals wieder verlieren. Baseline + bestehender Bericht + Live-Daten zusammenführen.
 results={}
 for source in (baseline.get('recent_results',[]),data.get('recent_results',[]),fresh.get('recent_results',[])):
@@ -191,12 +222,13 @@ if upcoming:
     data['upcoming_matches']=sorted(upcoming.values(),key=lambda m:(dmy(m['date']),m.get('time',''),m['home']))
 
 # Von vollständigen Tabellen immer den fortgeschrittensten Stand behalten.
+# Bei gleicher Anzahl absolvierter Spiele gewinnt der frischere Kandidat.
 candidates=[]
-for obj in (baseline,data,fresh):
+for priority,obj in enumerate((baseline,data,fresh)):
     rows=complete_table(obj,teamset)
-    if rows: candidates.append(rows)
+    if rows: candidates.append((table_score(rows),priority,rows))
 if candidates:
-    best=max(candidates,key=table_score)
+    _,_,best=max(candidates,key=lambda item:(item[0],item[1]))
     data['standings']=best
     er=next((r for r in best if r['team']=='FC Eschenbach II'),None)
     if er:
