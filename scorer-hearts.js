@@ -1,12 +1,13 @@
 (()=>{
   const API='https://kfpxheegmeupnuzqjqqt.supabase.co/functions/v1/scorer-hearts-public';
+  const STATE_API='https://kfpxheegmeupnuzqjqqt.supabase.co/rest/v1/rpc/go_eschenbach_scorer_hearts_state';
+  const SUPABASE_KEY='sb_publishable_vlP2dIHDTK-VY5LK-jeS_w_tN04WaK0';
   const deviceKey='go-eschenbach-mood-device';
   const teamNeedle='fc eschenbach ii';
   let cycle=null;
   let rebuildTimer=null;
   let kickoffTimer=null;
   let loading=false;
-  let baselineCounts={};
   let state={counts:{},voted_player_key:null};
 
   const makeUuid=()=>{
@@ -92,9 +93,7 @@
     document.querySelectorAll('.scorer-heart-button').forEach(button=>{
       const key=button.dataset.playerKey||'';
       const count=button.querySelector('.scorer-heart-count');
-      const total=Math.max(0,Number(state.counts?.[key])||0);
-      const baseline=Math.max(0,Number(baselineCounts?.[key])||0);
-      if(count)count.textContent=String(Math.max(0,total-baseline));
+      if(count)count.textContent=String(Math.max(0,Number(state.counts?.[key])||0));
       const selected=state.voted_player_key===key;
       button.classList.toggle('is-selected',selected);
       button.setAttribute('aria-pressed',selected?'true':'false');
@@ -105,7 +104,12 @@
   async function refreshState(){
     if(!cycle)return;
     try{
-      const r=await fetch(`${API}?cycle_key=${encodeURIComponent(cycle.key)}&device_id=${encodeURIComponent(getDeviceId())}&t=${Date.now()}`,{cache:'no-store'});
+      const r=await fetch(STATE_API,{
+        method:'POST',
+        headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY},
+        body:JSON.stringify({p_cycle_key:cycle.key,p_device_id:getDeviceId()}),
+        cache:'no-store'
+      });
       if(!r.ok)throw Error();
       const d=await r.json();
       state={counts:d.counts||{},voted_player_key:d.voted_player_key||null};
@@ -157,7 +161,6 @@
       const r=await fetch(`data/report.json?scorerhearts=${Date.now()}`,{cache:'no-store'});
       if(!r.ok)throw Error();
       const report=await r.json();
-      baselineCounts=(report?.heart_count_baseline&&typeof report.heart_count_baseline==='object')?report.heart_count_baseline:{};
       cycle=deriveCycle(report);
       scheduleNextKickoff();
     }catch{
