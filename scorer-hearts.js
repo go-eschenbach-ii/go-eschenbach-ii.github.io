@@ -6,6 +6,7 @@
   let rebuildTimer=null;
   let kickoffTimer=null;
   let loading=false;
+  let baselineCounts={};
   let state={counts:{},voted_player_key:null};
 
   const makeUuid=()=>{
@@ -91,7 +92,9 @@
     document.querySelectorAll('.scorer-heart-button').forEach(button=>{
       const key=button.dataset.playerKey||'';
       const count=button.querySelector('.scorer-heart-count');
-      if(count)count.textContent=String(state.counts?.[key]||0);
+      const total=Math.max(0,Number(state.counts?.[key])||0);
+      const baseline=Math.max(0,Number(baselineCounts?.[key])||0);
+      if(count)count.textContent=String(Math.max(0,total-baseline));
       const selected=state.voted_player_key===key;
       button.classList.toggle('is-selected',selected);
       button.setAttribute('aria-pressed',selected?'true':'false');
@@ -153,7 +156,9 @@
     try{
       const r=await fetch(`data/report.json?scorerhearts=${Date.now()}`,{cache:'no-store'});
       if(!r.ok)throw Error();
-      cycle=deriveCycle(await r.json());
+      const report=await r.json();
+      baselineCounts=(report?.heart_count_baseline&&typeof report.heart_count_baseline==='object')?report.heart_count_baseline:{};
+      cycle=deriveCycle(report);
       scheduleNextKickoff();
     }catch{
       cycle={key:'saisonstart',nextAt:null};
