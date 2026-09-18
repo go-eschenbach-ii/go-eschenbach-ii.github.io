@@ -35,6 +35,8 @@
   }
 
   function deriveCycle(d){
+    const explicit=String(d?.heart_cycle_key||'').trim().slice(0,220);
+    if(explicit)return {key:explicit,nextAt:null};
     const all=[...(Array.isArray(d?.recent_results)?d.recent_results:[]),...(Array.isArray(d?.upcoming_matches)?d.upcoming_matches:[])];
     const matches=all.filter(isEschenbach).map(m=>{
       const info=kickoffInfo(m);
