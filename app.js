@@ -69,6 +69,7 @@ function scorersHTML(items){
 }
 
 function render(d){
+  app.dataset.heartCycleKey=String(d.heart_cycle_key||'').trim();
   const e=d.eschenbach||{};
   const fresh=freshnessInfo(d.generated_at);
   const situation=readerText(d.current_situation);
@@ -110,4 +111,4 @@ logoButton?.addEventListener('click',openLogo);
 logoClose?.addEventListener('click',closeLogo);
 logoModal?.addEventListener('click',e=>{if(e.target===logoModal)closeLogo();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&logoModal&&!logoModal.hidden)closeLogo();});
-if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js?v=25').catch(()=>{})}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js?v=26').catch(()=>{})}
