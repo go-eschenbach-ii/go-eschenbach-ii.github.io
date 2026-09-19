@@ -18,7 +18,15 @@
   const collectHeadings=()=>[...document.querySelectorAll('#app h2,#app h3.section-subtitle')]
     .filter(el=>allowedHeadings.has(el.textContent?.trim()||''));
   const reportMarker=()=>document.querySelector('.update-sticker')?.getAttribute('aria-label')||'aktueller Bericht';
-  const sectionKey=heading=>`heading:${heading.textContent.trim()}|${reportMarker()}`.slice(0,300);
+  const heartCycleKey=()=>document.getElementById('app')?.dataset.heartCycleKey?.trim()||'';
+  const sectionKey=heading=>{
+    const name=heading.textContent.trim();
+    if(name==='Rückblick'){
+      const cycle=heartCycleKey();
+      if(cycle)return `heading:${name}|cycle:${cycle}`.slice(0,300);
+    }
+    return `heading:${name}|${reportMarker()}`.slice(0,300);
+  };
   const savedKey=key=>`go-eschenbach-mood-choice:${key}`;
 
   async function loadCount(key,meter){
