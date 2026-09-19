@@ -1,12 +1,12 @@
 {
-  "report_date": "18.09.2026",
-  "title": "FC Eschenbach II bleibt an der Tabellenspitze",
-  "lead": "Der FC Eschenbach II weist nach vier Spieltagen weiterhin eine makellose Bilanz auf. Vier Siege aus vier Partien, 17 erzielte Tore und nur vier Gegentore bedeuten Rang eins mit zwölf Punkten. Zuletzt setzte sich das Team zu Hause mit 3:0 gegen den FC Knutwil II durch. Damit bleibt Eschenbach in der laufenden Meisterschaft ungeschlagen und ohne Punktverlust.",
+  "report_date": "19.09.2026",
+  "title": "FC Eschenbach II bleibt auf Kurs",
+  "lead": "Der FC Eschenbach II steht nach vier Runden mit vier Siegen und zwölf Punkten auf Rang zwei. Die Mannschaft weist eine Bilanz von 17:4 Toren auf und ist seit Saisonbeginn ungeschlagen. Zuletzt setzte sich Eschenbach II zu Hause mit 3:0 gegen den FC Knutwil II durch und blieb dabei ohne Gegentor.",
   "review": "Der FC Eschenbach II bleibt dank eines 3:0-Siegs gegen den FC Knutwil II auch nach dem vierten Saisonspiel ohne Punktverlust. Eschenbach ging bereits in der dritten Minute in Führung und dominierte die Anfangsphase mit gepflegtem Spielaufbau und mehreren Torchancen. Captain Muff dirigierte seine Mannschaft umsichtig, während Gürber mit viel Laufarbeit auffiel und Fischer in der Defensive für Sicherheit sorgte. Vor der Pause blieb die Partie jedoch offen: Knutwil kam besser ins Spiel und war dem Ausgleich näher als Eschenbach dem zweiten Treffer. Nach dem Seitenwechsel erspielte sich Knutwil weitere gute Möglichkeiten, doch Eschenbach erhöhte entgegen dem Spielverlauf mit einem Volleyschuss von Nabulon. In der 77. Minute rettete zudem die Latte nach einem sehenswerten Freistoss von Knutwil, bevor Nabulon in der 83. Minute per Penalty zum 3:0 traf und damit einen Hattrick komplettierte. Torhüter Bienz blieb zum zweiten Mal in Folge ohne Gegentor, und Trainer Muff hatte sein Team einmal mehr sehr gut eingestellt. Rund 60 Zuschauerinnen und Zuschauer verfolgten bei idealen Temperaturen ein unterhaltsames Spiel, auch wenn der Rasenplatz schon bessere Tage gesehen hatte.",
-  "current_situation": "Eschenbach führt die Tabelle mit zwölf Punkten aus vier Spielen an. Dahinter folgen der FC Dagmersellen und der FC Hochdorf III mit je neun Punkten. Der FC Grosswangen-Ettiswil hat mit dem 9:2 beim SC Nebikon seinen ersten Saisonsieg gefeiert und liegt nun auf Rang sechs. Nebikon steht nach drei Spielen mit einem Punkt auf Rang neun. Eschenbach weist weiterhin vier Siege aus vier Partien und eine Tordifferenz von plus 13 auf.",
-  "outlook": "Als Nächstes trifft der FC Eschenbach II am 26. September um 17.00 Uhr auswärts auf den SC Nebikon. Nebikon steht nach drei Spielen mit einem Punkt auf Rang neun und weist bei 5:15 Toren eine Tordifferenz von minus zehn auf. Am 1. Oktober um 20.15 Uhr folgt das Auswärtsspiel beim FC Schötz III, das nach drei Partien noch ohne Punkt am Tabellenende steht.",
+  "current_situation": "Die Ausgangslage des FC Eschenbach II ist nach vier Runden sehr stark. Vier Siege in Serie, zwölf Punkte und eine Tordifferenz von plus 13 bedeuten Rang zwei. Nur der FC Dagmersellen liegt vor Eschenbach II; beide Teams haben dieselbe Punktezahl und ebenfalls vier Siege aus vier Spielen. Dagmersellen verfügt jedoch über die bessere Tordifferenz. Eschenbach II hat bisher 17 Tore erzielt und vier Gegentore erhalten. Damit gehört die Mannschaft sowohl offensiv als auch defensiv zur Spitzengruppe. Der Vorsprung auf den drittplatzierten FC Hochdorf III beträgt drei Punkte. In der internen Torschützenliste führen Luis Nabulon und Ramon Brugger mit je drei Treffern, gefolgt von Nando Hächler und Tilman Bucher mit je zwei Toren.",
+  "outlook": "Als Nächstes trifft der FC Eschenbach II am Samstag, 26. September 2026, auswärts auf den SC Nebikon. Anpfiff ist um 17.00 Uhr. Nebikon steht nach drei Spielen mit einem Punkt auf Rang neun und weist ein Torverhältnis von 5:15 auf. Eschenbach II geht damit als zweitplatziertes, noch ungeschlagenes Team in diese Partie. Ein weiterer Sieg würde die Serie auf fünf Erfolge verlängern und den Druck auf den punktgleichen FC Dagmersellen aufrechterhalten. Bereits am 1. Oktober folgt der nächste Auswärtstermin: Um 20.15 Uhr spielt Eschenbach II beim FC Schötz III. Schötz III liegt derzeit nach drei Partien mit null Punkten auf Rang zehn.",
   "eschenbach": {
-    "rank": 1,
+    "rank": 2,
     "played": 4,
     "wins": 4,
     "draws": 0,
@@ -16,26 +16,26 @@
     "goals_against": 4,
     "goal_difference": 13,
     "points": 12,
-    "form": "S S S S"
+    "form": "4 Siege in Serie"
   },
   "recent_results": [
     {
+      "date": "19.09.2026",
+      "time": "17:00",
+      "home": "FC Dagmersellen",
+      "away": "FC Altbüron-Grossdietwil",
+      "home_goals": 4,
+      "away_goals": 1,
+      "note": ""
+    },
+    {
       "date": "17.09.2026",
-      "time": "20:00",
+      "time": "",
       "home": "SC Nebikon",
       "away": "FC Grosswangen-Ettiswil",
       "home_goals": 2,
       "away_goals": 9,
       "note": ""
-    },
-    {
-      "date": "12.09.2026",
-      "time": "19:00",
-      "home": "FC Eschenbach II",
-      "away": "FC Knutwil II",
-      "home_goals": 3,
-      "away_goals": 0,
-      "note": "Eschenbach führte früh, musste nach der Pause eine Druckphase überstehen und blieb erneut ohne Gegentor."
     },
     {
       "date": "12.09.2026",
@@ -45,6 +45,15 @@
       "home_goals": 3,
       "away_goals": 2,
       "note": ""
+    },
+    {
+      "date": "12.09.2026",
+      "time": "",
+      "home": "FC Eschenbach II",
+      "away": "FC Knutwil II",
+      "home_goals": 3,
+      "away_goals": 0,
+      "note": "Eschenbach II bleibt ohne Gegentor."
     },
     {
       "date": "11.09.2026",
@@ -113,6 +122,20 @@
   "standings": [
     {
       "rank": 1,
+      "team": "FC Dagmersellen",
+      "played": 4,
+      "wins": 4,
+      "draws": 0,
+      "losses": 0,
+      "penalty_points": 1,
+      "goals_for": 20,
+      "goals_against": 3,
+      "goal_difference": 17,
+      "points": 12,
+      "is_eschenbach": false
+    },
+    {
+      "rank": 2,
       "team": "FC Eschenbach II",
       "played": 4,
       "wins": 4,
@@ -124,20 +147,6 @@
       "goal_difference": 13,
       "points": 12,
       "is_eschenbach": true
-    },
-    {
-      "rank": 2,
-      "team": "FC Dagmersellen",
-      "played": 3,
-      "wins": 3,
-      "draws": 0,
-      "losses": 0,
-      "penalty_points": 1,
-      "goals_for": 16,
-      "goals_against": 2,
-      "goal_difference": 14,
-      "points": 9,
-      "is_eschenbach": false
     },
     {
       "rank": 3,
@@ -170,14 +179,14 @@
     {
       "rank": 5,
       "team": "FC Altbüron-Grossdietwil",
-      "played": 3,
+      "played": 4,
       "wins": 2,
       "draws": 0,
-      "losses": 1,
+      "losses": 2,
       "penalty_points": 8,
-      "goals_for": 8,
-      "goals_against": 10,
-      "goal_difference": -2,
+      "goals_for": 9,
+      "goals_against": 14,
+      "goal_difference": -5,
       "points": 6,
       "is_eschenbach": false
     },
@@ -254,13 +263,6 @@
   ],
   "upcoming_matches": [
     {
-      "date": "19.09.2026",
-      "time": "17:00",
-      "home": "FC Dagmersellen",
-      "away": "FC Altbüron-Grossdietwil",
-      "note": ""
-    },
-    {
       "date": "21.09.2026",
       "time": "20:15",
       "home": "FC Schötz III",
@@ -307,6 +309,27 @@
       "time": "20:15",
       "home": "FC Schötz III",
       "away": "FC Eschenbach II",
+      "note": ""
+    },
+    {
+      "date": "02.10.2026",
+      "time": "20:00",
+      "home": "FC Altbüron-Grossdietwil",
+      "away": "FC Wauwil-Egolzwil",
+      "note": ""
+    },
+    {
+      "date": "02.10.2026",
+      "time": "20:00",
+      "home": "FC Ruswil III",
+      "away": "FC Grosswangen-Ettiswil",
+      "note": ""
+    },
+    {
+      "date": "03.10.2026",
+      "time": "17:00",
+      "home": "FC Dagmersellen",
+      "away": "SC Nebikon",
       "note": ""
     }
   ],
@@ -356,19 +379,15 @@
   "sources": [
     {
       "title": "IFV Matchcenter – 5. Liga, Gruppe 4: Resultate und Rangliste",
-      "url": "https://matchcenter.ifv.ch/default.aspx?a=mrr&ln=13040&lng=1&ls=25897&oid=7&s=2027&sg=70471"
+      "url": "https://matchcenter.ifv.ch/Default.aspx?a=mrr&ln=13040&lng=1&ls=25897&oid=7&s=2027&sg=70471"
     },
     {
       "title": "IFV Matchcenter – 5. Liga, Gruppe 4: Spielplan",
-      "url": "https://matchcenter.ifv.ch/default.aspx?a=msp&ln=13040&lng=1&ls=25897&oid=7&s=2027&sg=70471"
+      "url": "https://matchcenter.ifv.ch/Default.aspx?a=msp&ln=13040&lng=1&ls=25897&oid=7&s=2027&sg=70471"
     },
     {
-      "title": "IFV Matchcenter – FC Eschenbach II gegen FC Knutwil II",
-      "url": "https://matchcenter.ifv.ch/default.aspx?lng=1&ls=19241&oid=7&sg=55924&t=31022&tg=4328770&v=358"
-    },
-    {
-      "title": "FC Dagmersellen – News und Matchberichte",
-      "url": "https://fcdagmersellen.ch/news/"
+      "title": "FC Eschenbach",
+      "url": "https://fceschenbach.ch"
     }
   ],
   "own_goals": 1,
@@ -390,14 +409,14 @@
         "date": "12.09.2026",
         "opponent": "FC Knutwil II",
         "result": "3:0",
-        "scorers": "Torschützen im offiziellen Matchcenter nicht ausgewiesen",
+        "scorers": "Im öffentlich verfügbaren offiziellen Matchcenter sind keine Torschützen oder Eigentore ausgewiesen; eine zweifelsfreie Zuordnung ist daher nicht möglich",
         "own_goals": 0
       },
       {
         "date": "22.08.2026",
         "opponent": "FC Altbüron-Grossdietwil",
         "result": "6:2",
-        "scorers": "Luis Nabulon (2), Joel Häusler, Ramon Brugger, Ilay Brandenberger",
+        "scorers": "Luis Nabulon (2), Joel Häusler, Ramon Brugger, Ilay Brandenberger; 1 Eigentor des Gegners",
         "own_goals": 1
       },
       {
@@ -409,6 +428,6 @@
       }
     ]
   },
-  "heart_cycle_key": "eschenbach:12.09.2026 19:00",
-  "generated_at": "18.09.2026 21:06:26"
+  "generated_at": "19.09.2026 22:10:16",
+  "heart_cycle_key": "eschenbach:12.09.2026 19:00"
 }
