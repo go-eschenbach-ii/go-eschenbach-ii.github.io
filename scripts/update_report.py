@@ -180,16 +180,34 @@ data=call_json(prompt, timeout=180, use_web=True)
 data=preserve_last_complete_table(data, previous_data)
 
 expected_goals=int(data.get('eschenbach',{}).get('goals_for') or 0)
+
+# Eigene Matchberichte und freigegebene Matchkommentare sind eine zusätzliche,
+# spielbezogene Quelle für Torschützen. Das ist besonders wichtig, wenn das
+# offizielle Matchcenter zwar das Resultat, aber keine Torschützen ausweist.
+scorer_editor_evidence={
+    'previous_match_report':' '.join(str(previous_data.get('review','')).split()).strip(),
+    'current_match_report':' '.join(str(data.get('review','')).split()).strip(),
+    'admin_match_comments':match_comments
+}
+scorer_editor_context=json.dumps(scorer_editor_evidence,ensure_ascii=False)
+
 scorer_prompt=f'''Du bist Datenprüfer für Schweizer Amateurfussball. Ermittle die vollständige Saison-Torschützenliste von FC Eschenbach II in der IFV 5. Liga, Gruppe 4, Saison 2026/27 bis einschliesslich {date_display}.
+
+EIGENE SPIELBEOBACHTUNGEN / MATCHBERICHT DES APP-REDAKTORS:
+{scorer_editor_context}
 
 VERBINDLICH:
 1. Ermittle alle bereits ausgetragenen Meisterschaftsspiele von FC Eschenbach II. Keine Cup-, Test- oder Freundschaftsspiele.
 2. Prüfe jedes Spiel einzeln und erfasse alle Eschenbacher Torschützen.
 3. Eigentore des Gegners zugunsten von Eschenbach separat als own_goals zählen.
-4. Falls nötig, prüfe zusätzlich offizielle Vereinsberichte zum exakt passenden Spiel.
-5. Identische Spielernamen zusammenführen und Tore summieren.
-6. Kontrollsumme: Spielertore plus own_goals muss exakt {expected_goals} ergeben.
-7. Nichts schätzen oder erfinden. Wenn nicht vollständig, complete=false setzen.
+4. Für die Anzahl Tore pro Spiel ist das offizielle Resultat verbindlich. Für die Zuordnung der Torschützen darfst du zusätzlich die oben angegebenen eigenen Matchberichte und Matchkommentare verwenden.
+5. Wenn das offizielle Matchcenter für ein Spiel keine Torschützen nennt, der eigene Matchbericht oder ein Matchkommentar aber eindeutig Spieler und Tore diesem exakten Spiel zuordnet, müssen diese Tore in die Saisonstatistik einberechnet werden.
+6. Dieselbe Torinformation aus mehreren Quellen niemals doppelt zählen. Gleiche Angaben aus Matchcenter, Matchbericht und Matchkommentar sind nur eine Bestätigung desselben Tores.
+7. Bei einem echten Widerspruch zwischen einer offiziellen Torschützenangabe und dem eigenen Matchbericht hat die offizielle Angabe Vorrang.
+8. Falls nötig, prüfe zusätzlich offizielle Vereinsberichte zum exakt passenden Spiel.
+9. Identische Spielernamen zusammenführen und Tore summieren.
+10. Kontrollsumme: Spielertore plus own_goals muss exakt {expected_goals} ergeben.
+11. Nichts schätzen oder erfinden. Wenn nicht vollständig, complete=false setzen.
 
 Antworte ausschliesslich als valides JSON:
 {{
@@ -219,7 +237,11 @@ if not complete and expected_goals>0:
 Bisheriges Audit:
 {json.dumps(audit, ensure_ascii=False)}
 
-Gehe jedes Meisterschaftsspiel erneut einzeln durch. Ergänze fehlende Torschützen oder Eigentore, ohne bereits verifizierte Tore doppelt zu zählen. Die Endsumme muss exakt {expected_goals} ergeben. Nichts erfinden.
+Gehe jedes Meisterschaftsspiel erneut einzeln durch. Ergänze fehlende Torschützen oder Eigentore, ohne bereits verifizierte Tore doppelt zu zählen. Nutze dabei auch die eigenen spielbezogenen Angaben des App-Redaktors, wenn offizielle Torschützen fehlen:
+
+{scorer_editor_context}
+
+Ein im eigenen Matchbericht eindeutig genannter Torschütze zählt für das passende Spiel. Gleiche Angaben aus mehreren Quellen dürfen nicht doppelt gezählt werden. Die Endsumme muss exakt {expected_goals} ergeben. Nichts erfinden.
 
 Antworte ausschliesslich als valides JSON im selben Format:
 {{"complete":true,"expected_goals":{expected_goals},"own_goals":0,"scorers":[{{"name":"...","goals":1}}],"checked_matches":[{{"date":"DD.MM.YYYY","opponent":"...","result":"...","scorers":"...","own_goals":0}}],"note":"..."}}
