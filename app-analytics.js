@@ -93,7 +93,10 @@
   }
 
   (async()=>{
-    try{await rpc('go_eschenbach_track_app_open');}catch{}
+    const isAdmin=!!localStorage.getItem(TOKEN_KEY);
+    if(!isAdmin){
+      try{await rpc('go_eschenbach_track_app_open');}catch{}
+    }
     await loadAdminStats();
   })();
 })();
