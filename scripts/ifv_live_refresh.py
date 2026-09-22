@@ -99,6 +99,7 @@ def complete_table(obj, teamset):
         vals={k:n(r.get(k)) for k in fields}
         if team not in teamset or any(v is None for v in vals.values()): return None
         if vals['played']!=vals['wins']+vals['draws']+vals['losses']: return None
+        if vals['points']!=vals['wins']*3+vals['draws']: return None
         if vals['goal_difference']!=vals['goals_for']-vals['goals_against']: return None
         clean.append({'team':team,**vals,'is_eschenbach':team=='FC Eschenbach II'})
     if {r['team'] for r in clean}!=teamset or {r['rank'] for r in clean}!=set(range(1,len(clean)+1)):
