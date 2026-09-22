@@ -4,7 +4,7 @@
   "lead": "FC Eschenbach II steht nach vier Spieltagen mit vier Siegen und zwölf Punkten auf dem zweiten Tabellenplatz. Die Mannschaft ist weiterhin ungeschlagen und weist ein Torverhältnis von 17:4 auf. An der Tabellenspitze liegt der FC Dagmersellen ebenfalls bei zwölf Punkten, jedoch mit der besseren Tordifferenz. Als Nächstes wartet auswärts der SC Nebikon.",
   "review": "Der FC Eschenbach II bleibt dank eines 3:0-Siegs gegen den FC Knutwil II auch nach dem vierten Saisonspiel ohne Punktverlust. Eschenbach ging bereits in der dritten Minute in Führung und dominierte die Anfangsphase mit gepflegtem Spielaufbau und mehreren Torchancen. Captain Muff dirigierte seine Mannschaft umsichtig, während Gürber mit viel Laufarbeit auffiel und Fischer in der Defensive für Sicherheit sorgte. Vor der Pause blieb die Partie jedoch offen: Knutwil kam besser ins Spiel und war dem Ausgleich näher als Eschenbach dem zweiten Treffer. Nach dem Seitenwechsel erspielte sich Knutwil weitere gute Möglichkeiten, doch Eschenbach erhöhte entgegen dem Spielverlauf mit einem Volleyschuss von Nabulon. In der 77. Minute rettete zudem die Latte nach einem sehenswerten Freistoss von Knutwil, bevor Nabulon in der 83. Minute per Penalty zum 3:0 traf und damit einen Hattrick komplettierte. Torhüter Bienz blieb zum zweiten Mal in Folge ohne Gegentor, und Trainer Muff hatte sein Team einmal mehr sehr gut eingestellt. Rund 60 Zuschauerinnen und Zuschauer verfolgten bei idealen Temperaturen ein unterhaltsames Spiel, auch wenn der Rasenplatz schon bessere Tage gesehen hatte.",
   "current_situation": "FC Eschenbach II belegt aktuell Rang zwei und liegt punktgleich mit dem FC Dagmersellen an der Tabellenspitze. Der Unterschied zeigt sich bei der Tordifferenz: Dagmersellen weist +17 aus, Eschenbach +13. Hinter dem Spitzenduo folgt der FC Hochdorf III mit neun Punkten. Die aktuelle Form von Eschenbach lautet vier Siege. Topskorer ist Luis Nabulon mit sechs Treffern, gefolgt von Ramon Brugger mit zwei Toren. Acht weitere Spieler haben je einmal getroffen; zusätzlich ist ein Eigentor in der Teambilanz aufgeführt. In der Tabelle sind zudem ein Penaltypunkt und zwölf Punkte ausgewiesen.",
-  "outlook": "Am 26. September um 17.00 Uhr tritt FC Eschenbach II beim SC Nebikon an. Nebikon liegt nach vier Spielen auf Rang neun, hat einen Punkt gesammelt und weist ein Torverhältnis von 12:22 auf. Für Eschenbach bietet sich damit die nächste Möglichkeit, die Serie von vier Siegen fortzusetzen und den Druck auf den FC Dagmersellen aufrechtzuerhalten. Bei einem weiteren Erfolg würde das Team auf 15 Punkte kommen. Bereits am 1. Oktober folgt auswärts beim FC Schötz III das nächste Spiel. Schötz steht derzeit mit null Punkten und einem Torverhältnis von 1:32 am Tabellenende.",
+  "outlook": "Am 26. September um 17.00 Uhr tritt FC Eschenbach II beim SC Nebikon an. Nebikon liegt nach vier Spielen auf Rang sechs, hat vier Punkte gesammelt und weist ein Torverhältnis von 12:16 auf. Für Eschenbach bietet sich damit die nächste Möglichkeit, die Serie von vier Siegen fortzusetzen. Bereits am 1. Oktober folgt auswärts beim FC Schötz III das nächste Spiel.",
   "eschenbach": {
     "rank": 2,
     "played": 4,
@@ -201,6 +201,20 @@
     },
     {
       "rank": 6,
+      "team": "SC Nebikon",
+      "played": 4,
+      "wins": 1,
+      "draws": 1,
+      "losses": 2,
+      "penalty_points": 2,
+      "goals_for": 12,
+      "goals_against": 16,
+      "goal_difference": -4,
+      "points": 4,
+      "is_eschenbach": false
+    },
+    {
+      "rank": 7,
       "team": "FC Grosswangen-Ettiswil",
       "played": 4,
       "wins": 1,
@@ -214,7 +228,7 @@
       "is_eschenbach": false
     },
     {
-      "rank": 7,
+      "rank": 8,
       "team": "FC Wauwil-Egolzwil",
       "played": 4,
       "wins": 1,
@@ -228,7 +242,7 @@
       "is_eschenbach": false
     },
     {
-      "rank": 8,
+      "rank": 9,
       "team": "FC Ruswil III",
       "played": 4,
       "wins": 1,
@@ -239,20 +253,6 @@
       "goals_against": 11,
       "goal_difference": -1,
       "points": 3,
-      "is_eschenbach": false
-    },
-    {
-      "rank": 9,
-      "team": "SC Nebikon",
-      "played": 4,
-      "wins": 0,
-      "draws": 1,
-      "losses": 3,
-      "penalty_points": 2,
-      "goals_for": 12,
-      "goals_against": 22,
-      "goal_difference": -10,
-      "points": 1,
       "is_eschenbach": false
     },
     {
