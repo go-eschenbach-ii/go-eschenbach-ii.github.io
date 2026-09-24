@@ -221,6 +221,33 @@ if base_table and merged:
                     target[key]=esch[key]
             print(f'Rangliste aus bestaetigtem Stand und {len(changed_keys)} neuem/geaendertem Resultat(en) abgeglichen.')
 
+# Rangfolge immer abschliessend nach der IFV-Regel normalisieren:
+# Punkte -> tieferer Strafpunktquotient -> Tordifferenz -> erzielte Tore.
+final_table=complete_standings(protected)
+if final_table:
+    final_rows,_=final_table
+    def final_rank_key(row):
+        played=max(1,as_int(row.get('played'),0))
+        penalty=max(0,as_int(row.get('penalty_points'),0))
+        return (
+            -as_int(row.get('points'),0),
+            penalty/played,
+            -as_int(row.get('goal_difference'),0),
+            -as_int(row.get('goals_for'),0),
+            str(row.get('team','')).casefold()
+        )
+
+    ranked=sorted((dict(r) for r in final_rows),key=final_rank_key)
+    for idx,row in enumerate(ranked,1):
+        row['rank']=idx
+        row['is_eschenbach']=str(row.get('team','')).strip()=='FC Eschenbach II'
+    protected['standings']=ranked
+    esch=next((r for r in ranked if r.get('is_eschenbach')),None)
+    if esch:
+        target=protected.setdefault('eschenbach',{})
+        for key in ('rank','played','wins','draws','losses','penalty_points','goals_for','goals_against','goal_difference','points'):
+            target[key]=esch[key]
+
 # Ein erfolgreicher Update-Lauf soll in der App als neuer Lauf erkennbar sein,
 # auch wenn wegen einer IFV-Sperre bewusst der letzte bestaetigte Strukturstand erhalten blieb.
 protected['generated_at']=datetime.now(ZoneInfo('Europe/Zurich')).strftime('%d.%m.%Y %H:%M:%S')
