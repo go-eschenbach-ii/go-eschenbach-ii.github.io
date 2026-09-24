@@ -1,4 +1,5 @@
 import json, os, re, urllib.request, http.cookiejar, html as html_lib
+from fractions import Fraction
 from datetime import datetime, timedelta
 from urllib.parse import urljoin
 from zoneinfo import ZoneInfo
@@ -88,6 +89,70 @@ def mkey(m):
     return (str(m.get('date','')),str(m.get('home','')).strip().casefold(),str(m.get('away','')).strip().casefold())
 
 
+def ranking_key(row):
+    played=max(0,n(row.get('played')) or 0)
+    penalty=max(0,n(row.get('penalty_points')) or 0)
+    penalty_ratio=Fraction(penalty,played) if played else Fraction(0,1)
+    return (
+        -(n(row.get('points')) or 0),
+        penalty_ratio,
+        -(n(row.get('goal_difference')) or 0),
+        -(n(row.get('goals_for')) or 0),
+        str(row.get('team','')).casefold()
+    )
+
+
+def rerank(rows):
+    ranked=sorted((dict(r) for r in rows),key=ranking_key)
+    for idx,row in enumerate(ranked,1):
+        row['rank']=idx
+        row['is_eschenbach']=row.get('team')=='FC Eschenbach II'
+    return ranked
+
+
+def parse_ifv_standings_text(text, teamset):
+    """Liest die sichtbare IFV-Rangliste deterministisch aus dem Seitentext."""
+    canonical={str(t).casefold():str(t) for t in teamset}
+    lines=[' '.join(str(x).split()) for x in str(text).splitlines() if str(x).strip()]
+    rows=[]
+    seen=set()
+    for i,line in enumerate(lines):
+        team=canonical.get(line.casefold())
+        if not team or team in seen or i==0:
+            continue
+        rank_match=re.fullmatch(r'(\d+)\.',lines[i-1])
+        if not rank_match:
+            continue
+        raw_vals=[]
+        for token in lines[i+1:i+18]:
+            if token==':':
+                continue
+            if re.fullmatch(r'\(\d+\)',token) or re.fullmatch(r'[+-]?\d+',token):
+                raw_vals.append(token)
+                if len(raw_vals)==9:
+                    break
+        if len(raw_vals)!=9 or not re.fullmatch(r'\(\d+\)',raw_vals[4]):
+            continue
+        nums=[int(v.strip('()')) for v in raw_vals]
+        row={
+            'rank':int(rank_match.group(1)),
+            'team':team,
+            'played':nums[0],
+            'wins':nums[1],
+            'draws':nums[2],
+            'losses':nums[3],
+            'penalty_points':nums[4],
+            'goals_for':nums[5],
+            'goals_against':nums[6],
+            'goal_difference':nums[7],
+            'points':nums[8],
+            'is_eschenbach':team=='FC Eschenbach II'
+        }
+        rows.append(row)
+        seen.add(team)
+    return complete_table({'standings':rows},teamset) if len(rows)==len(teamset) else None
+
+
 def complete_table(obj, teamset):
     rows=obj.get('standings',[]) if isinstance(obj,dict) else []
     if not isinstance(rows,list) or len(rows)!=len(teamset): return None
@@ -104,7 +169,9 @@ def complete_table(obj, teamset):
         clean.append({'team':team,**vals,'is_eschenbach':team=='FC Eschenbach II'})
     if {r['team'] for r in clean}!=teamset or {r['rank'] for r in clean}!=set(range(1,len(clean)+1)):
         return None
-    return sorted(clean,key=lambda r:r['rank'])
+    # IFV-Regel: bei Punktgleichheit zuerst tieferer Strafpunktquotient,
+    # danach Tordifferenz. Rang wird deshalb immer deterministisch neu gebildet.
+    return rerank(clean)
 
 
 def table_score(rows):
@@ -117,6 +184,7 @@ if len(teamset)<8:
 
 # Den vom Benutzer genannten offiziellen Einstieg öffnen und alle 5.-Liga-Gruppenlinks lesen.
 base_raw=fetch_html(IFV_BASE)
+base_text=to_text(base_raw)
 links=[]
 for href in re.findall(r'href=["\']([^"\']+)["\']',base_raw,re.I):
     href=html_lib.unescape(href)
@@ -152,7 +220,7 @@ Regeln:
 - Nichts erfinden oder aus Vorwissen ergänzen.
 - recent_results: alle Meisterschaftsresultate vom {recent_start.strftime('%d.%m.%Y')} bis heute, aber nur wenn beide Torzahlen sichtbar sind.
 - upcoming_matches: alle noch nicht beendeten Meisterschaftsspiele von heute bis {future_end.strftime('%d.%m.%Y')}.
-- standings: vollständige aktuelle Rangliste aller Gruppenteams. Strafpunkte sind die Zahl in Klammern.
+- standings: vollständige aktuelle Rangliste aller Gruppenteams. Strafpunkte sind die Zahl in Klammern. Bei Punktgleichheit zählt zuerst der tiefere Strafpunktquotient (Strafpunkte / ausgetragene Spiele), danach die Tordifferenz.
 - Keine andere Liga, Gruppe, Cup- oder Juniorenspiele.
 
 RESULTATE + RANGLISTE:
@@ -164,6 +232,18 @@ SPIELPLAN:
 JSON:
 {{"recent_results":[{{"date":"DD.MM.YYYY","time":"HH:MM","home":"...","away":"...","home_goals":0,"away_goals":0}}],"upcoming_matches":[{{"date":"DD.MM.YYYY","time":"HH:MM","home":"...","away":"..."}}],"standings":[{{"rank":1,"team":"...","played":0,"wins":0,"draws":0,"losses":0,"penalty_points":0,"goals_for":0,"goals_against":0,"goal_difference":0,"points":0}}]}}'''
 fresh=call_json(prompt,timeout=180)
+
+# Die zentrale Liga-Seite ist die bevorzugte Quelle für Rang und Strafpunkte.
+# Sie wird ohne Modellinterpretation direkt ausgelesen. Die Gruppen-Unterseite
+# dient als zweite offizielle Quelle, falls die zentrale Seite unvollständig ist.
+direct_base=parse_ifv_standings_text(base_text,teamset)
+direct_result=parse_ifv_standings_text(result_text,teamset)
+if direct_base:
+    fresh['standings']=direct_base
+    print('Rangliste deterministisch aus zentraler IFV-Ligaseite gelesen.')
+elif direct_result:
+    fresh['standings']=direct_result
+    print('Rangliste deterministisch aus IFV-Gruppenseite gelesen.')
 
 # Falls die kombinierte Extraktion bei der Rangliste unvollständig ist, die Tabelle
 # separat und mit engerem Auftrag nochmals lesen. So kann ein neues Resultat nicht
