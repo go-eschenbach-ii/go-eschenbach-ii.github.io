@@ -17,19 +17,8 @@ const matchHTML=m=>{const note=readerNote(m.note);return`<div class="match"><div
 
 // Übergang für den bereits gespeicherten Bericht vom 06.09.2026.
 // Neue Recherchen liefern diese Werte direkt aus dem IFV Matchcenter.
-const legacyStats={
-  'FC Eschenbach II':{wins:3,draws:0,losses:0,penalty_points:1,goals_for:14,goals_against:4},
-  'FC Knutwil II':{wins:2,draws:1,losses:0,penalty_points:2,goals_for:9,goals_against:3},
-  'FC Dagmersellen':{wins:2,draws:0,losses:0,penalty_points:0,goals_for:9,goals_against:2},
-  'FC Hochdorf III':{wins:2,draws:0,losses:1,penalty_points:0,goals_for:24,goals_against:4},
-  'FC Altbüron-Grossdietwil':{wins:1,draws:0,losses:1,penalty_points:3,goals_for:5,goals_against:8},
-  'FC Ruswil III':{wins:1,draws:0,losses:2,penalty_points:1,goals_for:8,goals_against:8},
-  'FC Wauwil-Egolzwil':{wins:1,draws:0,losses:2,penalty_points:2,goals_for:8,goals_against:14},
-  'SC Nebikon':{wins:0,draws:1,losses:1,penalty_points:1,goals_for:3,goals_against:6},
-  'FC Grosswangen-Ettiswil':{wins:0,draws:0,losses:2,penalty_points:0,goals_for:2,goals_against:8},
-  'FC Schötz III':{wins:0,draws:0,losses:3,penalty_points:5,goals_for:0,goals_against:25}
-};
-const fullRow=r=>({...legacyStats[r.team],...r});
+const fullRow=r=>({...r});
+
 
 function freshnessInfo(value){
   if(!value)return{date:'unbekannt',time:'',tone:'stale'};
@@ -111,4 +100,4 @@ logoButton?.addEventListener('click',openLogo);
 logoClose?.addEventListener('click',closeLogo);
 logoModal?.addEventListener('click',e=>{if(e.target===logoModal)closeLogo();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&logoModal&&!logoModal.hidden)closeLogo();});
-if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js?v=27').catch(()=>{})}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js?v=28').catch(()=>{})}
