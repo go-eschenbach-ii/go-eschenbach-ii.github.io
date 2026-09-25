@@ -26,7 +26,7 @@
       "away": "FC Ruswil III",
       "home_goals": 2,
       "away_goals": 0,
-      "note": "Wauwil-Egolzwil gewann ohne Gegentor."
+      "note": ""
     },
     {
       "date": "21.09.2026",
@@ -35,7 +35,7 @@
       "away": "SC Nebikon",
       "home_goals": 1,
       "away_goals": 7,
-      "note": "Nebikon feierte einen Kantersieg."
+      "note": ""
     },
     {
       "date": "19.09.2026",
@@ -44,16 +44,16 @@
       "away": "FC Altbüron-Grossdietwil",
       "home_goals": 4,
       "away_goals": 1,
-      "note": "Dagmersellen setzte sich klar durch."
+      "note": ""
     },
     {
       "date": "17.09.2026",
-      "time": "",
+      "time": "20:00",
       "home": "SC Nebikon",
       "away": "FC Grosswangen-Ettiswil",
       "home_goals": 2,
       "away_goals": 9,
-      "note": "Grosswangen-Ettiswil gewann deutlich."
+      "note": ""
     },
     {
       "date": "12.09.2026",
@@ -447,6 +447,6 @@
       }
     ]
   },
-  "generated_at": "24.09.2026 22:10:17",
+  "generated_at": "25.09.2026 22:29:04",
   "heart_cycle_key": "eschenbach:12.09.2026 19:00"
 }
