@@ -432,7 +432,8 @@ base_rows=complete_table(baseline,teamset)
 if base_rows:
     baseline_results={}
     for m in baseline.get('recent_results',[]) if isinstance(baseline.get('recent_results'),list) else []:
-        if isinstance(m,dict) and n(m.get('home_goals')) is not None and n(m.get('away_goals')) is not None:
+        md=dmy(m.get('date')) if isinstance(m,dict) else None
+        if isinstance(m,dict) and md and recent_start<=md<=today and n(m.get('home_goals')) is not None and n(m.get('away_goals')) is not None:
             baseline_results[mkey(m)]=m
     current_results={mkey(m):m for m in data.get('recent_results',[]) if isinstance(m,dict)}
     changed=[]
