@@ -181,11 +181,15 @@ def apply_match_delta(rows_by_team, match, direction):
     return True
 
 def ranking_key(row):
-    played=max(0,n(row.get('played')) or 0)
+    played=max(1,n(row.get('played')) or 0)
+    points=max(0,n(row.get('points')) or 0)
     penalty=max(0,n(row.get('penalty_points')) or 0)
-    penalty_ratio=Fraction(penalty,played) if played else Fraction(0,1)
+    # IFV-Zwischenrangliste bei unterschiedlicher Spielzahl:
+    # zuerst Punkte pro Spiel, danach tieferer Strafpunktquotient.
+    points_ratio=Fraction(points,played)
+    penalty_ratio=Fraction(penalty,played)
     return (
-        -(n(row.get('points')) or 0),
+        -points_ratio,
         penalty_ratio,
         -(n(row.get('goal_difference')) or 0),
         -(n(row.get('goals_for')) or 0),
@@ -260,8 +264,8 @@ def complete_table(obj, teamset):
         clean.append({'team':team,**vals,'is_eschenbach':team=='FC Eschenbach II'})
     if {r['team'] for r in clean}!=teamset or {r['rank'] for r in clean}!=set(range(1,len(clean)+1)):
         return None
-    # IFV-Regel: bei Punktgleichheit zuerst tieferer Strafpunktquotient,
-    # danach Tordifferenz. Rang wird deshalb immer deterministisch neu gebildet.
+    # IFV-Zwischenrangliste: bei unterschiedlicher Spielzahl zählt zuerst der
+    # Punktequotient (Punkte / Spiele), danach der Strafpunktquotient.
     return rerank(clean)
 
 
@@ -312,7 +316,7 @@ Regeln:
 - Nichts erfinden oder aus Vorwissen ergänzen.
 - recent_results: alle Meisterschaftsresultate vom {recent_start.strftime('%d.%m.%Y')} bis heute, aber nur wenn beide Torzahlen sichtbar sind.
 - upcoming_matches: alle noch nicht beendeten Meisterschaftsspiele von heute bis {future_end.strftime('%d.%m.%Y')}.
-- standings: vollständige aktuelle Rangliste aller Gruppenteams. Strafpunkte sind die Zahl in Klammern. Bei Punktgleichheit zählt zuerst der tiefere Strafpunktquotient (Strafpunkte / ausgetragene Spiele), danach die Tordifferenz.
+- standings: vollständige aktuelle Rangliste aller Gruppenteams. Strafpunkte sind die Zahl in Klammern. Für die Zwischenrangliste bei unterschiedlicher Spielzahl zuerst den Punktequotienten (Punkte / Spiele) berücksichtigen; bei gleichem Punktequotienten zählt der tiefere Strafpunktquotient (Strafpunkte / Spiele).
 - Keine andere Liga, Gruppe, Cup- oder Juniorenspiele.
 
 RESULTATE + RANGLISTE:

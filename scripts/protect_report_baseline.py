@@ -198,11 +198,11 @@ if base_table and merged:
         if valid and applied:
             def rank_key(row):
                 played=max(1,as_int(row.get('played'),0))
+                points=max(0,as_int(row.get('points'),0))
                 penalty=max(0,as_int(row.get('penalty_points'),0))
-                penalty_ratio=penalty/played
                 return (
-                    -as_int(row.get('points'),0),
-                    penalty_ratio,
+                    -(points/played),
+                    penalty/played,
                     -as_int(row.get('goal_difference'),0),
                     -as_int(row.get('goals_for'),0),
                     str(row.get('team','')).casefold()
@@ -221,16 +221,17 @@ if base_table and merged:
                     target[key]=esch[key]
             print(f'Rangliste aus bestaetigtem Stand und {len(changed_keys)} neuem/geaendertem Resultat(en) abgeglichen.')
 
-# Rangfolge immer abschliessend nach der IFV-Regel normalisieren:
-# Punkte -> tieferer Strafpunktquotient -> Tordifferenz -> erzielte Tore.
+# Rangfolge abschliessend wie in der IFV-Zwischenrangliste normalisieren:
+# Punktequotient -> tieferer Strafpunktquotient -> Tordifferenz -> erzielte Tore.
 final_table=complete_standings(protected)
 if final_table:
     final_rows,_=final_table
     def final_rank_key(row):
         played=max(1,as_int(row.get('played'),0))
+        points=max(0,as_int(row.get('points'),0))
         penalty=max(0,as_int(row.get('penalty_points'),0))
         return (
-            -as_int(row.get('points'),0),
+            -(points/played),
             penalty/played,
             -as_int(row.get('goal_difference'),0),
             -as_int(row.get('goals_for'),0),
