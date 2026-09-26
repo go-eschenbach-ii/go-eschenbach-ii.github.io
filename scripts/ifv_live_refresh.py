@@ -5,6 +5,7 @@ from urllib.parse import urljoin
 from zoneinfo import ZoneInfo
 
 PATH='data/report.json'
+ALERT_PATH='data/alert.json'
 BASELINE=os.environ.get('REPORT_BASELINE','/tmp/report-before-update.json')
 API_KEY=os.environ.get('OPENAI_API_KEY','').strip()
 IFV_BASE='https://matchcenter.ifv.ch/default.aspx?oid=7&lng=1&s=2027&ln=13040'
@@ -416,6 +417,31 @@ for m in fresh.get('upcoming_matches',[]) if isinstance(fresh.get('upcoming_matc
 if upcoming:
     data['upcoming_matches']=sorted(upcoming.values(),key=lambda m:(dmy(m['date']),m.get('time',''),m['home']))
 
+# Manuelle Dringlichkeitsmeldung (z.B. Spielabsage) hat Vorrang vor dem
+# automatischen IFV-Spielplan, bis sie abläuft.
+active_alert=None
+try:
+    with open(ALERT_PATH,'r',encoding='utf-8') as f:
+        candidate=json.load(f)
+    if isinstance(candidate,dict) and candidate.get('active') is True:
+        until_raw=str(candidate.get('active_until','')).strip()
+        from_raw=str(candidate.get('active_from','')).strip()
+        until=datetime.fromisoformat(until_raw) if until_raw else None
+        starts=datetime.fromisoformat(from_raw) if from_raw else None
+        now_aware=now
+        if (starts is None or now_aware>=starts.astimezone(now.tzinfo)) and (until is None or now_aware<=until.astimezone(now.tzinfo)):
+            active_alert=candidate
+except Exception as exc:
+    print('Dringlichkeitsmeldung konnte nicht gelesen werden:',exc)
+
+if active_alert and isinstance(active_alert.get('match'),dict):
+    cm=active_alert['match']
+    cancelled_key=(str(cm.get('date','')),str(cm.get('home','')).strip().casefold(),str(cm.get('away','')).strip().casefold())
+    data['upcoming_matches']=[
+        m for m in data.get('upcoming_matches',[])
+        if mkey(m)!=cancelled_key
+    ]
+
 # Von vollständigen Tabellen immer den fortgeschrittensten Stand behalten.
 # Bei gleicher Anzahl absolvierter Spiele gewinnt der frischere Kandidat.
 candidates=[]
@@ -473,9 +499,11 @@ if base_rows:
                 print(f'Rangliste vor der Textredaktion mit {len(changed)} Resultatänderung(en) abgeglichen.')
 
 facts={k:data.get(k) for k in ('eschenbach','recent_results','standings','upcoming_matches','scorers','own_goals')}
+if active_alert:
+    facts['active_alert']={k:active_alert.get(k) for k in ('type','title','message','meta','match')}
 editorial=f'''Schreibe die fünf Lesertexte für die Fan-App FC Eschenbach II neu.
 FAKTEN: {json.dumps(facts,ensure_ascii=False)}
-Regeln: Nur diese Fakten verwenden; nichts erfinden. Resultate, Rangliste und Spielplan sind verbindlich. Keine erfundenen Spielverläufe, Chancen, Taktik, Verletzungen oder Ursachen. Sichere Einordnung von Serien, Punkteabständen, Tordifferenzen und Bedeutung des nächsten Spiels ist erwünscht. Schweizer Rechtschreibung. lead 50–80 Wörter, review 120–190, current_situation 100–160, outlook 100–160. JSON: {{"title":"...","lead":"...","review":"...","current_situation":"...","outlook":"..."}}'''
+Regeln: Nur diese Fakten verwenden; nichts erfinden. Resultate, Rangliste und Spielplan sind verbindlich. Eine active_alert-Meldung hat Vorrang vor dem Spielplan; ein abgesagtes Spiel darf nicht als kommend beschrieben werden. Keine erfundenen Spielverläufe, Chancen, Taktik, Verletzungen oder Ursachen. Sichere Einordnung von Serien, Punkteabständen, Tordifferenzen und Bedeutung des nächsten Spiels ist erwünscht. Schweizer Rechtschreibung. lead 50–80 Wörter, review 120–190, current_situation 100–160, outlook 100–160. JSON: {{"title":"...","lead":"...","review":"...","current_situation":"...","outlook":"..."}}'''
 try:
     text=call_json(editorial,timeout=120)
     for k in ('title','lead','review','current_situation','outlook'):
@@ -483,6 +511,18 @@ try:
         if v: data[k]=v
 except Exception as exc:
     print('Live-Redaktion übersprungen:',exc)
+
+if active_alert and active_alert.get('type')=='match_cancelled':
+    cm=active_alert.get('match') or {}
+    home=str(cm.get('home','')).strip()
+    away=str(cm.get('away','')).strip()
+    time_text=str(cm.get('time','')).strip()
+    next_esch=next((m for m in data.get('upcoming_matches',[]) if isinstance(m,dict) and 'FC Eschenbach II' in (m.get('home'),m.get('away'))),None)
+    first=f"Das heutige Spiel {home} – {away}" + (f" um {time_text} Uhr" if time_text else '') + " ist abgesagt."
+    if next_esch:
+        data['outlook']=first + f" Der nächste aktuell im Spielplan geführte Eschenbach-Match ist am {next_esch.get('date','')} um {next_esch.get('time','')} Uhr: {next_esch.get('home','')} – {next_esch.get('away','')}."
+    else:
+        data['outlook']=first + " Sobald ein neuer Termin feststeht, wird er in der App nachgeführt."
 
 # Offizielle, tatsächlich geladene Links dokumentieren.
 sources=[s for s in data.get('sources',[]) if isinstance(s,dict) and s.get('url') and s.get('title')]

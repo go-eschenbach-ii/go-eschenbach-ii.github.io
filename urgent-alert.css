@@ -1,0 +1,58 @@
+.urgent-alert-host{
+  width:min(920px,calc(100% - 28px));
+  margin:16px auto 2px;
+}
+.urgent-alert-card{
+  background:#d71920;
+  color:#fff;
+  border:3px solid #111;
+  border-radius:18px;
+  box-shadow:6px 6px 0 #111;
+  padding:15px 17px;
+  display:flex;
+  gap:13px;
+  align-items:flex-start;
+}
+.urgent-alert-icon{
+  flex:0 0 auto;
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  background:#fff;
+  color:#d71920;
+  border:2px solid #111;
+  display:grid;
+  place-items:center;
+  font-size:24px;
+  line-height:1;
+  font-weight:950;
+}
+.urgent-alert-copy{
+  min-width:0;
+}
+.urgent-alert-title{
+  margin:0 0 4px;
+  font-size:clamp(20px,5vw,28px);
+  line-height:1.05;
+  font-weight:950;
+  letter-spacing:.02em;
+  text-transform:uppercase;
+}
+.urgent-alert-text{
+  margin:0;
+  font-size:clamp(15px,3.9vw,18px);
+  line-height:1.35;
+  font-weight:800;
+}
+.urgent-alert-meta{
+  display:block;
+  margin-top:5px;
+  font-size:13px;
+  font-weight:750;
+  opacity:.95;
+}
+@media (max-width:520px){
+  .urgent-alert-host{width:calc(100% - 22px);margin-top:12px}
+  .urgent-alert-card{padding:13px 14px;gap:10px;border-radius:15px;box-shadow:4px 4px 0 #111}
+  .urgent-alert-icon{width:36px;height:36px;font-size:21px}
+}

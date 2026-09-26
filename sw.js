@@ -1,13 +1,13 @@
-const CACHE='liga4daily-v74';
+const CACHE='liga4daily-v75';
 const ASSETS=[
   './','index.html','styles.css','stats-flip.css','theme-yellowblack.css','bottom-update.css',
   'team-photo-source.css','match-tip.css','app-menu.css','mood-meter.css','scorer-hearts.css',
-  'share-button.css','match-commentary.css','update-badge.css','app.js','app-analytics.js','flippy-stats.js',
+  'share-button.css','match-commentary.css','update-badge.css','urgent-alert.css','app.js','app-analytics.js','flippy-stats.js',
   'theme-enhance.js','reader-cleanup.js','match-tip.js','app-menu.js','mood-meter.js',
   'scorer-hearts.js','share-button.js','admin-activation-tap.js','match-commentary.js',
-  'commentary-launcher.js','admin-update.js','update-badge.js','update-push-trigger.js',
+  'commentary-launcher.js','admin-update.js','update-badge.js','update-push-trigger.js','urgent-alert.js',
   'manifest.webmanifest','logo-eschenbach-ii.svg','app-icon-180.png','apple-touch-icon.png',
-  'app-icon-192.png','app-icon-512.png','team-photo.jpg','data/report.json'
+  'app-icon-192.png','app-icon-512.png','team-photo.jpg','data/report.json','data/alert.json'
 ];
 
 self.addEventListener('install',event=>{

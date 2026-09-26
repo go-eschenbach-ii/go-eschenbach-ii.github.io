@@ -4,7 +4,7 @@
   "lead": "Nach dem 3:0-Sieg des FC Hochdorf III gegen den FC Grosswangen-Ettiswil stehen Eschenbach, Dagmersellen und Hochdorf bei zwölf Punkten. Weil Hochdorf bereits fünf Spiele absolviert hat, liegt der Punktequotient mit 2,4 unter jenem von Eschenbach und Dagmersellen (je 3,0). Zwischen diesen beiden entscheidet der tiefere Strafpunktquotient zugunsten von Eschenbach.",
   "review": "Der FC Eschenbach II bleibt dank eines 3:0-Siegs gegen den FC Knutwil II auch nach dem vierten Saisonspiel ohne Punktverlust. Eschenbach ging bereits in der dritten Minute in Führung und dominierte die Anfangsphase mit gepflegtem Spielaufbau und mehreren Torchancen. Captain Muff dirigierte seine Mannschaft umsichtig, während Gürber mit viel Laufarbeit auffiel und Fischer in der Defensive für Sicherheit sorgte. Vor der Pause blieb die Partie jedoch offen: Knutwil kam besser ins Spiel und war dem Ausgleich näher als Eschenbach dem zweiten Treffer. Nach dem Seitenwechsel erspielte sich Knutwil weitere gute Möglichkeiten, doch Eschenbach erhöhte entgegen dem Spielverlauf mit einem Volleyschuss von Nabulon. In der 77. Minute rettete zudem die Latte nach einem sehenswerten Freistoss von Knutwil, bevor Nabulon in der 83. Minute per Penalty zum 3:0 traf und damit einen Hattrick komplettierte. Torhüter Bienz blieb zum zweiten Mal in Folge ohne Gegentor, und Trainer Muff hatte sein Team einmal mehr sehr gut eingestellt. Rund 60 Zuschauerinnen und Zuschauer verfolgten bei idealen Temperaturen ein unterhaltsames Spiel, auch wenn der Rasenplatz schon bessere Tage gesehen hatte.",
   "current_situation": "Eschenbach hat seine ersten vier Meisterschaftsspiele gewonnen und steht mit zwölf Punkten auf Rang 1. Dagmersellen weist ebenfalls zwölf Punkte aus vier Spielen auf. Weil beide einen Punktequotienten von 3,0 haben, entscheidet der Strafpunktquotient: Eschenbach kommt auf 1/4 = 0,25, Dagmersellen auf 3/4 = 0,75. Hochdorf hat zwar null Strafpunkte, aber zwölf Punkte aus bereits fünf Spielen und damit einen tieferen Punktequotienten von 2,4. Deshalb liegt Hochdorf aktuell auf Rang 3.",
-  "outlook": "Am 26. September 2026 trifft der FC Eschenbach II auswärts auf den SC Nebikon. Anpfiff ist um 17.00 Uhr. Nebikon belegt nach vier Spielen Rang 7 und hat vier Punkte gesammelt; die Torbilanz lautet 12:16. Für Eschenbach ist es die nächste Gelegenheit, die Serie von vier Siegen fortzusetzen. Am gleichen Spieltag empfängt der FC Knutwil II den FC Dagmersellen. Danach folgt am 1. Oktober um 20.15 Uhr das Auswärtsspiel beim FC Schötz III. Schötz steht nach vier Partien noch ohne Punkt da und weist eine Tordifferenz von minus 31 auf. Eschenbach bestreitet damit zwei Auswärtsspiele in Folge.",
+  "outlook": "Das heutige Auswärtsspiel beim SC Nebikon um 17.00 Uhr ist abgesagt. Sobald ein neuer Termin feststeht, wird er in der App nachgeführt. Der nächste aktuell im Spielplan geführte Eschenbach-Match ist am 1. Oktober um 20.15 Uhr auswärts beim FC Schötz III.",
   "eschenbach": {
     "rank": 1,
     "played": 4,
@@ -291,13 +291,6 @@
   "upcoming_matches": [
     {
       "date": "26.09.2026",
-      "time": "17:00",
-      "home": "SC Nebikon",
-      "away": "FC Eschenbach II",
-      "note": ""
-    },
-    {
-      "date": "26.09.2026",
       "time": "18:00",
       "home": "FC Knutwil II",
       "away": "FC Dagmersellen",
@@ -449,6 +442,6 @@
       }
     ]
   },
-  "generated_at": "25.09.2026 22:29:04",
+  "generated_at": "26.09.2026 14:34:00",
   "heart_cycle_key": "eschenbach:12.09.2026 19:00"
 }
