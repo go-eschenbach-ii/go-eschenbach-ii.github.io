@@ -68,7 +68,7 @@
       if(!version)return;
       const previous=localStorage.getItem(LAST_SEEN_KEY)||'';
       if(previous&&previous!==version){
-        const notice=topNotice('update-fresh-notice',`<div class="update-fresh-card"><span class="update-fresh-one">1</span><div><strong>Neuer Bericht verfügbar</strong><small>Update vom ${formatVersion(version)}</small></div><button type="button" aria-label="Update-Hinweis schliessen">×</button></div>`);
+        const notice=topNotice('update-fresh-notice',`<div class="update-fresh-card"><span class="update-fresh-one">1</span><div><strong>Es gibt Neuigkeiten.</strong><small>Update vom ${formatVersion(version)}</small></div><button type="button" aria-label="Update-Hinweis schliessen">×</button></div>`);
         notice.querySelector('button')?.addEventListener('click',()=>notice.remove());
       }
       localStorage.setItem(LAST_SEEN_KEY,version);

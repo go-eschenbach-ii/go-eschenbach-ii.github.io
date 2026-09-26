@@ -202,6 +202,7 @@ if base_table and merged:
                 penalty=max(0,as_int(row.get('penalty_points'),0))
                 return (
                     -(points/played),
+                    -points,
                     penalty/played,
                     -as_int(row.get('goal_difference'),0),
                     -as_int(row.get('goals_for'),0),
@@ -232,6 +233,7 @@ if final_table:
         penalty=max(0,as_int(row.get('penalty_points'),0))
         return (
             -(points/played),
+            -points,
             penalty/played,
             -as_int(row.get('goal_difference'),0),
             -as_int(row.get('goals_for'),0),

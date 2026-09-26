@@ -181,6 +181,58 @@ def apply_match_delta(rows_by_team, match, direction):
         row['goal_difference']=row['goals_for']-row['goals_against']
     return True
 
+def infer_results_from_table_delta(old_obj, new_obj, candidates, teamset):
+    """Rekonstruiert ein fehlendes Resultat sicher aus zwei offiziellen Tabellenständen.
+
+    Es wird nur übernommen, wenn für beide Teams genau ein zusätzliches Spiel
+    sichtbar ist und die Tor-Deltas auf beiden Seiten exakt übereinstimmen.
+    """
+    old_rows=complete_table(old_obj,teamset)
+    new_rows=complete_table(new_obj,teamset)
+    if not old_rows or not new_rows:
+        return []
+    old_by={r['team']:r for r in old_rows}
+    new_by={r['team']:r for r in new_rows}
+    inferred=[]
+    seen=set()
+    for m in candidates if isinstance(candidates,list) else []:
+        if not isinstance(m,dict):
+            continue
+        d=dmy(m.get('date'))
+        home=' '.join(str(m.get('home','')).split())
+        away=' '.join(str(m.get('away','')).split())
+        if not d or d<recent_start or d>today or home not in teamset or away not in teamset:
+            continue
+        key=(d.strftime('%d.%m.%Y'),home.casefold(),away.casefold())
+        if key in seen:
+            continue
+        seen.add(key)
+        oh=old_by.get(home); oa=old_by.get(away)
+        nh=new_by.get(home); na=new_by.get(away)
+        if not all((oh,oa,nh,na)):
+            continue
+        if n(nh.get('played'))-n(oh.get('played'))!=1 or n(na.get('played'))-n(oa.get('played'))!=1:
+            continue
+        hg=n(nh.get('goals_for'))-n(oh.get('goals_for'))
+        ag=n(nh.get('goals_against'))-n(oh.get('goals_against'))
+        if hg<0 or ag<0:
+            continue
+        if n(na.get('goals_for'))-n(oa.get('goals_for'))!=ag:
+            continue
+        if n(na.get('goals_against'))-n(oa.get('goals_against'))!=hg:
+            continue
+        inferred.append({
+            'date':d.strftime('%d.%m.%Y'),
+            'time':' '.join(str(m.get('time','')).split()),
+            'home':home,
+            'away':away,
+            'home_goals':hg,
+            'away_goals':ag,
+            'note':''
+        })
+    return inferred
+
+
 def ranking_key(row):
     played=max(1,n(row.get('played')) or 0)
     points=max(0,n(row.get('points')) or 0)
@@ -191,6 +243,7 @@ def ranking_key(row):
     penalty_ratio=Fraction(penalty,played)
     return (
         -points_ratio,
+        -points,
         penalty_ratio,
         -(n(row.get('goal_difference')) or 0),
         -(n(row.get('goals_for')) or 0),
@@ -333,20 +386,26 @@ fresh=call_json(prompt,timeout=180)
 # Zweite offizielle IFV-Quelle: sichtbare Resultate im Spielplan werden
 # zusätzlich deterministisch gelesen. Dadurch bleibt ein beendeter Match
 # nicht als kommend stehen, wenn die Resultateseite noch verzögert ist.
+direct_result_results=parse_ifv_schedule_results(result_text,teamset)
 direct_schedule_results=parse_ifv_schedule_results(schedule_text,teamset)
-if direct_schedule_results:
+direct_results={}
+for source in (direct_result_results,direct_schedule_results):
+    for m in source:
+        if isinstance(m,dict):
+            direct_results[mkey(m)]=m
+if direct_results:
     merged_results={}
-    for source in (fresh.get('recent_results',[]),direct_schedule_results):
+    for source in (fresh.get('recent_results',[]),list(direct_results.values())):
         if not isinstance(source,list):
             continue
         for m in source:
             if isinstance(m,dict):
                 merged_results[mkey(m)]=m
     fresh['recent_results']=list(merged_results.values())
-    direct_keys={mkey(m) for m in direct_schedule_results}
+    direct_keys=set(direct_results)
     if isinstance(fresh.get('upcoming_matches'),list):
         fresh['upcoming_matches']=[m for m in fresh['upcoming_matches'] if not isinstance(m,dict) or mkey(m) not in direct_keys]
-    print(f'{len(direct_schedule_results)} Resultat(e) direkt aus dem IFV-Spielplan gelesen.')
+    print(f'{len(direct_results)} Resultat(e) deterministisch aus IFV-Resultateseite/Spielplan gelesen.')
 
 # Die zentrale Liga-Seite ist die bevorzugte Quelle für Rang und Strafpunkte.
 # Sie wird ohne Modellinterpretation direkt ausgelesen. Die Gruppen-Unterseite
@@ -390,6 +449,27 @@ JSON:
                 break
         except Exception as exc:
             print(f'Separater Ranglistenversuch {attempt+1} fehlgeschlagen:',exc)
+
+# Falls ein Resultat auf den sichtbaren Resultatseiten noch fehlt, die Rangliste
+# aber bereits nachgeführt wurde, wird es aus den Tabellen-Deltas rekonstruiert.
+scheduled_candidates=[]
+for source in (baseline.get('upcoming_matches',[]),data.get('upcoming_matches',[]),fresh.get('upcoming_matches',[])):
+    if isinstance(source,list):
+        scheduled_candidates.extend(source)
+inferred_results=infer_results_from_table_delta(baseline,fresh,scheduled_candidates,teamset)
+if inferred_results:
+    merged_results={}
+    for source in (fresh.get('recent_results',[]),inferred_results):
+        if not isinstance(source,list):
+            continue
+        for m in source:
+            if isinstance(m,dict):
+                merged_results[mkey(m)]=m
+    fresh['recent_results']=list(merged_results.values())
+    inferred_keys={mkey(m) for m in inferred_results}
+    if isinstance(fresh.get('upcoming_matches'),list):
+        fresh['upcoming_matches']=[m for m in fresh['upcoming_matches'] if not isinstance(m,dict) or mkey(m) not in inferred_keys]
+    print(f'{len(inferred_results)} Resultat(e) aus offiziellen Tabellen-Deltas rekonstruiert.')
 
 # Bestätigte Resultate niemals wieder verlieren. Baseline + bestehender Bericht + Live-Daten zusammenführen.
 results={}

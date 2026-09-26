@@ -1,4 +1,4 @@
-const CACHE='liga4daily-v75';
+const CACHE='liga4daily-v76';
 const ASSETS=[
   './','index.html','styles.css','stats-flip.css','theme-yellowblack.css','bottom-update.css',
   'team-photo-source.css','match-tip.css','app-menu.css','mood-meter.css','scorer-hearts.css',
@@ -38,7 +38,7 @@ self.addEventListener('push',event=>{
   try{data=event.data?event.data.json():{};}catch{}
   const title=String(data.title||'GO Eschenbach II');
   const options={
-    body:String(data.body||'Es gibt ein frisches Update.'),
+    body:String(data.body||'Es gibt Neuigkeiten.'),
     icon:'app-icon-192.png?v=5',
     badge:'app-icon-192.png?v=5',
     tag:'go-eschenbach-update',
