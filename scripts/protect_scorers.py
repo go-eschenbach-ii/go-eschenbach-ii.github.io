@@ -99,7 +99,7 @@ accounted=player_goals+own_goals+forfait_goals
 if expected and accounted>expected:
     base_rows,_=scorer_map(baseline)
     base_player=sum(base_rows.values())
-    base_total=base_player+base_own
+    base_total=base_player+base_own+forfait_goals_from_obj(baseline)
     if base_total and base_total<=expected:
         rows=[{'name':name,'goals':base_rows[key]} for key,name in (scorer_map(baseline)[1]).items() if key in base_rows]
         rows.sort(key=lambda x:(-x['goals'],x['name'].casefold()))
