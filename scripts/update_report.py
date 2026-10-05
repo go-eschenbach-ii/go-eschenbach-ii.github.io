@@ -88,6 +88,8 @@ def normalize_scorers(items):
         name=' '.join(str(item.get('name','')).split())
         if not name:
             continue
+        if 'forfait' in name.casefold():
+            continue
         try:
             goals=int(item.get('goals',0))
         except (TypeError,ValueError):
@@ -200,13 +202,14 @@ VERBINDLICH:
 1. Ermittle alle bereits ausgetragenen Meisterschaftsspiele von FC Eschenbach II. Keine Cup-, Test- oder Freundschaftsspiele.
 2. Prüfe jedes Spiel einzeln und erfasse alle Eschenbacher Torschützen.
 3. Eigentore des Gegners zugunsten von Eschenbach separat als own_goals zählen.
+3a. Forfait-Tore zählen zur Mannschafts-Torzahl, dürfen aber NIEMALS einem Spieler zugeordnet werden. Zähle sie separat als forfait_goals.
 4. Für die Anzahl Tore pro Spiel ist das offizielle Resultat verbindlich. Für die Zuordnung der Torschützen darfst du zusätzlich die oben angegebenen eigenen Matchberichte und Matchkommentare verwenden.
 5. Wenn das offizielle Matchcenter für ein Spiel keine Torschützen nennt, der eigene Matchbericht oder ein Matchkommentar aber eindeutig Spieler und Tore diesem exakten Spiel zuordnet, müssen diese Tore in die Saisonstatistik einberechnet werden.
 6. Dieselbe Torinformation aus mehreren Quellen niemals doppelt zählen. Gleiche Angaben aus Matchcenter, Matchbericht und Matchkommentar sind nur eine Bestätigung desselben Tores.
 7. Bei einem echten Widerspruch zwischen einer offiziellen Torschützenangabe und dem eigenen Matchbericht hat die offizielle Angabe Vorrang.
 8. Falls nötig, prüfe zusätzlich offizielle Vereinsberichte zum exakt passenden Spiel.
 9. Identische Spielernamen zusammenführen und Tore summieren.
-10. Kontrollsumme: Spielertore plus own_goals muss exakt {expected_goals} ergeben.
+10. Kontrollsumme: Spielertore plus own_goals plus forfait_goals muss exakt {expected_goals} ergeben.
 11. Nichts schätzen oder erfinden. Wenn nicht vollständig, complete=false setzen.
 
 Antworte ausschliesslich als valides JSON:
@@ -226,8 +229,12 @@ try:
     own_goals=max(0,int(audit.get('own_goals',0) or 0))
 except (TypeError,ValueError):
     own_goals=0
+try:
+    forfait_goals=max(0,int(audit.get('forfait_goals',0) or 0))
+except (TypeError,ValueError):
+    forfait_goals=0
 player_goals=sum(x['goals'] for x in audit_scorers)
-accounted=player_goals+own_goals
+accounted=player_goals+own_goals+forfait_goals
 complete=bool(audit.get('complete')) and accounted==expected_goals
 
 if not complete and expected_goals>0:
@@ -241,7 +248,7 @@ Gehe jedes Meisterschaftsspiel erneut einzeln durch. Ergänze fehlende Torschüt
 
 {scorer_editor_context}
 
-Ein im eigenen Matchbericht eindeutig genannter Torschütze zählt für das passende Spiel. Gleiche Angaben aus mehreren Quellen dürfen nicht doppelt gezählt werden. Die Endsumme muss exakt {expected_goals} ergeben. Nichts erfinden.
+Ein im eigenen Matchbericht eindeutig genannter Torschütze zählt für das passende Spiel. Gleiche Angaben aus mehreren Quellen dürfen nicht doppelt gezählt werden. Forfait-Tore niemals einem Spieler zuordnen, sondern separat als forfait_goals zählen. Die Endsumme aus Spielertoren + Eigentoren + Forfait-Toren muss exakt {expected_goals} ergeben. Nichts erfinden.
 
 Antworte ausschliesslich als valides JSON im selben Format:
 {{"complete":true,"expected_goals":{expected_goals},"own_goals":0,"scorers":[{{"name":"...","goals":1}}],"checked_matches":[{{"date":"DD.MM.YYYY","opponent":"...","result":"...","scorers":"...","own_goals":0}}],"note":"..."}}
@@ -252,22 +259,29 @@ Antworte ausschliesslich als valides JSON im selben Format:
         retry_own=max(0,int(retry.get('own_goals',0) or 0))
     except (TypeError,ValueError):
         retry_own=0
-    retry_total=sum(x['goals'] for x in retry_scorers)+retry_own
+    try:
+        retry_forfait=max(0,int(retry.get('forfait_goals',0) or 0))
+    except (TypeError,ValueError):
+        retry_forfait=0
+    retry_total=sum(x['goals'] for x in retry_scorers)+retry_own+retry_forfait
     if retry_total>=accounted:
         audit=retry
         audit_scorers=retry_scorers
         own_goals=retry_own
+        forfait_goals=retry_forfait
         player_goals=sum(x['goals'] for x in audit_scorers)
         accounted=retry_total
         complete=bool(retry.get('complete')) and accounted==expected_goals
 
 data['scorers']=audit_scorers
 data['own_goals']=own_goals
+data['forfait_goals']=forfait_goals
 if complete:
     own_text=''
     if own_goals:
         own_text=f' plus {own_goals} Eigentor' + ('e' if own_goals!=1 else '') + ' zugunsten von Eschenbach'
-    data['scorer_note']=f'{player_goals} Spielertore{own_text} ergeben {accounted} Saisontore.'
+    forfait_text=f' plus {forfait_goals} Forfait-Tore' if forfait_goals else ''
+    data['scorer_note']=f'{player_goals} Spielertore{own_text}{forfait_text} ergeben {accounted} Saisontore.'
 else:
     missing=max(0,expected_goals-accounted)
     data['scorer_note']=f'Verifiziert zugeordnet: {accounted} von {expected_goals} Toren; noch nicht eindeutig zuordenbar: {missing}.'
@@ -277,6 +291,7 @@ data['scorer_audit']={
     'expected_goals':expected_goals,
     'player_goals':player_goals,
     'own_goals':own_goals,
+    'forfait_goals':forfait_goals,
     'accounted_goals':accounted,
     'checked_matches':audit.get('checked_matches',[])
 }
