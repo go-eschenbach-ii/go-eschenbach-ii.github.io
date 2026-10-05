@@ -442,7 +442,7 @@
       "goals": 1
     }
   ],
-  "scorer_note": "19 Spielertore plus 1 Eigentor zugunsten von Eschenbach ergeben 20 Saisontore.",
+  "scorer_note": "16 Spielertore plus 1 Eigentor zugunsten von Eschenbach plus 3 Forfait-Tore ergeben 20 Saisontore.",
   "sources": [
     {
       "title": "IFV Matchcenter – 5. Liga, Gruppe 4: Resultate und Rangliste",
@@ -461,7 +461,7 @@
   "scorer_audit": {
     "complete": true,
     "expected_goals": 20,
-    "player_goals": 19,
+    "player_goals": 16,
     "own_goals": 1,
     "accounted_goals": 20,
     "checked_matches": [
@@ -507,8 +507,10 @@
         "scorers": "Tilman Bucher (1), Nando Hächler (1), Ramon Brugger (1), Luca Ulrich (1), Sandro Rosenberg (1)",
         "own_goals": 0
       }
-    ]
+    ],
+    "forfait_goals": 3
   },
   "generated_at": "04.10.2026 20:03:58",
-  "heart_cycle_key": "review:c33cb90b-9afa-485a-a754-31a9bfcee121"
+  "heart_cycle_key": "review:c33cb90b-9afa-485a-a754-31a9bfcee121",
+  "forfait_goals": 3
 }
