@@ -217,6 +217,7 @@ Antworte ausschliesslich als valides JSON:
   "complete":true,
   "expected_goals":{expected_goals},
   "own_goals":0,
+  "forfait_goals":0,
   "scorers":[{{"name":"...","goals":1}}],
   "checked_matches":[{{"date":"DD.MM.YYYY","opponent":"...","result":"...","scorers":"...","own_goals":0}}],
   "note":"..."
@@ -251,7 +252,7 @@ Gehe jedes Meisterschaftsspiel erneut einzeln durch. Ergänze fehlende Torschüt
 Ein im eigenen Matchbericht eindeutig genannter Torschütze zählt für das passende Spiel. Gleiche Angaben aus mehreren Quellen dürfen nicht doppelt gezählt werden. Forfait-Tore niemals einem Spieler zuordnen, sondern separat als forfait_goals zählen. Die Endsumme aus Spielertoren + Eigentoren + Forfait-Toren muss exakt {expected_goals} ergeben. Nichts erfinden.
 
 Antworte ausschliesslich als valides JSON im selben Format:
-{{"complete":true,"expected_goals":{expected_goals},"own_goals":0,"scorers":[{{"name":"...","goals":1}}],"checked_matches":[{{"date":"DD.MM.YYYY","opponent":"...","result":"...","scorers":"...","own_goals":0}}],"note":"..."}}
+{{"complete":true,"expected_goals":{expected_goals},"own_goals":0,"forfait_goals":0,"scorers":[{{"name":"...","goals":1}}],"checked_matches":[{{"date":"DD.MM.YYYY","opponent":"...","result":"...","scorers":"...","own_goals":0}}],"note":"..."}}
 '''
     retry=call_json(retry_prompt, timeout=240, use_web=True)
     retry_scorers=normalize_scorers(retry.get('scorers',[]))
