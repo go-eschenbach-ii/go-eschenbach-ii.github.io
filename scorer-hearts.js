@@ -63,8 +63,12 @@
   function mountRows(){
     let mounted=false;
     scorerRows().forEach(row=>{
-      if(row.dataset.scorerHeartMounted==='1')return;
       const name=row.querySelector('strong')?.textContent?.trim();
+      if(/forfait/i.test(String(name||''))){
+        row.remove();
+        return;
+      }
+      if(row.dataset.scorerHeartMounted==='1')return;
       if(!name)return;
       const key=playerKey(name);
       const content=[...row.children].find(el=>el.tagName==='DIV');
