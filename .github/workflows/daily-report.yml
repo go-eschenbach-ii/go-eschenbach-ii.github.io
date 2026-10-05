@@ -28,6 +28,7 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -179,8 +180,14 @@ jobs:
             echo "Keine Änderung am Bericht."
             exit 0
           fi
+
+          cp data/report.json /tmp/report-generated.json
+          git fetch origin main
+          git reset --hard origin/main
+          cp /tmp/report-generated.json data/report.json
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/report.json
           git commit -m "Liga-4-Bericht aus der App aktualisiert"
-          git push
+          git push origin HEAD:main
