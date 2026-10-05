@@ -14,14 +14,39 @@ def as_int(value, default=0):
 
 expected=max(0,as_int((data.get('eschenbach') or {}).get('goals_for')))
 scorers=data.get('scorers') if isinstance(data.get('scorers'),list) else []
-player_goals=sum(max(0,as_int(s.get('goals'))) for s in scorers if isinstance(s,dict))
-own_goals=max(0,as_int(data.get('own_goals')))
-accounted=player_goals+own_goals
+clean_scorers=[]
+legacy_forfait=0
+for s in scorers:
+    if not isinstance(s,dict):
+        continue
+    name=' '.join(str(s.get('name','')).split()).strip()
+    goals=max(0,as_int(s.get('goals')))
+    if not name or goals<=0:
+        continue
+    if 'forfait' in name.casefold():
+        legacy_forfait=max(legacy_forfait,goals)
+        changed=True
+        continue
+    clean_scorers.append({'name':name,'goals':goals})
 
+if clean_scorers!=scorers:
+    data['scorers']=clean_scorers
+
+player_goals=sum(max(0,as_int(s.get('goals'))) for s in clean_scorers)
+own_goals=max(0,as_int(data.get('own_goals')))
 audit=data.get('scorer_audit') if isinstance(data.get('scorer_audit'),dict) else {}
+forfait_goals=max(
+    legacy_forfait,
+    max(0,as_int(data.get('forfait_goals'))),
+    max(0,as_int(audit.get('forfait_goals')))
+)
+data['forfait_goals']=forfait_goals
+accounted=player_goals+own_goals+forfait_goals
+
 audit['expected_goals']=expected
 audit['player_goals']=player_goals
 audit['own_goals']=own_goals
+audit['forfait_goals']=forfait_goals
 audit['accounted_goals']=accounted
 
 if expected and accounted==expected:
