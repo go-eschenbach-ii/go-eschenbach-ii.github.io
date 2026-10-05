@@ -151,7 +151,10 @@
       if(!r.ok)throw Error();
       const d=await r.json();
       if(d.pending){
-        if(d.phase==='running')setStatus('Aktualisierung läuft …','running');
+        const started=d.requested_at?new Date(d.requested_at).getTime():0;
+        const age=started?Date.now()-started:0;
+        if(age>5*60*1000)setStatus('Update dauert länger als üblich …','running');
+        else if(d.phase==='running')setStatus('Aktualisierung läuft …','running');
         else setStatus('Update startet …','running');
         pollTimer=setTimeout(poll,7000);
         return;
@@ -289,7 +292,9 @@
         requestedAt=d.requested_at||localStorage.getItem(REQUEST_KEY);
         el.disabled=true;
         el.textContent='Läuft …';
-        setStatus(d.phase==='running'?'Aktualisierung läuft …':'Update startet …','running');
+        const started=d.requested_at?new Date(d.requested_at).getTime():0;
+        const age=started?Date.now()-started:0;
+        setStatus(age>5*60*1000?'Update dauert länger als üblich …':(d.phase==='running'?'Aktualisierung läuft …':'Update startet …'),'running');
         watchPublishedReport();
         poll();
       }else{
