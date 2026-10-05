@@ -33,11 +33,31 @@ def scorer_map(obj):
         goals=max(0,as_int(item.get('goals')))
         if not name or goals<=0:
             continue
+        if 'forfait' in name.casefold():
+            continue
         key=name.casefold()
         # Saison-Summen werden nicht addiert, sondern der höchste bestätigte Stand bewahrt.
         result[key]=max(result.get(key,0),goals)
         labels.setdefault(key,name)
     return result,labels
+
+
+def forfait_goals_from_obj(obj):
+    if not isinstance(obj,dict):
+        return 0
+    explicit=max(0,as_int(obj.get('forfait_goals')))
+    audit=obj.get('scorer_audit') if isinstance(obj.get('scorer_audit'),dict) else {}
+    explicit=max(explicit,max(0,as_int(audit.get('forfait_goals'))))
+    if explicit:
+        return explicit
+    legacy=0
+    for item in obj.get('scorers',[]) if isinstance(obj.get('scorers'),list) else []:
+        if not isinstance(item,dict):
+            continue
+        name=clean_name(item.get('name'))
+        if 'forfait' in name.casefold():
+            legacy=max(legacy,max(0,as_int(item.get('goals'))))
+    return legacy
 
 
 def merge_scorers(old_obj,new_obj):
@@ -70,8 +90,9 @@ rows=merge_scorers(baseline,current)
 base_own=max(0,as_int(baseline.get('own_goals')))
 cur_own=max(0,as_int(current.get('own_goals')))
 own_goals=max(base_own,cur_own)
+forfait_goals=max(forfait_goals_from_obj(baseline),forfait_goals_from_obj(current))
 player_goals=sum(as_int(x.get('goals')) for x in rows)
-accounted=player_goals+own_goals
+accounted=player_goals+own_goals+forfait_goals
 
 # Wenn eine neue Recherche offensichtlich über die offizielle Torzahl hinausschiesst,
 # bleibt der letzte bestätigte Stand erhalten statt eine falsche Liste zu publizieren.
@@ -83,17 +104,20 @@ if expected and accounted>expected:
         rows=[{'name':name,'goals':base_rows[key]} for key,name in (scorer_map(baseline)[1]).items() if key in base_rows]
         rows.sort(key=lambda x:(-x['goals'],x['name'].casefold()))
         own_goals=base_own
+        forfait_goals=forfait_goals_from_obj(baseline)
         player_goals=sum(as_int(x.get('goals')) for x in rows)
-        accounted=player_goals+own_goals
+        accounted=player_goals+own_goals+forfait_goals
 
 current['scorers']=rows
 current['own_goals']=own_goals
+current['forfait_goals']=forfait_goals
 complete=bool(expected and accounted==expected)
 audit=current.get('scorer_audit') if isinstance(current.get('scorer_audit'),dict) else {}
 audit['complete']=complete
 audit['expected_goals']=expected
 audit['player_goals']=player_goals
 audit['own_goals']=own_goals
+audit['forfait_goals']=forfait_goals
 audit['accounted_goals']=accounted
 audit['checked_matches']=merge_checked_matches(baseline,current)
 current['scorer_audit']=audit
@@ -104,7 +128,8 @@ if complete:
         own_text=' plus 1 Eigentor zugunsten von Eschenbach'
     elif own_goals>1:
         own_text=f' plus {own_goals} Eigentore zugunsten von Eschenbach'
-    current['scorer_note']=f'{player_goals} Spielertore{own_text} ergeben {accounted} Saisontore.'
+    forfait_text=f' plus {forfait_goals} Forfait-Tore' if forfait_goals else ''
+    current['scorer_note']=f'{player_goals} Spielertore{own_text}{forfait_text} ergeben {accounted} Saisontore.'
 elif rows or own_goals:
     missing=max(0,expected-accounted)
     current['scorer_note']=f'Bestätigt zugeordnet: {accounted} von {expected} Toren; noch offen: {missing}. Die bestätigten Torschützen bleiben sichtbar.'
