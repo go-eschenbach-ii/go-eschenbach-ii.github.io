@@ -44,7 +44,7 @@ function scorerSummary(d){
 }
 
 function scorersHTML(items){
-  const list=Array.isArray(items)?items:[];
+  const list=(Array.isArray(items)?items:[]).filter(s=>!/forfait/i.test(String(s?.name||'')));
   if(!list.length)return'';
   const top=Math.max(...list.map(s=>Number(s.goals)||0));
   let topMarked=false;
