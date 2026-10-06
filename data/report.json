@@ -21,12 +21,12 @@
   "recent_results": [
     {
       "date": "04.10.2026",
-      "time": "16:00",
+      "time": "",
       "home": "FC Hochdorf III",
       "away": "FC Knutwil II",
       "home_goals": 6,
       "away_goals": 0,
-      "note": "Meisterschaft"
+      "note": ""
     },
     {
       "date": "03.10.2026",
@@ -35,7 +35,7 @@
       "away": "SC Nebikon",
       "home_goals": 8,
       "away_goals": 0,
-      "note": "Meisterschaft"
+      "note": ""
     },
     {
       "date": "02.10.2026",
@@ -53,7 +53,7 @@
       "away": "FC Grosswangen-Ettiswil",
       "home_goals": 5,
       "away_goals": 2,
-      "note": "Meisterschaft"
+      "note": ""
     },
     {
       "date": "02.10.2026",
@@ -62,7 +62,7 @@
       "away": "FC Wauwil-Egolzwil",
       "home_goals": 2,
       "away_goals": 1,
-      "note": "Meisterschaft"
+      "note": ""
     },
     {
       "date": "26.09.2026",
@@ -510,7 +510,7 @@
     ],
     "forfait_goals": 3
   },
-  "generated_at": "04.10.2026 20:03:58",
+  "generated_at": "06.10.2026 08:13:14",
   "heart_cycle_key": "review:c33cb90b-9afa-485a-a754-31a9bfcee121",
   "forfait_goals": 3
 }
