@@ -99,7 +99,7 @@
         <div class="admin-analytics-stat"><strong>${fourteen}</strong><span>letzte 14 Tage</span></div>
         <div class="admin-analytics-stat install"><strong>${installed}</strong><span>als App genutzt</span></div>
       </div>
-      <div class="admin-analytics-note">Seit 07.10.2026 werden anonyme Geräte statt einzelner App-Starts gezählt. «Als App genutzt» zählt Geräte, die GO Eschenbach II vom Home-Bildschirm im App-Modus geöffnet haben.</div>
+      <div class="admin-analytics-note">Seit 07.10.2026 werden anonyme Geräte statt einzelner App-Starts gezählt. «Als App genutzt» berücksichtigt auch bestehende Push-Abonnements.</div>
       <details class="admin-analytics-details">
         <summary>Tageswerte anzeigen</summary>
         <div class="admin-analytics-days">
