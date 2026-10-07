@@ -3,6 +3,7 @@
   if(!button)return;
 
   let deferredPrompt=null;
+  const appUrl='https://go-eschenbach-ii.github.io/';
   const isStandalone=()=>window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
   const isIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 
@@ -38,15 +39,36 @@
         <button class="install-app-ok" type="button">Verstanden</button>
       </div>`;
     document.body.appendChild(dialog);
-    const close=()=>{
+
+    const hideDialog=(restoreFocus=true)=>{
       dialog.hidden=true;
       document.body.classList.remove('install-dialog-open');
-      button.focus();
+      if(restoreFocus)button.focus();
     };
-    dialog.querySelector('.install-app-close')?.addEventListener('click',close);
-    dialog.querySelector('.install-app-ok')?.addEventListener('click',close);
-    dialog.addEventListener('click',event=>{if(event.target===dialog)close();});
-    document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!dialog.hidden)close();});
+
+    dialog.querySelector('.install-app-close')?.addEventListener('click',()=>hideDialog(true));
+    dialog.querySelector('.install-app-ok')?.addEventListener('click',async()=>{
+      hideDialog(false);
+      if(navigator.share){
+        try{
+          await navigator.share({
+            title:'GO Eschenbach II',
+            text:'GO Eschenbach II auf dem Home-Bildschirm speichern.',
+            url:appUrl
+          });
+        }catch(error){
+          if(error?.name!=='AbortError'){
+            setTimeout(showInstructions,80);
+          }
+        }finally{
+          button.focus();
+        }
+        return;
+      }
+      showInstructions();
+    });
+    dialog.addEventListener('click',event=>{if(event.target===dialog)hideDialog(true);});
+    document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!dialog.hidden)hideDialog(true);});
     return dialog;
   };
 
@@ -58,24 +80,24 @@
     const steps=dialog.querySelector('.install-app-steps');
     if(isIOS()){
       if(title)title.textContent='Auf dem iPhone speichern';
-      if(intro)intro.textContent='Öffne das Teilen-Menü von Safari und wähle dort die folgende Funktion:';
+      if(intro)intro.textContent='Nach „Verstanden“ öffnet sich das Teilen-Menü. Wähle dort:';
       if(highlight)highlight.innerHTML='Wähle: <strong>Zum Home-Bildschirm</strong>';
       if(steps)steps.innerHTML=`
-        <li>Tippe in Safari auf <strong>Teilen</strong> <span class="install-share-symbol" aria-hidden="true">□↑</span>.</li>
-        <li>Wähle <strong>Zum Home-Bildschirm</strong>.</li>
+        <li>Tippe unten auf <strong>Verstanden</strong>.</li>
+        <li>Wähle im Teilen-Menü <strong>Zum Home-Bildschirm</strong>.</li>
         <li>Tippe oben rechts auf <strong>Hinzufügen</strong>.</li>`;
     }else{
       if(title)title.textContent='App auf Handy laden';
-      if(intro)intro.textContent='Installiere GO Eschenbach II direkt auf deinem Home-Bildschirm.';
-      if(highlight)highlight.innerHTML='Wähle: <strong>App installieren</strong> oder <strong>Zum Home-Bildschirm</strong>';
+      if(intro)intro.textContent='Nach „Verstanden“ öffnet sich das Teilen-Menü deines Smartphones.';
+      if(highlight)highlight.innerHTML='Wähle: <strong>Zum Home-Bildschirm</strong> oder <strong>App installieren</strong>';
       if(steps)steps.innerHTML=`
-        <li>Öffne das Menü deines Browsers.</li>
-        <li>Wähle <strong>App installieren</strong> oder <strong>Zum Home-Bildschirm</strong>.</li>
+        <li>Tippe unten auf <strong>Verstanden</strong>.</li>
+        <li>Wähle <strong>Zum Home-Bildschirm</strong> oder <strong>App installieren</strong>.</li>
         <li>Bestätige die Installation.</li>`;
     }
     dialog.hidden=false;
     document.body.classList.add('install-dialog-open');
-    dialog.querySelector('.install-app-close')?.focus();
+    dialog.querySelector('.install-app-ok')?.focus();
   };
 
   window.addEventListener('beforeinstallprompt',event=>{
