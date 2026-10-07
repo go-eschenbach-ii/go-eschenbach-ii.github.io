@@ -3,7 +3,6 @@
   if(!button)return;
 
   let deferredPrompt=null;
-  const appUrl='https://go-eschenbach-ii.github.io/';
   const isStandalone=()=>window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
   const isIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 
@@ -14,24 +13,10 @@
     menuButton?.setAttribute('aria-expanded','false');
   };
 
-  const showSafariShareHint=()=>{
-    let hint=document.getElementById('installSafariHint');
-    if(!hint){
-      hint=document.createElement('div');
-      hint.id='installSafariHint';
-      hint.className='install-safari-hint';
-      hint.setAttribute('role','status');
-      hint.innerHTML='<strong>Jetzt unten in Safari auf Teilen ⬆ tippen.</strong><span>Danach „Zum Home-Bildschirm“ wählen.</span><i aria-hidden="true">↓</i>';
-      document.body.appendChild(hint);
-    }
-    hint.hidden=false;
-    clearTimeout(showSafariShareHint.timer);
-    showSafariShareHint.timer=setTimeout(()=>{hint.hidden=true},10000);
-  };
-
   const ensureDialog=()=>{
     let dialog=document.getElementById('installAppDialog');
     if(dialog)return dialog;
+
     dialog=document.createElement('div');
     dialog.id='installAppDialog';
     dialog.className='install-app-dialog';
@@ -44,55 +29,24 @@
         <button class="install-app-close" type="button" aria-label="Hinweis schliessen">×</button>
         <div class="install-app-icon" aria-hidden="true">⬆</div>
         <h2 id="installAppDialogTitle">App auf Home-Bildschirm laden</h2>
-        <p class="install-app-intro">So hast du GO Eschenbach II wie eine App direkt auf deinem Handy.</p>
-        <div class="install-app-highlight">Wähle: <strong>Zum Home-Bildschirm</strong></div>
-        <ol class="install-app-steps">
-          <li>Tippe im Browser auf <strong>Teilen</strong> <span class="install-share-symbol" aria-hidden="true">□↑</span>.</li>
-          <li>Wähle <strong>Zum Home-Bildschirm</strong>.</li>
-          <li>Bestätige mit <strong>Hinzufügen</strong>.</li>
-        </ol>
+        <p class="install-app-intro">In Safari unten auf <strong>Teilen</strong> tippen.</p>
+        <div class="install-app-highlight"><strong>Zum Home-Bildschirm</strong> wählen</div>
+        <p class="install-app-simple-end">Danach mit <strong>Hinzufügen</strong> bestätigen.</p>
         <button class="install-app-ok" type="button">Verstanden</button>
       </div>`;
+
     document.body.appendChild(dialog);
 
-    const hideDialog=(restoreFocus=true)=>{
+    const close=()=>{
       dialog.hidden=true;
       document.body.classList.remove('install-dialog-open');
-      if(restoreFocus)button.focus();
+      button.focus();
     };
 
-    dialog.querySelector('.install-app-close')?.addEventListener('click',()=>hideDialog(true));
-    dialog.querySelector('.install-app-ok')?.addEventListener('click',async()=>{
-      hideDialog(false);
-
-      // Auf iPhone/iPad muss das echte Safari-Teilen-Menü über die Browserleiste
-      // geöffnet werden. navigator.share() zeigt nur das allgemeine Teilen-Menü
-      // und enthält die Safari-Aktion "Zum Home-Bildschirm" nicht.
-      if(isIOS()){
-        showSafariShareHint();
-        button.focus();
-        return;
-      }
-
-      if(navigator.share){
-        try{
-          await navigator.share({
-            title:'GO Eschenbach II',
-            text:'GO Eschenbach II auf dem Home-Bildschirm speichern.',
-            url:appUrl
-          });
-        }catch(error){
-          if(error?.name!=='AbortError')setTimeout(showInstructions,80);
-        }finally{
-          button.focus();
-        }
-        return;
-      }
-      showInstructions();
-    });
-
-    dialog.addEventListener('click',event=>{if(event.target===dialog)hideDialog(true);});
-    document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!dialog.hidden)hideDialog(true);});
+    dialog.querySelector('.install-app-close')?.addEventListener('click',close);
+    dialog.querySelector('.install-app-ok')?.addEventListener('click',close);
+    dialog.addEventListener('click',event=>{if(event.target===dialog)close();});
+    document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!dialog.hidden)close();});
     return dialog;
   };
 
@@ -101,24 +55,18 @@
     const title=dialog.querySelector('#installAppDialogTitle');
     const intro=dialog.querySelector('.install-app-intro');
     const highlight=dialog.querySelector('.install-app-highlight');
-    const steps=dialog.querySelector('.install-app-steps');
+    const end=dialog.querySelector('.install-app-simple-end');
 
     if(isIOS()){
-      if(title)title.textContent='Auf dem iPhone speichern';
-      if(intro)intro.textContent='Auf dem iPhone muss dafür das Teilen-Symbol von Safari verwendet werden.';
-      if(highlight)highlight.innerHTML='Wähle danach: <strong>Zum Home-Bildschirm</strong>';
-      if(steps)steps.innerHTML=`
-        <li>Tippe unten auf <strong>Verstanden</strong>.</li>
-        <li>Tippe danach unten in Safari auf <strong>Teilen</strong> <span class="install-share-symbol" aria-hidden="true">□↑</span>.</li>
-        <li>Wähle <strong>Zum Home-Bildschirm</strong> und dann <strong>Hinzufügen</strong>.</li>`;
+      if(title)title.textContent='App auf Home-Bildschirm laden';
+      if(intro)intro.innerHTML='In Safari unten auf <strong>Teilen</strong> tippen.';
+      if(highlight)highlight.innerHTML='<strong>Zum Home-Bildschirm</strong> wählen';
+      if(end)end.innerHTML='Danach mit <strong>Hinzufügen</strong> bestätigen.';
     }else{
       if(title)title.textContent='App auf Handy laden';
-      if(intro)intro.textContent='Installiere GO Eschenbach II direkt auf deinem Home-Bildschirm.';
-      if(highlight)highlight.innerHTML='Wähle: <strong>Zum Home-Bildschirm</strong> oder <strong>App installieren</strong>';
-      if(steps)steps.innerHTML=`
-        <li>Tippe unten auf <strong>Verstanden</strong>.</li>
-        <li>Wähle <strong>Zum Home-Bildschirm</strong> oder <strong>App installieren</strong>.</li>
-        <li>Bestätige die Installation.</li>`;
+      if(intro)intro.textContent='Öffne das Browser-Menü.';
+      if(highlight)highlight.innerHTML='<strong>App installieren</strong> oder <strong>Zum Home-Bildschirm</strong> wählen';
+      if(end)end.textContent='Danach die Installation bestätigen.';
     }
 
     dialog.hidden=false;
@@ -145,6 +93,7 @@
       button.hidden=true;
       return;
     }
+
     if(deferredPrompt&&!isIOS()){
       const prompt=deferredPrompt;
       deferredPrompt=null;
@@ -154,6 +103,7 @@
       }catch{}
       return;
     }
+
     showInstructions();
   });
 })();
