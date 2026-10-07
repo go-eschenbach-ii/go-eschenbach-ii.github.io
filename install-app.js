@@ -29,10 +29,11 @@
         <div class="install-app-icon" aria-hidden="true">⬆</div>
         <h2 id="installAppDialogTitle">App auf Home-Bildschirm laden</h2>
         <p class="install-app-intro">So hast du GO Eschenbach II wie eine App direkt auf deinem Handy.</p>
+        <div class="install-app-highlight">Wähle: <strong>Zum Home-Bildschirm</strong></div>
         <ol class="install-app-steps">
           <li>Tippe im Browser auf <strong>Teilen</strong> <span class="install-share-symbol" aria-hidden="true">□↑</span>.</li>
           <li>Wähle <strong>Zum Home-Bildschirm</strong>.</li>
-          <li>Bestätige oben mit <strong>Hinzufügen</strong>.</li>
+          <li>Bestätige mit <strong>Hinzufügen</strong>.</li>
         </ol>
         <button class="install-app-ok" type="button">Verstanden</button>
       </div>`;
@@ -51,16 +52,22 @@
 
   const showInstructions=()=>{
     const dialog=ensureDialog();
+    const title=dialog.querySelector('#installAppDialogTitle');
     const intro=dialog.querySelector('.install-app-intro');
+    const highlight=dialog.querySelector('.install-app-highlight');
     const steps=dialog.querySelector('.install-app-steps');
     if(isIOS()){
-      if(intro)intro.textContent='So hast du GO Eschenbach II wie eine App direkt auf deinem iPhone.';
+      if(title)title.textContent='Auf dem iPhone speichern';
+      if(intro)intro.textContent='Öffne das Teilen-Menü von Safari und wähle dort die folgende Funktion:';
+      if(highlight)highlight.innerHTML='Wähle: <strong>Zum Home-Bildschirm</strong>';
       if(steps)steps.innerHTML=`
         <li>Tippe in Safari auf <strong>Teilen</strong> <span class="install-share-symbol" aria-hidden="true">□↑</span>.</li>
-        <li>Scrolle zu <strong>Zum Home-Bildschirm</strong>.</li>
-        <li>Bestätige oben rechts mit <strong>Hinzufügen</strong>.</li>`;
+        <li>Wähle <strong>Zum Home-Bildschirm</strong>.</li>
+        <li>Tippe oben rechts auf <strong>Hinzufügen</strong>.</li>`;
     }else{
-      if(intro)intro.textContent='Dein Browser kann die App gerade nicht automatisch installieren.';
+      if(title)title.textContent='App auf Handy laden';
+      if(intro)intro.textContent='Installiere GO Eschenbach II direkt auf deinem Home-Bildschirm.';
+      if(highlight)highlight.innerHTML='Wähle: <strong>App installieren</strong> oder <strong>Zum Home-Bildschirm</strong>';
       if(steps)steps.innerHTML=`
         <li>Öffne das Menü deines Browsers.</li>
         <li>Wähle <strong>App installieren</strong> oder <strong>Zum Home-Bildschirm</strong>.</li>
@@ -90,7 +97,7 @@
       button.hidden=true;
       return;
     }
-    if(deferredPrompt){
+    if(deferredPrompt&&!isIOS()){
       const prompt=deferredPrompt;
       deferredPrompt=null;
       try{
