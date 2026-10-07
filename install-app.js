@@ -14,6 +14,21 @@
     menuButton?.setAttribute('aria-expanded','false');
   };
 
+  const showSafariShareHint=()=>{
+    let hint=document.getElementById('installSafariHint');
+    if(!hint){
+      hint=document.createElement('div');
+      hint.id='installSafariHint';
+      hint.className='install-safari-hint';
+      hint.setAttribute('role','status');
+      hint.innerHTML='<strong>Jetzt unten in Safari auf Teilen ⬆ tippen.</strong><span>Danach „Zum Home-Bildschirm“ wählen.</span><i aria-hidden="true">↓</i>';
+      document.body.appendChild(hint);
+    }
+    hint.hidden=false;
+    clearTimeout(showSafariShareHint.timer);
+    showSafariShareHint.timer=setTimeout(()=>{hint.hidden=true},10000);
+  };
+
   const ensureDialog=()=>{
     let dialog=document.getElementById('installAppDialog');
     if(dialog)return dialog;
@@ -49,6 +64,16 @@
     dialog.querySelector('.install-app-close')?.addEventListener('click',()=>hideDialog(true));
     dialog.querySelector('.install-app-ok')?.addEventListener('click',async()=>{
       hideDialog(false);
+
+      // Auf iPhone/iPad muss das echte Safari-Teilen-Menü über die Browserleiste
+      // geöffnet werden. navigator.share() zeigt nur das allgemeine Teilen-Menü
+      // und enthält die Safari-Aktion "Zum Home-Bildschirm" nicht.
+      if(isIOS()){
+        showSafariShareHint();
+        button.focus();
+        return;
+      }
+
       if(navigator.share){
         try{
           await navigator.share({
@@ -57,9 +82,7 @@
             url:appUrl
           });
         }catch(error){
-          if(error?.name!=='AbortError'){
-            setTimeout(showInstructions,80);
-          }
+          if(error?.name!=='AbortError')setTimeout(showInstructions,80);
         }finally{
           button.focus();
         }
@@ -67,6 +90,7 @@
       }
       showInstructions();
     });
+
     dialog.addEventListener('click',event=>{if(event.target===dialog)hideDialog(true);});
     document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!dialog.hidden)hideDialog(true);});
     return dialog;
@@ -78,23 +102,25 @@
     const intro=dialog.querySelector('.install-app-intro');
     const highlight=dialog.querySelector('.install-app-highlight');
     const steps=dialog.querySelector('.install-app-steps');
+
     if(isIOS()){
       if(title)title.textContent='Auf dem iPhone speichern';
-      if(intro)intro.textContent='Nach „Verstanden“ öffnet sich das Teilen-Menü. Wähle dort:';
-      if(highlight)highlight.innerHTML='Wähle: <strong>Zum Home-Bildschirm</strong>';
+      if(intro)intro.textContent='Auf dem iPhone muss dafür das Teilen-Symbol von Safari verwendet werden.';
+      if(highlight)highlight.innerHTML='Wähle danach: <strong>Zum Home-Bildschirm</strong>';
       if(steps)steps.innerHTML=`
         <li>Tippe unten auf <strong>Verstanden</strong>.</li>
-        <li>Wähle im Teilen-Menü <strong>Zum Home-Bildschirm</strong>.</li>
-        <li>Tippe oben rechts auf <strong>Hinzufügen</strong>.</li>`;
+        <li>Tippe danach unten in Safari auf <strong>Teilen</strong> <span class="install-share-symbol" aria-hidden="true">□↑</span>.</li>
+        <li>Wähle <strong>Zum Home-Bildschirm</strong> und dann <strong>Hinzufügen</strong>.</li>`;
     }else{
       if(title)title.textContent='App auf Handy laden';
-      if(intro)intro.textContent='Nach „Verstanden“ öffnet sich das Teilen-Menü deines Smartphones.';
+      if(intro)intro.textContent='Installiere GO Eschenbach II direkt auf deinem Home-Bildschirm.';
       if(highlight)highlight.innerHTML='Wähle: <strong>Zum Home-Bildschirm</strong> oder <strong>App installieren</strong>';
       if(steps)steps.innerHTML=`
         <li>Tippe unten auf <strong>Verstanden</strong>.</li>
         <li>Wähle <strong>Zum Home-Bildschirm</strong> oder <strong>App installieren</strong>.</li>
         <li>Bestätige die Installation.</li>`;
     }
+
     dialog.hidden=false;
     document.body.classList.add('install-dialog-open');
     dialog.querySelector('.install-app-ok')?.focus();
