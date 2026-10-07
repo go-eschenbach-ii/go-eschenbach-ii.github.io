@@ -24,7 +24,7 @@
   <link rel="stylesheet" href="match-commentary.css?v=1">
   <link rel="stylesheet" href="update-badge.css?v=2">
   <link rel="stylesheet" href="urgent-alert.css?v=1">
-  <link rel="stylesheet" href="install-app.css?v=1">
+  <link rel="stylesheet" href="install-app.css?v=2">
 </head>
 <body>
   <header class="hero">
@@ -37,7 +37,6 @@
     <div id="appMenuPanel" class="app-menu-panel" hidden>
       <span class="app-menu-label">Direkt zu</span>
       <nav aria-label="Bereiche der App"></nav>
-      <button id="installAppButton" class="install-app-button" type="button">App auf Handy laden</button>
     </div>
     <button id="logoButton" class="brand-button" type="button" aria-label="Logo von FC Eschenbach II vergrössern">
       <img class="brand-logo" src="logo-eschenbach-ii.svg?v=9" alt="FC Eschenbach II">
@@ -48,6 +47,10 @@
       <p>Halte dich auf dem Laufenden!</p>
     </div>
   </header>
+
+  <div class="install-app-banner">
+    <button id="installAppButton" class="install-app-button" type="button">App auf Handy laden</button>
+  </div>
 
   <div id="urgentAlertHost" class="urgent-alert-host" hidden aria-live="assertive"></div>
   <div id="shareToast" class="share-toast" hidden></div>
