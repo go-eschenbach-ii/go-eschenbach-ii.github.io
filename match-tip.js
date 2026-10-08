@@ -1,7 +1,7 @@
 (()=>{
   const API='https://kfpxheegmeupnuzqjqqt.supabase.co/functions/v1/match-tips-public';
   const DEVICE_KEY='go-eschenbach-tip-device-id';
-  const NAME_KEY='go-eschenbach-tip-name';
+  const NAME_KEY='go-eschenbach-tip-first-name';
   const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
   const parseKickoff=(date,time)=>{
     const m=String(date||'').match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
@@ -11,8 +11,8 @@
   };
   const isEschenbach=m=>/FC\s+Eschenbach\s+II/i.test(String(m?.home||''))||/FC\s+Eschenbach\s+II/i.test(String(m?.away||''));
   const clamp=v=>Math.max(0,Math.min(20,Number(v)||0));
-  const cleanName=v=>String(v??'').replace(/\s+/g,' ').trim().slice(0,40);
-  const validName=v=>cleanName(v).length>=2;
+  const firstName=v=>String(v??'').replace(/\s+/g,' ').trim().split(' ')[0].slice(0,30);
+  const validName=v=>firstName(v).length>=2;
   const deviceId=(()=>{
     let id=localStorage.getItem(DEVICE_KEY)||'';
     if(id)return id;
@@ -49,7 +49,7 @@
       body:JSON.stringify({
         match_key:matchKey,
         voter_id:deviceId,
-        display_name:cleanName(name),
+        display_name:firstName(name),
         home_goals:tip.home,
         away_goals:tip.away
       })
@@ -68,17 +68,25 @@
         action:'set_name',
         match_key:matchKey,
         voter_id:deviceId,
-        display_name:cleanName(name)
+        display_name:firstName(name)
       })
     });
     if(!r.ok)throw Error();
     return r.json();
   }
 
-  function statsText(d){
-    return d.total
-      ?`${d.total} ${d.total===1?'Tipp':'Tipps'}${d.top?` · häufigster Tipp ${d.top}`:''}`
-      :'Noch keine Tipps – sei der Erste!';
+  function renderTipsList(host,state){
+    const tips=Array.isArray(state?.tips)?state.tips:[];
+    if(!tips.length){
+      host.innerHTML='<div class="match-tip-list-empty">Noch keine Tipps mit Vornamen.</div>';
+      return;
+    }
+    host.innerHTML=tips.map(t=>`
+      <div class="match-tip-list-row">
+        <strong>${esc(t.name)}</strong>
+        <span>${esc(t.home)} : ${esc(t.away)}</span>
+      </div>
+    `).join('');
   }
 
   function latestCompletedMatch(d){
@@ -98,33 +106,29 @@
 
     try{
       const state=await loadResultState(match);
+      const winners=Array.isArray(state?.winners)?state.winners.filter(Boolean):[];
       if(!state?.total)return;
 
-      const winners=Array.isArray(state.winners)?state.winners.filter(Boolean):[];
-      const winnerCount=Number(state.winner_count||0);
       const card=document.createElement('section');
       card.className='match-tip-result-card';
 
-      let winnerHtml='';
-      if(winnerCount>0&&winners.length){
-        winnerHtml=`
-          <div class="match-tip-winner-label">RICHTIG GETIPPT</div>
-          <div class="match-tip-winners">${winners.map(name=>`<span>${esc(name)}</span>`).join('')}</div>
-          ${winnerCount>winners.length?`<div class="match-tip-anonymous">${winnerCount-winners.length} weiterer richtiger Tipp ohne hinterlegten Namen</div>`:''}
+      if(winners.length){
+        card.innerHTML=`
+          <span class="match-tip-kicker">MATCH-TIPP · GEWINNER</span>
+          <h2>Herzliche Gratulation!</h2>
+          <div class="match-tip-result-match">${esc(match.home)} – ${esc(match.away)} · ${esc(match.home_goals)}:${esc(match.away_goals)}</div>
+          <div class="match-tip-winners">
+            ${winners.map(name=>`<span>${esc(name)}</span>`).join('')}
+          </div>
         `;
-      }else if(winnerCount>0){
-        winnerHtml='<div class="match-tip-no-winner">Ein richtiger Tipp wurde ohne Namen abgegeben.</div>';
       }else{
-        winnerHtml=`<div class="match-tip-no-winner">Diesmal hat niemand das Resultat <strong>${esc(match.home_goals)}:${esc(match.away_goals)}</strong> exakt getippt.</div>`;
+        card.innerHTML=`
+          <span class="match-tip-kicker">MATCH-TIPP</span>
+          <h2>Diesmal kein Gewinner</h2>
+          <div class="match-tip-result-match">${esc(match.home)} – ${esc(match.away)} · ${esc(match.home_goals)}:${esc(match.away_goals)}</div>
+          <div class="match-tip-no-winner">Niemand hat das Resultat exakt getippt.</div>
+        `;
       }
-
-      card.innerHTML=`
-        <span class="match-tip-kicker">MATCH-TIPP · AUFLÖSUNG</span>
-        <h2>${esc(match.home)} – ${esc(match.away)}</h2>
-        <div class="match-tip-result-score">${esc(match.home_goals)} : ${esc(match.away_goals)}</div>
-        ${winnerHtml}
-        <div class="match-tip-result-meta">${state.total} ${state.total===1?'abgegebener Tipp':'abgegebene Tipps'}</div>
-      `;
       outlook.before(card);
     }catch{}
   }
@@ -138,7 +142,7 @@
     const key='go-eschenbach-match-tip:'+id;
     const kickoff=parseKickoff(match.date,match.time);
     const locked=kickoff?Date.now()>=kickoff.getTime():false;
-    const rememberedName=cleanName(localStorage.getItem(NAME_KEY)||'');
+    const rememberedName=firstName(localStorage.getItem(NAME_KEY)||'');
 
     let saved=null;
     try{saved=JSON.parse(localStorage.getItem(key)||'null')}catch{}
@@ -154,14 +158,15 @@
         <div class="match-tip-vs">VS</div>
         <div class="match-tip-team">${esc(match.away)}</div>
       </div>
-      <div class="match-tip-stats">Tipps werden geladen …</div>
+
+      <div class="match-tip-list-title">Bisherige Tipps</div>
+      <div class="match-tip-list"><div class="match-tip-list-empty">Tipps werden geladen …</div></div>
 
       <div class="match-tip-form${saved||locked?' is-hidden':''}">
         <label class="match-tip-name-label">
-          <span>Dein Name</span>
-          <input class="match-tip-name" type="text" maxlength="40" autocomplete="name" placeholder="Vorname oder Name" value="${esc(rememberedName)}">
+          <span>Dein Vorname</span>
+          <input class="match-tip-name" type="text" maxlength="30" autocomplete="given-name" placeholder="Vorname" value="${esc(rememberedName)}">
         </label>
-        <div class="match-tip-name-note">Dein Name wird nur angezeigt, wenn dein Tipp genau stimmt.</div>
         <div class="match-tip-score">
           <input class="match-tip-home" type="number" inputmode="numeric" min="0" max="20" aria-label="Tore ${esc(match.home)}">
           <span class="match-tip-colon">:</span>
@@ -175,9 +180,9 @@
         <div class="match-tip-saved-name">${saved?.name?esc(saved.name):''}</div>
         <div class="match-tip-saved-score">${saved?`${esc(saved.home)} : ${esc(saved.away)}`:''}</div>
         <div class="match-tip-name-repair" hidden>
-          <div class="match-tip-repair-text">Damit du bei einem richtigen Tipp als Gewinner angezeigt wirst, ergänze deinen Namen.</div>
-          <input class="match-tip-repair-input" type="text" maxlength="40" autocomplete="name" placeholder="Vorname oder Name" value="${esc(rememberedName)}">
-          <button class="match-tip-repair-action" type="button">Name speichern</button>
+          <div class="match-tip-repair-text">Ergänze deinen Vornamen, damit du bei einem richtigen Tipp als Gewinner angezeigt wirst.</div>
+          <input class="match-tip-repair-input" type="text" maxlength="30" autocomplete="given-name" placeholder="Vorname" value="${esc(rememberedName)}">
+          <button class="match-tip-repair-action" type="button">Vorname speichern</button>
         </div>
       </div>
 
@@ -186,7 +191,7 @@
 
     outlook.before(card);
 
-    const stats=card.querySelector('.match-tip-stats');
+    const list=card.querySelector('.match-tip-list');
     const form=card.querySelector('.match-tip-form');
     const savedBox=card.querySelector('.match-tip-saved');
     const savedName=card.querySelector('.match-tip-saved-name');
@@ -201,7 +206,7 @@
 
     const lockWithTip=tip=>{
       if(!tip)return;
-      const name=cleanName(tip.name||'');
+      const name=firstName(tip.name||'');
       const stored={home:Number(tip.home),away:Number(tip.away),name};
       localStorage.setItem(key,JSON.stringify(stored));
       if(name)localStorage.setItem(NAME_KEY,name);
@@ -212,20 +217,24 @@
       repair.hidden=!!name;
     };
 
-    loadState(id).then(state=>{
-      stats.textContent=statsText(state);
+    const refresh=async()=>{
+      const state=await loadState(id);
+      renderTipsList(list,state);
       if(state.mine)lockWithTip(state.mine);
       else if(saved){
         localStorage.removeItem(key);
         form.classList.toggle('is-hidden',locked);
         savedBox.classList.remove('is-visible');
       }
-    }).catch(()=>{
-      stats.textContent='Tipp-Zählung gerade nicht verfügbar.';
+      return state;
+    };
+
+    refresh().catch(()=>{
+      list.innerHTML='<div class="match-tip-list-empty">Tipps gerade nicht verfügbar.</div>';
     });
 
     action?.addEventListener('click',async()=>{
-      const name=cleanName(nameInput.value);
+      const name=firstName(nameInput.value);
       if(!validName(name)){
         nameInput.classList.add('is-invalid');
         nameInput.focus();
@@ -248,22 +257,10 @@
           let state=await loadState(id);
           if(state.mine&&!state.mine.name){
             await saveName(id,name);
-            state=await loadState(id);
           }
-          stats.textContent=statsText(state);
-          if(state.mine)lockWithTip(state.mine);
-          else{
-            form.classList.add('is-hidden');
-            savedBox.classList.add('is-visible');
-            savedScore.textContent='Bereits abgegeben';
-          }
-          return;
         }
-
         localStorage.setItem(NAME_KEY,name);
-        lockWithTip({...tip,name});
-        const state=await loadState(id);
-        stats.textContent=statsText(state);
+        await refresh();
         action.textContent='Tipp gespeichert';
       }catch{
         action.textContent='Nochmals versuchen';
@@ -272,7 +269,7 @@
     });
 
     repairAction?.addEventListener('click',async()=>{
-      const name=cleanName(repairInput.value);
+      const name=firstName(repairInput.value);
       if(!validName(name)){
         repairInput.classList.add('is-invalid');
         repairInput.focus();
@@ -285,8 +282,7 @@
       try{
         await saveName(id,name);
         localStorage.setItem(NAME_KEY,name);
-        const state=await loadState(id);
-        if(state.mine)lockWithTip(state.mine);
+        await refresh();
       }catch{
         repairAction.disabled=false;
         repairAction.textContent='Nochmals versuchen';
