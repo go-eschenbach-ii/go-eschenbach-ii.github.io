@@ -20,6 +20,15 @@
   },
   "recent_results": [
     {
+      "date": "09.10.2026",
+      "time": "",
+      "home": "FC Grosswangen-Ettiswil",
+      "away": "FC Altbüron-Grossdietwil",
+      "home_goals": 1,
+      "away_goals": 0,
+      "note": ""
+    },
+    {
       "date": "05.10.2026",
       "time": "",
       "home": "FC Altbüron-Grossdietwil",
@@ -353,17 +362,10 @@
   ],
   "upcoming_matches": [
     {
-      "date": "09.10.2026",
-      "time": "20:00",
-      "home": "FC Grosswangen-Ettiswil",
-      "away": "FC Altbüron-Grossdietwil",
-      "note": ""
-    },
-    {
       "date": "10.10.2026",
       "time": "18:00",
-      "home": "FC Wauwil-Egolzwil",
-      "away": "FC Schötz III",
+      "home": "FC Knutwil II",
+      "away": "FC Ruswil III",
       "note": ""
     },
     {
@@ -371,6 +373,13 @@
       "time": "19:15",
       "home": "FC Eschenbach II",
       "away": "FC Dagmersellen",
+      "note": ""
+    },
+    {
+      "date": "12.10.2026",
+      "time": "20:15",
+      "home": "SC Nebikon",
+      "away": "FC Eschenbach II",
       "note": ""
     },
     {
@@ -399,6 +408,27 @@
       "time": "18:00",
       "home": "FC Hochdorf III",
       "away": "FC Eschenbach II",
+      "note": ""
+    },
+    {
+      "date": "20.10.2026",
+      "time": "20:00",
+      "home": "FC Wauwil-Egolzwil",
+      "away": "FC Schötz III",
+      "note": ""
+    },
+    {
+      "date": "21.10.2026",
+      "time": "20:00",
+      "home": "FC Hochdorf III",
+      "away": "SC Nebikon",
+      "note": ""
+    },
+    {
+      "date": "22.10.2026",
+      "time": "20:15",
+      "home": "FC Schötz III",
+      "away": "FC Dagmersellen",
       "note": ""
     }
   ],
