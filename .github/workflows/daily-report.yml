@@ -70,6 +70,10 @@ jobs:
           REPORT_BASELINE: /tmp/report-before-update.json
         run: python scripts/ifv_live_refresh.py
 
+      - name: IFV-Spielplan deterministisch synchronisieren
+        continue-on-error: true
+        run: python scripts/sync_ifv_schedule.py
+
       - name: Matchkommentare endgültig in Rückblick einarbeiten
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
