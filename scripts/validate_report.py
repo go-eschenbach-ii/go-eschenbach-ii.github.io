@@ -68,6 +68,32 @@ elif expected and accounted>expected:
 
 data['scorer_audit']=audit
 
+# Ein Spiel mit bestätigtem Resultat darf nie gleichzeitig als kommendes Spiel erscheinen.
+def fixture_key(match):
+    return (
+        str(match.get('date','')).strip(),
+        str(match.get('home','')).strip().casefold(),
+        str(match.get('away','')).strip().casefold(),
+    )
+
+completed_keys=set()
+for match in data.get('recent_results',[]) if isinstance(data.get('recent_results'),list) else []:
+    if not isinstance(match,dict):
+        continue
+    if match.get('home_goals') is None or match.get('away_goals') is None:
+        continue
+    if match.get('date') and match.get('home') and match.get('away'):
+        completed_keys.add(fixture_key(match))
+
+upcoming=data.get('upcoming_matches') if isinstance(data.get('upcoming_matches'),list) else []
+clean_upcoming=[
+    match for match in upcoming
+    if isinstance(match,dict) and fixture_key(match) not in completed_keys
+]
+if clean_upcoming!=upcoming:
+    data['upcoming_matches']=clean_upcoming
+    changed=True
+
 # Letzte Sicherung für die Tabelle: Rangierung gemäss IFV-Regel.
 rows=data.get('standings') if isinstance(data.get('standings'),list) else []
 valid_rows=[]
