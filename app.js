@@ -15,6 +15,48 @@ function readerNote(value){
 }
 const matchHTML=m=>{const note=readerNote(m.note);return`<div class="match"><div class="muted">${esc(m.date)} ${esc(m.time||'')}</div><div><strong>${esc(m.home)}</strong> – <strong>${esc(m.away)}</strong> ${m.home_goals!=null?`<span class="score">${m.home_goals}:${m.away_goals}</span>`:''}</div>${note?`<div class="muted">${esc(note)}</div>`:''}</div>`};
 
+const isEschenbachMatch=m=>/FC\s+Eschenbach\s+II/i.test(String(m?.home||''))||/FC\s+Eschenbach\s+II/i.test(String(m?.away||''));
+
+function cleanScorerNoteText(value){
+  return String(value||'')
+    .replace(/\s*;\s*/g,', ')
+    .replace(/\s*,\s*/g,', ')
+    .replace(/\s+/g,' ')
+    .replace(/[.\s]+$/,'')
+    .trim();
+}
+
+function scorerNoteForMatch(match,auditMatches){
+  if(!isEschenbachMatch(match))return readerNote(match.note);
+
+  const opponent=/FC\s+Eschenbach\s+II/i.test(String(match.home||''))?String(match.away||''):String(match.home||'');
+  const audit=(auditMatches||[]).find(a=>
+    String(a?.date||'')===String(match.date||'') &&
+    String(a?.opponent||'').trim()===opponent.trim()
+  );
+
+  if(!audit)return readerNote(match.note);
+
+  let scorers=cleanScorerNoteText(audit.scorers);
+  const own=Math.max(0,Number(audit.own_goals)||0);
+  const ownAlreadyNamed=/eigentor/i.test(scorers);
+  const noPlayerAssignment=/keine\s+spielerzuordnung/i.test(scorers);
+
+  if(noPlayerAssignment&&own===0)return'';
+
+  if(own>0&&!ownAlreadyNamed){
+    const ownText=own===1?`Eigentor ${opponent}`:`${own} Eigentore von ${opponent}`;
+    scorers=scorers&&!noPlayerAssignment?`${scorers}, ${ownText}`:ownText;
+  }
+
+  return scorers?`Tore für Eschenbach II: ${scorers}.`:'';
+}
+
+function recentMatchHTML(match,auditMatches){
+  const note=scorerNoteForMatch(match,auditMatches);
+  return `<div class="match"><div class="muted">${esc(match.date)} ${esc(match.time||'')}</div><div><strong>${esc(match.home)}</strong> – <strong>${esc(match.away)}</strong> ${match.home_goals!=null?`<span class="score">${match.home_goals}:${match.away_goals}</span>`:''}</div>${note?`<div class="muted">${esc(note)}</div>`:''}</div>`;
+}
+
 const fixtureKey=m=>[
   String(m?.date||'').trim(),
   String(m?.home||'').trim().toLocaleLowerCase('de-CH'),
@@ -83,6 +125,7 @@ function render(d){
   const lead=readerText(d.lead);
   const scorerInfo=scorerSummary(d);
   const upcoming=visibleUpcomingMatches(d);
+  const auditMatches=Array.isArray(d.scorer_audit?.checked_matches)?d.scorer_audit.checked_matches:[];
   app.innerHTML=`
 <section class="team-photo-block" id="teamPhotoCard">
   <div class="team-photo-inline">
@@ -98,7 +141,7 @@ function render(d){
   <span class="pill">FC ESCHENBACH II</span><h2 style="font-size:27px;margin-top:10px">${esc(d.title)}</h2><p class="lead">${esc(lead)}</p>
 </section>
 <section class="grid"><div class="stat"><strong>${esc(e.rank?`#${e.rank}`:'–')}</strong><span>Rang</span></div><div class="stat"><strong>${val(e.points)}</strong><span>Punkte</span></div><div class="stat"><strong>${val(e.wins)}</strong><span>Siege</span></div></section>
-<section class="card"><h2>Rückblick</h2><p>${esc(review)}</p>${(d.recent_results||[]).map(matchHTML).join('')}</section>
+<section class="card"><h2>Rückblick</h2><p>${esc(review)}</p>${(d.recent_results||[]).map(m=>recentMatchHTML(m,auditMatches)).join('')}</section>
 <section class="card standings-card"><h2>Aktuelle Situation</h2><p>${esc(situation)}</p><div class="table-wrap"><table class="standings"><thead><tr><th>#</th><th>Team</th><th>Sp</th><th>S</th><th>U</th><th>N</th><th>Str</th><th>Tore</th><th>TD</th><th>Pkt</th></tr></thead><tbody>${(d.standings||[]).map(raw=>{const r=fullRow(raw);return`<tr class="${r.is_eschenbach?'fce':''}"><td>${val(r.rank)}</td><td>${esc(r.team)}</td><td>${val(r.played)}</td><td>${val(r.wins)}</td><td>${val(r.draws)}</td><td>${val(r.losses)}</td><td>${val(r.penalty_points)}</td><td>${r.goals_for!=null&&r.goals_against!=null?`${r.goals_for}:${r.goals_against}`:'–'}</td><td>${r.goal_difference!=null?`${r.goal_difference>0?'+':''}${r.goal_difference}`:'–'}</td><td><strong>${val(r.points)}</strong></td></tr>`}).join('')}</tbody></table></div><div class="table-legend">Sp = Spiele · S = Siege · U = Unentschieden · N = Niederlagen · Str = Strafpunkte · TD = Tordifferenz</div></section>
 <section class="card"><h2>Ausblick</h2><p>${esc(outlook)}</p><h3 class="section-subtitle">Kommende Spiele</h3>${upcoming.map(matchHTML).join('')}</section>
 ${d.scorers?.length?`<section class="card"><h2>Eschenbach-Torschützen</h2>${scorersHTML(d.scorers)}${scorerInfo?`<div class="muted">${esc(scorerInfo)}</div>`:''}</section>`:''}`;
@@ -117,4 +160,4 @@ logoButton?.addEventListener('click',openLogo);
 logoClose?.addEventListener('click',closeLogo);
 logoModal?.addEventListener('click',e=>{if(e.target===logoModal)closeLogo();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&logoModal&&!logoModal.hidden)closeLogo();});
-if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js?v=32').catch(()=>{})}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js?v=33').catch(()=>{})}
