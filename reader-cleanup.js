@@ -2,17 +2,38 @@
   const isEschenbachMatch=match=>/FC\s+Eschenbach\s+II/i.test(String(match?.home||''))||/FC\s+Eschenbach\s+II/i.test(String(match?.away||''));
   const scorerTextPattern=/(Torschütz|Tore?\s+für|Treffer\s+für|traf(?:en)?\b)/i;
 
+  const cleanScorerText=value=>String(value||'')
+    .replace(/\s*;\s*/g,', ')
+    .replace(/\s*,\s*/g,', ')
+    .replace(/\s+/g,' ')
+    .replace(/[.\s]+$/,'')
+    .trim();
+
   const scorerNoteFromAudit=(match,auditMatches)=>{
     if(!isEschenbachMatch(match))return'';
     const opponent=/FC\s+Eschenbach\s+II/i.test(String(match.home||''))?String(match.away||''):String(match.home||'');
     const audit=(auditMatches||[]).find(a=>String(a?.date||'')===String(match.date||'')&&String(a?.opponent||'').trim()===opponent.trim());
     if(!audit)return scorerTextPattern.test(String(match.note||''))?String(match.note||'').trim():'';
-    const scorers=String(audit.scorers||'').trim();
-    let note=scorers?`Tore für Eschenbach II: ${scorers}.`:'';
+
+    let scorers=cleanScorerText(audit.scorers);
     const own=Math.max(0,Number(audit.own_goals)||0);
-    if(own===1)note+=`${note?' ':''}Dazu kam ein Eigentor zugunsten von Eschenbach.`;
-    if(own>1)note+=`${note?' ':''}Dazu kamen ${own} Eigentore zugunsten von Eschenbach.`;
-    return note;
+
+    // Eigentore nur einmal nennen. Wenn sie bereits in der Torschützenangabe
+    // enthalten sind, wird kein zusätzlicher Satz angefügt.
+    const ownAlreadyNamed=/eigentor/i.test(scorers);
+    const noPlayerAssignment=/keine\s+spielerzuordnung/i.test(scorers);
+
+    if(noPlayerAssignment&&own===0)return'';
+
+    if(own>0&&!ownAlreadyNamed){
+      const ownText=own===1
+        ?`Eigentor ${opponent}`
+        :`${own} Eigentore von ${opponent}`;
+      scorers=scorers&&!noPlayerAssignment?`${scorers}, ${ownText}`:ownText;
+    }
+
+    if(!scorers)return'';
+    return `Tore für Eschenbach II: ${scorers}.`;
   };
 
   const kickoffValue=match=>{
