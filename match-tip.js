@@ -22,6 +22,17 @@
   })();
 
   const buildKey=m=>[m.date,m.time||'',m.home,m.away].join('|');
+  const fixtureKey=m=>[
+    String(m?.date||'').trim(),
+    String(m?.home||'').trim().toLocaleLowerCase('de-CH'),
+    String(m?.away||'').trim().toLocaleLowerCase('de-CH')
+  ].join('|');
+
+  const completedFixtureKeys=d=>new Set(
+    (Array.isArray(d?.recent_results)?d.recent_results:[])
+      .filter(m=>m&&m.home_goals!==null&&m.home_goals!==undefined&&m.away_goals!==null&&m.away_goals!==undefined)
+      .map(fixtureKey)
+  );
 
   async function loadState(matchKey){
     const r=await fetch(`${API}?match_key=${encodeURIComponent(matchKey)}&voter_id=${encodeURIComponent(deviceId)}`,{cache:'no-store'});
@@ -135,7 +146,16 @@
 
   function mountTipCard(d,outlook){
     if(document.querySelector('.match-tip-card'))return;
-    const match=Array.isArray(d.upcoming_matches)?d.upcoming_matches.find(isEschenbach):null;
+    const completed=completedFixtureKeys(d);
+    const candidates=(Array.isArray(d.upcoming_matches)?d.upcoming_matches:[])
+      .filter(isEschenbach)
+      .filter(m=>!completed.has(fixtureKey(m)))
+      .sort((a,b)=>{
+        const ta=parseKickoff(a.date,a.time)?.getTime()??Number.MAX_SAFE_INTEGER;
+        const tb=parseKickoff(b.date,b.time)?.getTime()??Number.MAX_SAFE_INTEGER;
+        return ta-tb;
+      });
+    const match=candidates[0]||null;
     if(!match)return;
 
     const id=buildKey(match);
