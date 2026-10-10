@@ -3,7 +3,9 @@
   if(!button)return;
 
   let deferredPrompt=null;
+  const ADMIN_TOKEN_KEY='go-eschenbach-comment-admin-token';
   const isStandalone=()=>window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
+  const isAdmin=()=>!!localStorage.getItem(ADMIN_TOKEN_KEY);
   const isIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 
   const closeMenu=()=>{
@@ -82,15 +84,22 @@
 
   window.addEventListener('appinstalled',()=>{
     deferredPrompt=null;
-    button.hidden=true;
+    button.hidden=!isAdmin();
   });
 
-  if(isStandalone())button.hidden=true;
+  // Normale User sehen den Hinweis nur, solange die App nicht vom
+  // Home-Bildschirm im Standalone-Modus geöffnet wird. Der Admin sieht ihn
+  // weiterhin als Vorschau/Kontrolle.
+  button.hidden=isStandalone()&&!isAdmin();
 
   button.addEventListener('click',async()=>{
     closeMenu();
     if(isStandalone()){
-      button.hidden=true;
+      if(isAdmin()){
+        showInstructions();
+      }else{
+        button.hidden=true;
+      }
       return;
     }
 
