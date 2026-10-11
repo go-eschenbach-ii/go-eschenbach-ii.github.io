@@ -66,9 +66,9 @@
       })
     });
     const d=await r.json().catch(()=>({}));
-    if(r.status===409&&d.error==='already_tipped')return{already:true};
+    if(r.status===409&&d.error==='tip_locked')return{locked:true};
     if(!r.ok)throw Error(d.error||'save_failed');
-    return{ok:true};
+    return{ok:true,updated:Boolean(d.updated)};
   }
 
   async function saveName(matchKey,name){
@@ -199,6 +199,7 @@
         <div class="match-tip-saved-label">DEIN TIPP</div>
         <div class="match-tip-saved-name">${saved?.name?esc(saved.name):''}</div>
         <div class="match-tip-saved-score">${saved?`${esc(saved.home)} : ${esc(saved.away)}`:''}</div>
+        ${!locked?'<button class="match-tip-action match-tip-edit" type="button">Tipp ändern</button>':''}
         <div class="match-tip-name-repair" hidden>
           <div class="match-tip-repair-text">Ergänze deinen Vornamen, damit du bei einem richtigen Tipp als Gewinner angezeigt wirst.</div>
           <input class="match-tip-repair-input" type="text" maxlength="30" autocomplete="given-name" placeholder="Vorname" value="${esc(rememberedName)}">
@@ -223,11 +224,14 @@
     const repair=card.querySelector('.match-tip-name-repair');
     const repairInput=card.querySelector('.match-tip-repair-input');
     const repairAction=card.querySelector('.match-tip-repair-action');
+    const editAction=card.querySelector('.match-tip-edit');
+    let currentMine=saved;
 
     const lockWithTip=tip=>{
       if(!tip)return;
       const name=firstName(tip.name||'');
       const stored={home:Number(tip.home),away:Number(tip.away),name};
+      currentMine=stored;
       localStorage.setItem(key,JSON.stringify(stored));
       if(name)localStorage.setItem(NAME_KEY,name);
       savedScore.textContent=`${stored.home} : ${stored.away}`;
@@ -253,6 +257,18 @@
       list.innerHTML='<div class="match-tip-list-empty">Tipps gerade nicht verfügbar.</div>';
     });
 
+    editAction?.addEventListener('click',()=>{
+      if(locked||!currentMine)return;
+      nameInput.value=currentMine.name||rememberedName||'';
+      home.value=String(currentMine.home);
+      away.value=String(currentMine.away);
+      savedBox.classList.remove('is-visible');
+      form.classList.remove('is-hidden');
+      action.disabled=false;
+      action.textContent='Änderung speichern';
+      nameInput.focus();
+    });
+
     action?.addEventListener('click',async()=>{
       const name=firstName(nameInput.value);
       if(!validName(name)){
@@ -273,15 +289,22 @@
 
       try{
         const result=await saveTip(id,tip,name);
-        if(result.already){
-          let state=await loadState(id);
-          if(state.mine&&!state.mine.name){
-            await saveName(id,name);
+        if(result.locked){
+          form.classList.add('is-hidden');
+          if(currentMine)savedBox.classList.add('is-visible');
+          let lockedNote=card.querySelector('.match-tip-locked');
+          if(!lockedNote){
+            lockedNote=document.createElement('div');
+            lockedNote.className='match-tip-locked';
+            lockedNote.textContent='Tipps sind für dieses Spiel geschlossen.';
+            card.append(lockedNote);
           }
+          return;
         }
         localStorage.setItem(NAME_KEY,name);
         await refresh();
-        action.textContent='Tipp gespeichert';
+        action.textContent=result.updated?'Tipp geändert':'Tipp gespeichert';
+        action.disabled=false;
       }catch{
         action.textContent='Nochmals versuchen';
         action.disabled=false;
