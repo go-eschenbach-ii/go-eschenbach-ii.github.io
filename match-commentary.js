@@ -8,6 +8,13 @@
   let serverComments=[];
   let recognition=null;
   let speechActive=false;
+  let speechParts=[];
+  let speechStartedAt='';
+  let restartTimer=null;
+  let finalizationTimer=null;
+  let emptyRestartCount=0;
+  let speechStopReason='';
+  const DRAFT_KEY='go-eschenbach-comment-active-draft-v1';
   let wakeLock=null;
   let panel=null;
   let statusEl=null;
@@ -165,6 +172,75 @@
     try{await wakeLock?.release();}catch{}wakeLock=null;
   }
 
+  // Safari und andere Browser koennen die Spracherkennung bei Stille
+  // beenden, selbst wenn continuous=true ist. Die Kommentar-Sitzung bleibt
+  // aktiv: Die Erkennung startet neu und der Text wird erst bei Stopp gespeichert.
+  function saveSpeechDraft(){
+    if(!currentMatch||!speechParts.length)return;
+    try{
+      localStorage.setItem(DRAFT_KEY,JSON.stringify({
+        match_key:matchKey(currentMatch),started_at:speechStartedAt,parts:speechParts
+      }));
+    }catch{}
+  }
+
+  function restoreSpeechDraft(){
+    try{
+      const draft=JSON.parse(localStorage.getItem(DRAFT_KEY)||'null');
+      if(draft?.match_key!==matchKey(currentMatch)||!Array.isArray(draft.parts))return null;
+      return {
+        started_at:String(draft.started_at||new Date().toISOString()),
+        parts:draft.parts.filter(x=>typeof x==='string'&&x.trim())
+      };
+    }catch{return null;}
+  }
+
+  function renderLiveTranscript(interim=''){
+    if(!liveEl)return;
+    const transcript=[...speechParts,interim].filter(Boolean).join(' ');
+    liveEl.textContent=transcript?'Bisher erkannt: '+(transcript.length>550?'…':'')+transcript.slice(-550):'';
+  }
+
+  function clearSpeechTimers(){
+    clearTimeout(restartTimer);restartTimer=null;
+    clearTimeout(finalizationTimer);finalizationTimer=null;
+  }
+
+  function finishSpeech(reason=speechStopReason){
+    clearSpeechTimers();
+    speechActive=false;
+    recognition=null;
+    updateSpeechButton();
+    const transcript=speechParts.join(' ').replace(/\s+/g,' ').trim();
+    speechParts=[];
+    renderLiveTranscript();
+    if(transcript){
+      queueTranscript(transcript,speechStartedAt||new Date().toISOString());
+      try{localStorage.removeItem(DRAFT_KEY);}catch{}
+      setStatus(reason||'Aufnahme beendet. Der gesamte Kommentar ist gespeichert und kann nun geprüft und freigegeben werden.',reason?'error':'');
+    }else{
+      setStatus(reason||'Aufnahme beendet. Es wurde kein gesprochener Text erkannt.',reason?'error':'');
+    }
+    speechStartedAt='';
+    speechStopReason='';
+    releaseWakeLock();
+  }
+
+  function scheduleRecognitionRestart(){
+    if(!speechActive||restartTimer)return;
+    if(document.visibilityState!=='visible'){
+      setStatus('Die App ist im Hintergrund. Beim Öffnen wird die Spracherkennung fortgesetzt.','');
+      return;
+    }
+    // Keine enge Fehlerschleife, aber lange Sprechpausen beenden
+    // die Aufnahme-Sitzung niemals automatisch.
+    const delay=Math.min(450+emptyRestartCount*300,3000);
+    restartTimer=setTimeout(()=>{
+      restartTimer=null;
+      if(speechActive)beginRecognition();
+    },delay);
+  }
+
   function buildRecognition(){
     if(!Recognition)return null;
     const r=new Recognition();
@@ -172,68 +248,111 @@
     r.continuous=true;
     r.interimResults=true;
     r.maxAlternatives=1;
+    const handledFinals=new Set();
+    let heardSpeech=false;
     r.onresult=e=>{
+      if(recognition!==r)return;
       let interim='';
-      for(let i=e.resultIndex;i<e.results.length;i++){
+      for(let i=0;i<e.results.length;i++){
         const result=e.results[i];
-        const text=String(result[0]?.transcript||'').trim();
-        if(!text)continue;
-        if(result.isFinal)queueTranscript(text);
-        else interim+=(interim?' ':'')+text;
+        const content=String(result[0]?.transcript||'').trim();
+        if(!content)continue;
+        if(result.isFinal){
+          if(!handledFinals.has(i)){
+            handledFinals.add(i);
+            speechParts.push(content);
+            saveSpeechDraft();
+            heardSpeech=true;
+            emptyRestartCount=0;
+          }
+        }else{
+          interim+=(interim?' ':'')+content;
+        }
       }
-      if(liveEl)liveEl.textContent=interim?`Ich höre: ${interim}`:'';
+      renderLiveTranscript(interim);
     };
     r.onerror=e=>{
-      if(e.error==='not-allowed'||e.error==='service-not-allowed'){
-        speechActive=false;
-        updateSpeechButton();
-        setStatus('Mikrofon bzw. Spracherkennung wurde nicht freigegeben.','error');
+      if(recognition!==r)return;
+      if(e.error==='not-allowed'||e.error==='service-not-allowed'||e.error==='audio-capture'){
+        stopSpeech('Mikrofon oder Spracherkennung nicht verfügbar. Bereits erkannter Text wurde gespeichert.');
       }else if(e.error!=='aborted'&&e.error!=='no-speech'){
-        setStatus('Spracherkennung wird neu gestartet …','');
+        setStatus('Spracherkennung kurz unterbrochen – versuche automatisch fortzusetzen.','');
       }
     };
     r.onend=()=>{
-      if(liveEl)liveEl.textContent='';
-      if(speechActive)setTimeout(()=>{try{r.start();}catch{}},350);
+      if(recognition!==r)return;
+      recognition=null;
+      if(speechActive){
+        if(!heardSpeech)emptyRestartCount=Math.min(emptyRestartCount+1,9);
+        renderLiveTranscript();
+        scheduleRecognitionRestart();
+      }else{
+        finishSpeech();
+      }
     };
     return r;
+  }
+
+  function beginRecognition(){
+    if(!speechActive||recognition||document.visibilityState!=='visible')return;
+    const r=buildRecognition();
+    if(!r)return;
+    recognition=r;
+    try{
+      r.start();
+      setStatus('Aufnahme läuft – du kannst beliebig lange Sprechpausen machen. Beende sie selbst mit «Aufnahme beenden».','active');
+    }catch{
+      recognition=null;
+      emptyRestartCount=Math.min(emptyRestartCount+1,9);
+      setStatus('Spracherkennung konnte nicht fortgesetzt werden. Neuer Versuch läuft …','');
+      scheduleRecognitionRestart();
+    }
   }
 
   function updateSpeechButton(){
     if(!startButton)return;
     startButton.classList.toggle('is-active',speechActive);
-    startButton.textContent=speechActive?'■ Kommentar-Modus beenden':'🎙 Kommentar-Modus starten';
+    startButton.textContent=speechActive?'■ Aufnahme beenden':'🎙 Kommentar-Modus starten';
   }
 
-  async function startSpeech(){
+  function startSpeech(){
+    if(speechActive){stopSpeech();return;}
     if(!Recognition){
       setStatus('Diese iPhone-/Browser-Version unterstützt die automatische Transkription hier nicht. Du kannst unten Textnotizen eingeben.','error');
       if(manualWrap)manualWrap.hidden=false;
       return;
     }
-    if(speechActive){stopSpeech();return;}
-    recognition=buildRecognition();
-    if(!recognition)return;
-    try{
-      speechActive=true;
-      updateSpeechButton();
-      await requestWakeLock();
-      recognition.start();
-      setStatus('Kommentar-Modus aktiv – einfach sprechen. Pausen trennen die Kommentare.','active');
-    }catch{
-      speechActive=false;updateSpeechButton();
-      setStatus('Sprachmodus konnte nicht gestartet werden.','error');
-    }
+    clearSpeechTimers();
+    const draft=restoreSpeechDraft();
+    speechParts=draft?.parts||[];
+    speechStartedAt=draft?.started_at||new Date().toISOString();
+    speechActive=true;
+    emptyRestartCount=0;
+    updateSpeechButton();
+    renderLiveTranscript();
+    // start() direkt beim Fingertipp aufrufen: Ein vorheriges await
+    // kann auf iOS die notwendige Nutzeraktivierung aufheben.
+    beginRecognition();
+    requestWakeLock();
   }
 
-  function stopSpeech(){
+  function stopSpeech(reason='',immediate=false){
+    if(!speechActive&&!recognition&&!speechParts.length)return;
     speechActive=false;
+    speechStopReason=reason;
+    clearTimeout(restartTimer);restartTimer=null;
     updateSpeechButton();
-    try{recognition?.stop();}catch{}
-    recognition=null;
-    if(liveEl)liveEl.textContent='';
-    releaseWakeLock();
-    setStatus('Kommentar-Modus beendet. Du kannst die Transkriptionen jetzt prüfen und freigeben.','');
+    const r=recognition;
+    if(!r||immediate){
+      try{r?.abort();}catch{}
+      finishSpeech(reason);
+      return;
+    }
+    try{r.stop();}catch{finishSpeech(reason);return;}
+    // Abschluss auch dann sichern, wenn der Browser kein onend sendet.
+    finalizationTimer=setTimeout(()=>finishSpeech(reason),1800);
+    if(reason)setStatus(reason,'error');
+    else setStatus('Aufnahme wird abgeschlossen und der Text gespeichert …','');
   }
 
   async function handleNoteAction(e){
@@ -313,7 +432,7 @@
         <button type="button" class="commentary-primary" id="commentaryStart">🎙 Kommentar-Modus starten</button>
         <button type="button" class="commentary-secondary" id="commentaryApproveAll">Alle für Rückblick freigeben</button>
       </div>
-      <div class="commentary-status" id="commentaryStatus">Headset verbinden, dann den Kommentar-Modus starten.</div>
+      <div class="commentary-status" id="commentaryStatus">Headset verbinden und Aufnahme starten. Sprechpausen sind erlaubt; sie endet erst mit «Aufnahme beenden».</div>
       <div class="commentary-live" id="commentaryLive" aria-live="polite"></div>
       <div class="commentary-counts" id="commentaryCounts"></div>
       <div class="commentary-notes" id="commentaryNotes"></div>
@@ -321,7 +440,7 @@
         <textarea id="commentaryManualText" placeholder="Notiz eintippen …" aria-label="Kommentar als Text eingeben"></textarea>
         <div class="commentary-controls" style="margin-top:7px"><button type="button" class="commentary-secondary" id="commentaryManualAdd">Notiz hinzufügen</button></div>
       </div>
-      <p class="commentary-help">Nur auf deinem freigeschalteten Gerät sichtbar. Gespeichert wird die Transkription, keine Audiodatei. Bearbeitete oder freigegebene Texte fliessen erst beim nächsten Update in den Rückblick ein.</p>`;
+      <p class="commentary-help">Nur auf deinem freigeschalteten Gerät sichtbar. Pausen unterbrechen deinen Kommentar nicht. Der erkannte Text wird beim Beenden als zusammenhängender Kommentar gespeichert, keine Audiodatei. Bearbeitete oder freigegebene Texte fliessen beim nächsten Update in den Rückblick ein.</p>`;
     review.parentNode.insertBefore(panel,review);
     statusEl=panel.querySelector('#commentaryStatus');
     liveEl=panel.querySelector('#commentaryLive');
@@ -395,9 +514,14 @@
     },true);
   }
 
-  document.addEventListener('visibilitychange',()=>{if(speechActive&&document.visibilityState==='visible')requestWakeLock();});
+  document.addEventListener('visibilitychange',()=>{
+    if(speechActive&&document.visibilityState==='visible'){
+      requestWakeLock();
+      if(!recognition&&!restartTimer)scheduleRecognitionRestart();
+    }
+  });
   window.addEventListener('online',()=>flushQueue());
-  window.addEventListener('beforeunload',()=>{if(speechActive)stopSpeech();});
+  window.addEventListener('beforeunload',()=>{if(speechActive)stopSpeech('',true);});
 
   installSecretActivation();
   initAdmin();
