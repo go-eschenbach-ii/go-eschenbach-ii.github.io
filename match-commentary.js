@@ -3,6 +3,45 @@
   const TOKEN_KEY='go-eschenbach-comment-admin-token';
   const QUEUE_KEY='go-eschenbach-comment-queue-v1';
   const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+  // Vereinsnamen der aktuellen Liga: nur eindeutige Team-Bezeichnungen
+  // normalisieren, damit gewöhnliche Ortsnamen und Aussagen unverändert bleiben.
+  const TEAM_NAMES=[
+    'FC Eschenbach II','FC Dagmersellen','FC Hochdorf III',
+    'FC Altbüron-Grossdietwil','FC Ruswil III','FC Knutwil II',
+    'FC Wauwil-Egolzwil','FC Grosswangen-Ettiswil',
+    'SC Nebikon','FC Schötz III'
+  ];
+  const TEAM_CORRECTIONS=[
+    [/\b(?:FC|F\s*\.?\s*C\.?|Fussballclub)\s+Eschenbach\s+(?:II|2|zwei|zweite)\b/gi,'FC Eschenbach II'],
+    [/\b(?:FC|F\s*\.?\s*C\.?|Fussballclub)\s+(?:D|T)agmersell?en\b/gi,'FC Dagmersellen'],
+    [/\b(?:FC|F\s*\.?\s*C\.?|Fussballclub)\s+Hochdorf\s+(?:III|3|drei|dritte)\b/gi,'FC Hochdorf III'],
+    [/\b(?:FC|F\s*\.?\s*C\.?|Fussballclub)\s+Altb(?:ü|ue|u)r(?:o|e)n\s*[-–\s]+\s*Gro(?:ss|ß)\s?dietwil\b/gi,'FC Altbüron-Grossdietwil'],
+    [/\b(?:FC|F\s*\.?\s*C\.?|Fussballclub)\s+Ru(?:s|ss)wil\s+(?:III|3|drei|dritte)\b/gi,'FC Ruswil III'],
+    [/\b(?:FC|F\s*\.?\s*C\.?|Fussballclub)\s+Knutwill?\s+(?:II|2|zwei|zweite)\b/gi,'FC Knutwil II'],
+    [/\b(?:FC|F\s*\.?\s*C\.?|Fussballclub)\s+(?:Wauwil|Vauwil)\s*[-–\s]+\s*Eg(?:o|e)lzwil\b/gi,'FC Wauwil-Egolzwil'],
+    [/\b(?:FC|F\s*\.?\s*C\.?|Fussballclub)\s+Gro(?:ss|ß)wangen\s*[-–\s]+\s*Ett?iswil\b/gi,'FC Grosswangen-Ettiswil'],
+    [/\b(?:SC|S\s*\.?\s*C\.?|Sportclub|FC)\s+N(?:e|a)bi(?:k|ck)on\b/gi,'SC Nebikon'],
+    [/\b(?:FC|F\s*\.?\s*C\.?|Fussballclub)\s+Sch(?:ö|oe|o|ü)tz\s+(?:III|3|drei|dritte)\b/gi,'FC Schötz III'],
+    [/\bHochdorf\s+(?:III|3|drei)\b/gi,'Hochdorf III'],
+    [/\bRu(?:s|ss)wil\s+(?:III|3|drei)\b/gi,'Ruswil III'],
+    [/\bKnutwill?\s+(?:II|2|zwei)\b/gi,'Knutwil II'],
+    [/\bSch(?:ö|oe|o|ü)tz\s+(?:III|3|drei)\b/gi,'Schötz III'],
+    [/\bAltb(?:ü|ue|u)r(?:o|e)n\s*[-–\s]+\s*Gro(?:ss|ß)\s?dietwil\b/gi,'Altbüron-Grossdietwil'],
+    [/\b(?:Wauwil|Vauwil)\s*[-–\s]+\s*Eg(?:o|e)lzwil\b/gi,'Wauwil-Egolzwil'],
+    [/\bGro(?:ss|ß)wangen\s*[-–\s]+\s*Ett?iswil\b/gi,'Grosswangen-Ettiswil']
+  ];
+  const normalizeTeamNames=value=>TEAM_CORRECTIONS.reduce(
+    (text,[pattern,replacement])=>text.replace(pattern,replacement),String(value??'')
+  );
+  function hintTeamNames(recognizer){
+    // Contextual Biasing wird von Browsern unterschiedlich unterstützt.
+    if(!('phrases' in recognizer)||typeof window.SpeechRecognitionPhrase!=='function')return;
+    try{
+      recognizer.phrases=TEAM_NAMES.flatMap(name=>[
+        name,name.replace(/^(?:FC|SC)\s+/,'')
+      ]).map(name=>new window.SpeechRecognitionPhrase(name,5));
+    }catch{}
+  }
   let adminToken=localStorage.getItem(TOKEN_KEY)||'';
   let currentMatch=null;
   let serverComments=[];
@@ -150,7 +189,7 @@
 
   function queueTranscript(text,spokenAt=new Date().toISOString()){
     if(!currentMatch)return;
-    const transcript=String(text||'').replace(/\s+/g,' ').trim();
+    const transcript=normalizeTeamNames(String(text||'').replace(/\s+/g,' ')).trim();
     if(!transcript)return;
     const item={
       client_id:uid(),
@@ -201,7 +240,7 @@
 
   function renderLiveTranscript(interim=''){
     if(!liveEl)return;
-    const transcript=[...speechParts,interim].filter(Boolean).join(' ');
+    const transcript=normalizeTeamNames([...speechParts,interim].filter(Boolean).join(' '));
     liveEl.textContent=transcript?'Bisher erkannt: '+(transcript.length>550?'…':'')+transcript.slice(-550):'';
   }
 
@@ -252,6 +291,7 @@
     r.continuous=true;
     r.interimResults=true;
     r.maxAlternatives=1;
+    hintTeamNames(r);
     const handledFinals=new Set();
     let heardSpeech=false;
     r.onresult=e=>{
@@ -259,7 +299,7 @@
       let interim='';
       for(let i=0;i<e.results.length;i++){
         const result=e.results[i];
-        const content=String(result[0]?.transcript||'').trim();
+        const content=normalizeTeamNames(String(result[0]?.transcript||'')).trim();
         if(!content)continue;
         if(result.isFinal){
           if(!handledFinals.has(i)){
