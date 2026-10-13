@@ -2,7 +2,6 @@
   const API='https://kfpxheegmeupnuzqjqqt.supabase.co/functions/v1/reader-comments-public';
   const NAME_KEY='go-eschenbach-reader-comment-name';
   const DEVICE_KEY='go-eschenbach-reader-comment-device';
-  const ADMIN_KEY='go-eschenbach-comment-admin-token';
   const PAGE_SIZE=20;
   let reportKey='';
   let panel=null;
@@ -88,15 +87,6 @@
       reply.addEventListener('click',()=>openForm({id:item.id,name:name.textContent,card,button:reply}));
       actions.append(reply);
     }
-    if(localStorage.getItem(ADMIN_KEY)){
-      const hide=document.createElement('button');
-      hide.type='button';
-      hide.className='reader-comment-hide';
-      hide.textContent='Ausblenden';
-      hide.setAttribute('aria-label','Kommentar von '+name.textContent+' ausblenden');
-      hide.addEventListener('click',()=>hideComment(String(item.id||''),hide));
-      actions.append(hide);
-    }
     if(actions.childNodes.length)card.append(actions);
     container.append(card);
     return card;
@@ -153,30 +143,6 @@
     }finally{
       busy=false;
       moreButton.disabled=false;
-    }
-  }
-  async function hideComment(id,button){
-    if(!id || !localStorage.getItem(ADMIN_KEY))return;
-    if(!window.confirm('Diesen Kommentar für alle ausblenden?'))return;
-    button.disabled=true;
-    try{
-      const res=await fetch(API,{
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'Authorization':'Bearer '+localStorage.getItem(ADMIN_KEY)
-        },
-        body:JSON.stringify({action:'hide',id})
-      });
-      if(!res.ok)throw Error('hide_failed');
-      const data=await res.json();
-      if(!data.ok)throw Error('hide_failed');
-      setStatus('Kommentar wurde ausgeblendet.');
-      await load(true);
-    }catch{
-      setStatus('Kommentar konnte nicht ausgeblendet werden.',true);
-    }finally{
-      button.disabled=false;
     }
   }
   async function submit(e){
