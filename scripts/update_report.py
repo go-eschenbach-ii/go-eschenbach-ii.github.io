@@ -149,6 +149,7 @@ Diese Kommentare sind persönliche Beobachtungen direkt vom Spiel. Wenn sie zu e
 LESERTEXTE – BESONDERS WICHTIG:
 Die Felder title, lead, review, current_situation und outlook werden direkt in der App angezeigt. Sie müssen wie ein kurzer, gut geschriebener Sportbericht klingen.
 - Schreibe natürlich, knapp und verständlich. Keine bürokratische oder technische Sprache.
+- Vermeide in allen fünf Lesertexten Gedankenstriche als Satzzeichen (– oder —). Verwende stattdessen natürliche ganze Sätze.
 - In diesen fünf Feldern NIEMALS über Recherche, Quellen, Datenverfügbarkeit, Verifizierung oder technische Probleme sprechen.
 - Dort keine Wörter oder Formulierungen wie IFV, Matchcenter, Quelle, Website, Datensatz, Recherche, Stichtag, verifiziert, geprüft, öffentlich abrufbar, verfügbar, nicht ermittelbar oder Rangliste nicht auslesbar verwenden.
 - Wenn eine Information nicht sicher vorliegt, lasse sie einfach weg. Erkläre dem Leser nicht, warum sie fehlt.
@@ -319,11 +320,12 @@ REGELN:
 - In keinem Feld Wörter/Begriffe wie IFV, Matchcenter, Quelle, Website, Datensatz, Recherche, Stichtag, verifiziert, geprüft, öffentlich abrufbar, verfügbar oder nicht ermittelbar.
 - Wenn ein Fakt unsicher oder fehlend ist, nicht erwähnen und keine Erklärung dazu schreiben.
 - Wenn admin_match_comments vorhanden sind und zum jüngsten Eschenbach-Spiel passen, bilden sie die wichtigste Grundlage für den erzählerischen Rückblick: Spielverlauf, Druckphasen, Chancen, Stimmung und beobachtete Eindrücke konkret und flüssig einarbeiten.
+- Jeden einzelnen passenden admin_match_comments-Eintrag lesen und alle inhaltlich eigenständigen Aussagen einarbeiten. Kommentare dürfen zusammengefasst, aber keine wesentlichen Einzelbeobachtungen weggelassen werden. Bei vielen Beobachtungen den Rückblick verlängern.
 - Die Matchkommentare sind direkte Beobachtungen des App-Redaktors. Nicht als Zitate oder als „Kommentare“ kennzeichnen und den Autor nicht erwähnen.
 - Resultat, Torschützen und Tabellenwerte aus den offiziellen Daten haben bei Widersprüchen Vorrang vor den Matchkommentaren.
 - title maximal ca. 70 Zeichen.
 - lead genau 2 kurze Sätze.
-- review 3–5 Sätze; mit admin_match_comments 4–7 Sätze, Fokus Eschenbach II.
+- review ohne Kommentare 3–5 Sätze; mit admin_match_comments so viele Sätze wie zur vollständigen Einarbeitung aller relevanten Einzelbeobachtungen erforderlich sind, Fokus Eschenbach II.
 - current_situation 3–4 Sätze.
 - outlook 2–4 Sätze, nächstes Eschenbach-Spiel im Zentrum.
 - Keine abgebrochenen Sätze und keine Listen in den Textfeldern.
