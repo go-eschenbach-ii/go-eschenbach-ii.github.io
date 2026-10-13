@@ -82,7 +82,10 @@
     if(!currentMatch)return[];
     const key=matchKey(currentMatch);
     const queued=getQueue().filter(x=>x.match_key===key).map(x=>({...x,id:`local:${x.client_id}`,queued:true}));
-    return [...serverComments.filter(x=>x.match_key===key),...queued].sort((a,b)=>new Date(a.spoken_at)-new Date(b.spoken_at));
+    return [...serverComments.filter(x=>x.match_key===key),...queued].sort((a,b)=>
+      (Date.parse(b.spoken_at)||0)-(Date.parse(a.spoken_at)||0) ||
+      String(b.created_at||b.client_id||b.id||'').localeCompare(String(a.created_at||a.client_id||a.id||''))
+    );
   }
 
   function formatTime(value){
@@ -215,7 +218,7 @@
     speechParts=[];
     renderLiveTranscript();
     if(transcript){
-      queueTranscript(transcript,speechStartedAt||new Date().toISOString());
+      queueTranscript(transcript);
       try{localStorage.removeItem(DRAFT_KEY);}catch{}
       setStatus(reason||'Aufnahme beendet. Der gesamte Kommentar ist gespeichert und kann nun geprüft und freigegeben werden.',reason?'error':'');
     }else{
