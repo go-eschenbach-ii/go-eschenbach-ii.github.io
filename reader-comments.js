@@ -251,8 +251,13 @@
     toggleButton.addEventListener('click',togglePanel);
     const toolbar=document.createElement('div');
     toolbar.className='reader-comments-toolbar';
-    toolbar.append(toggleButton);
-    review.append(toolbar);
+    const label=document.createElement('span');
+    label.className='reader-comments-toggle-label';
+    label.textContent='Kommentar';
+    toolbar.append(toggleButton,label);
+    const reviewText=review.querySelector(':scope > p');
+    if(reviewText)reviewText.insertAdjacentElement('afterend',toolbar);
+    else review.append(toolbar);
 
     const header=document.createElement('div');
     header.className='reader-comments-panel-header';
@@ -321,7 +326,7 @@
     moreButton.hidden=true;
     moreButton.addEventListener('click',()=>load(false));
     panel.append(header,intro,form,status,subTitle,list,moreButton);
-    review.after(panel);
+    toolbar.after(panel);
     document.addEventListener('keydown',event=>{
       if(event.key==='Escape' && panel && !panel.hidden)closePanel();
     });
