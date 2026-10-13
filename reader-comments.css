@@ -21,7 +21,6 @@
 .reader-comment-head time{font-size:11px;color:#7a7d83}
 .reader-comment-body{font-size:14px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;margin:7px 0 0}
 .reader-comments-empty{color:#72757b;font-size:13px;margin:14px 0 7px}
-.reader-comment-hide{border:0;background:transparent;color:#a13a3a;text-decoration:underline;padding:7px 0 1px;margin-top:4px;font:700 11px inherit;font-family:inherit;font-size:11px;cursor:pointer}
 .reader-comments-more{width:100%;min-height:42px;padding:11px;margin-top:9px;border:1px solid #111;background:#fff;color:#111;border-radius:10px;font:800 13px inherit;font-family:inherit;font-size:13px;cursor:pointer}
 .reader-comments-more[hidden]{display:none}
 .reader-comments-more:disabled{opacity:.5;cursor:progress}
@@ -65,7 +64,6 @@
 .reader-comment-reply-context[hidden]{display:none!important}
 .reader-comment-form .reader-comments-close{position:absolute;right:9px;top:7px;z-index:1;width:28px;height:28px;font-size:21px}
 .reader-comment-form > label:first-of-type{padding-top:6px}
-.reader-comment-hide{margin-top:0}
 .reader-comments-subtitle,.reader-comments-panel-header{display:none!important}
 @media(max-width:600px){
   .reader-comments-card{margin-bottom:11px}
