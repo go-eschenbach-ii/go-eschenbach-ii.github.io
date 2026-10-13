@@ -222,6 +222,48 @@ if base_table and merged:
                     target[key]=esch[key]
             print(f'Rangliste aus bestaetigtem Stand und {len(changed_keys)} neuem/geaendertem Resultat(en) abgeglichen.')
 
+# Bestaetigte Eschenbach-Saisontore duerfen bei gleichem Spielbestand nicht
+# auf einen veralteten automatischen Tabellenstand zurueckfallen.
+# Die Baseline gilt nur, wenn sie intern konsistent und die kontrollierten
+# Eschenbach-Ergebnisse in diesem Lauf unveraendert geblieben sind.
+def eschenbach_row(obj):
+    for row in obj.get('standings',[]) if isinstance(obj,dict) else []:
+        if isinstance(row,dict) and str(row.get('team','')).strip()=='FC Eschenbach II':
+            return row
+    return None
+
+def eschenbach_results_map(obj):
+    out={}
+    for match in confirmed_results(obj):
+        if 'FC Eschenbach II' not in (str(match.get('home','')).strip(),str(match.get('away','')).strip()):
+            continue
+        out[result_key(match)]=(as_int(match.get('home_goals')),as_int(match.get('away_goals')))
+    return out
+
+base_esch=eschenbach_row(baseline)
+new_esch=eschenbach_row(protected)
+audit=baseline.get('scorer_audit') if isinstance(baseline.get('scorer_audit'),dict) else {}
+base_accounts=sum(
+    max(0,as_int(item.get('goals'),0))
+    for item in baseline.get('scorers',[])
+    if isinstance(item,dict) and 'forfait' not in str(item.get('name','')).casefold()
+)
+base_accounts+=max(0,as_int(baseline.get('own_goals'),0))
+base_accounts+=max(0,as_int(baseline.get('forfait_goals'),0))
+baseline_consistent=bool(
+    base_esch and audit.get('complete') is True
+    and base_accounts==as_int(base_esch.get('goals_for'))
+    and as_int(base_esch.get('goals_for'))-as_int(base_esch.get('goals_against'))==as_int(base_esch.get('goal_difference'))
+)
+if (baseline_consistent and new_esch
+    and as_int(new_esch.get('played'))==as_int(base_esch.get('played'))
+    and eschenbach_results_map(baseline)==eschenbach_results_map(protected)
+):
+    for key in ('goals_for','goals_against','goal_difference'):
+        new_esch[key]=base_esch[key]
+        protected.setdefault('eschenbach',{})[key]=base_esch[key]
+    print('Bestaetigte Eschenbach-Bilanz bei unveraenderten Resultaten bewahrt.')
+
 # Rangfolge abschliessend wie in der IFV-Zwischenrangliste normalisieren:
 # Punktequotient -> tieferer Strafpunktquotient -> Tordifferenz -> erzielte Tore.
 final_table=complete_standings(protected)
