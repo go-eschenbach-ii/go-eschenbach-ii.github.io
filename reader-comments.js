@@ -7,7 +7,6 @@
   let reportKey='';
   let panel=null;
   let toggleButton=null;
-  let loadedOnce=false;
   let list=null;
   let form=null;
   let status=null;
@@ -187,8 +186,9 @@
       if(!data.ok)throw Error('Der Kommentar konnte nicht gespeichert werden.');
       localStorage.setItem(NAME_KEY,name);
       messageInput.value='';
-      setStatus('Dein Kommentar wurde veröffentlicht.');
-      // Run refresh after releasing the posting lock.
+      closePanel();
+      // Nach erfolgreichem Speichern verschwindet nur das Eingabefeld.
+      // Die öffentliche Kommentarliste bleibt jederzeit sichtbar.
     }catch(err){
       setStatus(err.message||'Senden fehlgeschlagen. Bitte nochmals versuchen.',true);
       return;
@@ -202,28 +202,30 @@
   }
 
   function closePanel(){
-    if(!panel||panel.hidden)return;
-    panel.hidden=true;
+    if(!form||form.hidden)return;
+    form.hidden=true;
+    const intro=panel?.querySelector('.reader-comments-intro');
+    const closeButton=panel?.querySelector('.reader-comments-close');
+    if(intro)intro.hidden=true;
+    if(closeButton)closeButton.hidden=true;
     toggleButton?.setAttribute('aria-expanded','false');
-    toggleButton?.setAttribute('aria-label','Kommentare zum Spielbericht öffnen');
+    toggleButton?.setAttribute('aria-label','Kommentar schreiben');
     toggleButton?.focus({preventScroll:true});
   }
   function togglePanel(){
-    if(!panel)return;
-    if(!panel.hidden){
+    if(!form)return;
+    if(!form.hidden){
       closePanel();
       return;
     }
-    panel.hidden=false;
+    form.hidden=false;
+    const intro=panel?.querySelector('.reader-comments-intro');
+    const closeButton=panel?.querySelector('.reader-comments-close');
+    if(intro)intro.hidden=false;
+    if(closeButton)closeButton.hidden=false;
     toggleButton?.setAttribute('aria-expanded','true');
-    toggleButton?.setAttribute('aria-label','Kommentare zum Spielbericht schliessen');
-    panel.scrollIntoView({behavior:'smooth',block:'nearest'});
-    if(!loadedOnce){
-      loadedOnce=true;
-      load(true);
-    }else{
-      load(true);
-    }
+    toggleButton?.setAttribute('aria-label','Kommentarfeld schliessen');
+    form.scrollIntoView({behavior:'smooth',block:'nearest'});
   }
 
   function mount(d){
@@ -237,15 +239,14 @@
     panel=document.createElement('section');
     panel.id='readerCommentsPanel';
     panel.className='card reader-comments-card';
-    panel.hidden=true;
     panel.setAttribute('aria-labelledby','readerCommentsTitle');
     toggleButton=document.createElement('button');
     toggleButton.id='readerCommentsToggle';
     toggleButton.className='reader-comments-toggle';
     toggleButton.type='button';
-    toggleButton.setAttribute('aria-controls','readerCommentsPanel');
+    toggleButton.setAttribute('aria-controls','readerCommentsForm');
     toggleButton.setAttribute('aria-expanded','false');
-    toggleButton.setAttribute('aria-label','Kommentare zum Spielbericht öffnen');
+    toggleButton.setAttribute('aria-label','Kommentar schreiben');
     toggleButton.title='Kommentare zum Spielbericht';
     toggleButton.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"/></svg>';
     toggleButton.addEventListener('click',togglePanel);
@@ -269,14 +270,18 @@
     closeButton.className='reader-comments-close';
     closeButton.setAttribute('aria-label','Kommentare schliessen');
     closeButton.textContent='×';
+    closeButton.hidden=true;
     closeButton.addEventListener('click',closePanel);
     header.append(headline,closeButton);
     const intro=document.createElement('p');
     intro.className='reader-comments-intro';
     intro.textContent='Was meinst du zum Spiel? Teile deine Meinung mit anderen Eschenbach-Fans.';
+    intro.hidden=true;
 
     form=document.createElement('form');
+    form.id='readerCommentsForm';
     form.className='reader-comment-form';
+    form.hidden=true;
     const nameLabel=document.createElement('label');
     nameLabel.textContent='Dein Vorname';
     const nameInput=document.createElement('input');
@@ -327,8 +332,10 @@
     moreButton.addEventListener('click',()=>load(false));
     panel.append(header,intro,form,status,subTitle,list,moreButton);
     toolbar.after(panel);
+    // Kommentare werden unabhängig davon geladen, ob das Eingabefeld geöffnet ist.
+    load(true);
     document.addEventListener('keydown',event=>{
-      if(event.key==='Escape' && panel && !panel.hidden)closePanel();
+      if(event.key==='Escape' && form && !form.hidden)closePanel();
     });
     return true;
   }
