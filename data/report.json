@@ -499,6 +499,10 @@
       "goals": 2
     },
     {
+      "name": "Fabio Almeida",
+      "goals": 1
+    },
+    {
       "name": "Ilay Brandenberger",
       "goals": 1
     },
@@ -515,11 +519,15 @@
       "goals": 1
     },
     {
+      "name": "Nico Röösli",
+      "goals": 1
+    },
+    {
       "name": "Sandro Rosenberg",
       "goals": 1
     }
   ],
-  "scorer_note": "Bestätigt zugeordnet: 26 von 27 Toren; noch offen: 1. Die bestätigten Torschützen bleiben sichtbar.",
+  "scorer_note": "Alle sieben Torschützen gegen SC Nebikon sind bestätigt. Die Saison-Gesamtzahl wird noch mit der offiziellen Statistik abgeglichen.",
   "sources": [
     {
       "title": "IFV Matchcenter – 5. Liga, Gruppe 4, Resultate und Rangliste",
@@ -547,10 +555,10 @@
   "scorer_audit": {
     "complete": false,
     "expected_goals": 27,
-    "player_goals": 21,
+    "player_goals": 23,
     "own_goals": 2,
     "forfait_goals": 3,
-    "accounted_goals": 26,
+    "accounted_goals": 28,
     "checked_matches": [
       {
         "date": "02.10.2026",
@@ -584,7 +592,7 @@
         "date": "12.10.2026",
         "opponent": "SC Nebikon",
         "result": "7:0",
-        "scorers": "Timo Bossert (2), Tilman Bucher, Mino Vidi, Noe Fischer; zwei weitere Eschenbacher Torschützen im vorliegenden Material nicht eindeutig genannt",
+        "scorers": "Timo Bossert (5., 39.), Nico Röösli (13.), Fabio Almeida (16.), Tilman Bucher (29.), Mino Vidi (84.), Noe Fischer (90.)",
         "own_goals": 0
       },
       {
