@@ -85,6 +85,13 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python scripts/polish_language.py
 
+      - name: Jeden freigegebenen Matchkommentar gegen den Rückblick prüfen
+        if: ${{ inputs.update_review != false }}
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          MATCH_COMMENTS_FILE: /tmp/go-eschenbach-match-comments.json
+        run: python scripts/verify_match_comment_coverage.py
+
       - name: Letzten korrekten Stand gegen Rueckschritte schuetzen
         if: always()
         env:
@@ -122,6 +129,9 @@ jobs:
               )
           PY
 
+
+      - name: Berichtssprache ohne Gedankenstriche sicherstellen
+        run: python scripts/enforce_report_style.py
 
       - name: Herz-Zyklus an Rückblick koppeln
         env:
