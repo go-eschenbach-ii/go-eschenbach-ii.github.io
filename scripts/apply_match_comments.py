@@ -5,8 +5,7 @@ COMMENTS_PATH=os.environ.get('MATCH_COMMENTS_FILE','/tmp/go-eschenbach-match-com
 API_KEY=os.environ.get('OPENAI_API_KEY','').strip()
 
 if not API_KEY:
-    print('OPENAI_API_KEY fehlt – Schlussredaktion des Rückblicks wird übersprungen.')
-    raise SystemExit(0)
+    raise RuntimeError('OPENAI_API_KEY fehlt: Rückblick und Kommentare können nicht zuverlässig verarbeitet werden.')
 
 try:
     with open(REPORT_PATH,'r',encoding='utf-8') as f:
@@ -38,7 +37,7 @@ except Exception as exc:
     print('Matchkommentare konnten nicht geladen werden:',exc)
 
 comments.sort(key=lambda x:x.get('spoken_at',''))
-priority_comments=comments[-8:]
+priority_comments=comments
 
 
 def is_eschenbach_match(item):
@@ -71,14 +70,16 @@ VERBINDLICH – KEINE AUSNAHMEN:
 - Behaupte insbesondere keine Begegnung zwischen Eschenbach und einem Team, nur weil dieses Team in standings oder in einem anderen recent_result vorkommt.
 - Der Schwerpunkt liegt auf dem jüngsten Eintrag in eschenbach_results.
 - Wenn match_comments zu diesem Spiel vorhanden sind, sind sie direkte Beobachtungen vom Platz und müssen den erzählerischen Rückblick prägen: Spielverlauf, Druckphasen, Chancen, Aluminiumtreffer, auffällige Leistungen und Stimmung nur soweit tatsächlich genannt.
-- priority_latest_comments enthält die neuesten Beobachtungen und Zusammenfassungen des App-Redaktors. Jede inhaltlich relevante Information daraus MUSS im Rückblick vorkommen, sofern sie nicht einem gesicherten Resultat widerspricht. Besonders Schlussfazit, Gesamtbeurteilung und Hinweise auf herausragende Spieler dürfen nicht weggelassen werden.
+- Lies JEDEN Eintrag in match_comments vollständig. Jede eigenständige relevante Beobachtung aus jedem Kommentar zum besprochenen Spiel muss inhaltlich im Rückblick vorkommen. Nichts stillschweigend auslassen. Gleiche Aussagen sinnvoll bündeln, aber keine einzigartigen Fakten verlieren.
+- priority_latest_comments enthält ALLE gespeicherten Beobachtungen und Zusammenfassungen des App-Redaktors, nicht bloss eine Auswahl der jüngsten. Jede inhaltlich relevante Information daraus MUSS im Rückblick vorkommen, sofern sie nicht einem gesicherten Resultat widerspricht. Besonders Schlussfazit, Gesamtbeurteilung und Hinweise auf herausragende Spieler dürfen nicht weggelassen werden.
 - Mehrere ähnliche Kommentare dürfen zu einer flüssigen Aussage zusammengeführt werden; wesentliche neue Aussagen dürfen dadurch aber nicht verschwinden.
 - Gib Matchkommentare nicht als Zitate wieder und erwähne weder den Autor noch das Wort «Kommentar».
 - Offizielles Resultat aus eschenbach_results hat Vorrang. Torschützenangaben aus direkten Platzbeobachtungen dürfen verwendet werden, sofern keine gesicherte offizielle Angabe widerspricht. Bei unklarer Spracherkennung Namen nicht erraten.
 - Erfinde keine zusätzlichen Chancen, Tore, Torschützen, taktischen Details, Ursachen oder früheren Partien.
 - Saisonwerte wie Anzahl Siege, Tore oder Punkte dürfen aus season_summary genannt werden, ohne daraus unbekannte Gegner abzuleiten.
 - Schweizer Rechtschreibung, sportlich, natürlich und gut lesbar.
-- 7 bis 10 Sätze. Keine Listen und kein Quellen- oder Recherchejargon.
+- Die Länge dem Umfang der Beobachtungen anpassen: lieber mehr Sätze als einen wichtigen Kommentar weglassen. Keine Listen und kein Quellen- oder Recherchejargon.
+- Schreibe ohne Gedankenstriche. Keine Zeichen – oder — als Satzzeichen verwenden. Formuliere mit Punkt, Komma oder einem neuen Satz.
 
 Antworte ausschliesslich als valides JSON:
 {{"review":"..."}}
@@ -121,6 +122,10 @@ try:
             f.write('\n')
         print(f'Sicherer Rückblick erstellt: {len(eschenbach_results)} echte Eschenbach-Resultate, {len(comments)} Matchkommentare, {len(priority_comments)} priorisierte Schlusskommentare.')
     else:
+        if comments:
+            raise RuntimeError('Matchkommentare vorhanden, aber kein neuer Rückblick erzeugt.')
         print('Schlussredaktion lieferte keinen Rückblick – bestehender Text bleibt.')
 except Exception as exc:
+    if comments:
+        raise RuntimeError('Rückblick fehlgeschlagen: Freigegebene Matchkommentare dürfen nicht verloren gehen.') from exc
     print('Rückblick-Schlussredaktion übersprungen:',exc)
