@@ -6,6 +6,8 @@
   const PAGE_SIZE=20;
   let reportKey='';
   let panel=null;
+  let toggleButton=null;
+  let loadedOnce=false;
   let list=null;
   let form=null;
   let status=null;
@@ -199,6 +201,31 @@
     setStatus('Dein Kommentar wurde veröffentlicht.');
   }
 
+  function closePanel(){
+    if(!panel||panel.hidden)return;
+    panel.hidden=true;
+    toggleButton?.setAttribute('aria-expanded','false');
+    toggleButton?.setAttribute('aria-label','Kommentare zum Spielbericht öffnen');
+    toggleButton?.focus({preventScroll:true});
+  }
+  function togglePanel(){
+    if(!panel)return;
+    if(!panel.hidden){
+      closePanel();
+      return;
+    }
+    panel.hidden=false;
+    toggleButton?.setAttribute('aria-expanded','true');
+    toggleButton?.setAttribute('aria-label','Kommentare zum Spielbericht schliessen');
+    panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+    if(!loadedOnce){
+      loadedOnce=true;
+      load(true);
+    }else{
+      load(true);
+    }
+  }
+
   function mount(d){
     if(panel)return true;
     const app=document.getElementById('app');
@@ -210,11 +237,35 @@
     panel=document.createElement('section');
     panel.id='readerCommentsPanel';
     panel.className='card reader-comments-card';
+    panel.hidden=true;
     panel.setAttribute('aria-labelledby','readerCommentsTitle');
+    toggleButton=document.createElement('button');
+    toggleButton.id='readerCommentsToggle';
+    toggleButton.className='reader-comments-toggle';
+    toggleButton.type='button';
+    toggleButton.setAttribute('aria-controls','readerCommentsPanel');
+    toggleButton.setAttribute('aria-expanded','false');
+    toggleButton.setAttribute('aria-label','Kommentare zum Spielbericht öffnen');
+    toggleButton.title='Kommentare zum Spielbericht';
+    toggleButton.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"/></svg>';
+    toggleButton.addEventListener('click',togglePanel);
+    const toolbar=document.createElement('div');
+    toolbar.className='reader-comments-toolbar';
+    toolbar.append(toggleButton);
+    review.append(toolbar);
 
+    const header=document.createElement('div');
+    header.className='reader-comments-panel-header';
     const headline=document.createElement('h2');
     headline.id='readerCommentsTitle';
-    headline.textContent='💬 Kommentare zum Spielbericht';
+    headline.textContent='Kommentare zum Spielbericht';
+    const closeButton=document.createElement('button');
+    closeButton.type='button';
+    closeButton.className='reader-comments-close';
+    closeButton.setAttribute('aria-label','Kommentare schliessen');
+    closeButton.textContent='×';
+    closeButton.addEventListener('click',closePanel);
+    header.append(headline,closeButton);
     const intro=document.createElement('p');
     intro.className='reader-comments-intro';
     intro.textContent='Was meinst du zum Spiel? Teile deine Meinung mit anderen Eschenbach-Fans.';
@@ -269,9 +320,11 @@
     moreButton.textContent='Weitere Kommentare anzeigen';
     moreButton.hidden=true;
     moreButton.addEventListener('click',()=>load(false));
-    panel.append(headline,intro,form,status,subTitle,list,moreButton);
+    panel.append(header,intro,form,status,subTitle,list,moreButton);
     review.after(panel);
-    load(true);
+    document.addEventListener('keydown',event=>{
+      if(event.key==='Escape' && panel && !panel.hidden)closePanel();
+    });
     return true;
   }
 
