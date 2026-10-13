@@ -46,3 +46,28 @@
 .reader-comments-panel-header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px}
 .reader-comments-panel-header h2{margin:0}
 .reader-comments-close{width:38px;height:38px;display:inline-grid;place-items:center;flex:0 0 auto;font:400 28px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;border:1px solid #ddd;border-radius:50%;background:#f5f5f5;color:#111;cursor:pointer}
+
+
+/* Schlanke, stets sichtbare Diskussion direkt unter dem Bericht. */
+.reader-comments-card{margin:0 0 14px;padding:0;background:transparent;border:0;box-shadow:none}
+.reader-comments-card .reader-comments-status{min-height:0;margin:0;font-size:12px}
+.reader-comments-card .reader-comments-status:empty{display:none}
+.reader-comments-card .reader-comments-list:empty{display:none}
+.reader-comment-replies{margin:5px 0 1px 15px;padding:0 0 0 12px;border-left:2px solid #e3d277}
+.reader-comment-reply{padding:9px 0 6px;border-bottom:1px solid #eee}
+.reader-comment-reply:last-child{border-bottom:0}
+.reader-comment-actions{display:flex;gap:14px;align-items:center;margin-top:6px;flex-wrap:wrap}
+.reader-comment-answer{border:0;padding:4px 0;background:transparent;color:#574a14;font-size:12px;font-weight:800;cursor:pointer}
+.reader-comment-answer:hover{text-decoration:underline}
+.reader-comment-answer:focus-visible{outline:2px solid #111;outline-offset:2px}
+.reader-comment-form{position:relative;margin:10px 0 12px}
+.reader-comment-reply-context{font-size:13px;font-weight:800;color:#574a14;padding-right:40px}
+.reader-comment-reply-context[hidden]{display:none!important}
+.reader-comment-form .reader-comments-close{position:absolute;right:9px;top:7px;z-index:1;width:28px;height:28px;font-size:21px}
+.reader-comment-form > label:first-of-type{padding-top:6px}
+.reader-comment-hide{margin-top:0}
+.reader-comments-subtitle,.reader-comments-panel-header{display:none!important}
+@media(max-width:600px){
+  .reader-comments-card{margin-bottom:11px}
+  .reader-comment-replies{margin-left:9px;padding-left:10px}
+}
