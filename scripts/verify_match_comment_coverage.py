@@ -70,7 +70,7 @@ ALLE KOMMENTARE, fortlaufend nummeriert:
 {json.dumps(numbered, ensure_ascii=False)}
 
 Antworte ausschliesslich als JSON:
-{{"review":"...", "covered_comment_indices":[1,2,3]}}
+{{"review":"...", "covered_comment_indices":{json.dumps(list(range(1,len(items)+1)))}}}
 Die covered_comment_indices müssen jeden von dir inhaltlich
 eingearbeiteten bzw. bei Widerspruch zu sicheren Fakten sorgfältig
 geprüften Kommentar enthalten. Eine Nummer darfst du nicht ohne Prüfung
