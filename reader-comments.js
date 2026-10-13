@@ -14,6 +14,10 @@
   let visible=0;
   let hasMore=false;
   let busy=false;
+  let replyToId=null;
+  let replyToName='';
+  let replyingButton=null;
+  let formContext=null;
 
   function slug(value){
     return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
@@ -58,9 +62,9 @@
       day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'
     });
   }
-  function addComment(item){
+  function addComment(item, container, isReply=false){
     const card=document.createElement('article');
-    card.className='reader-comment';
+    card.className=isReply?'reader-comment reader-comment-reply':'reader-comment';
     const info=document.createElement('div');
     info.className='reader-comment-head';
     const name=document.createElement('strong');
@@ -73,6 +77,17 @@
     body.className='reader-comment-body';
     body.textContent=String(item.body||'');
     card.append(info,body);
+    const actions=document.createElement('div');
+    actions.className='reader-comment-actions';
+    if(!isReply){
+      const reply=document.createElement('button');
+      reply.type='button';
+      reply.className='reader-comment-answer';
+      reply.textContent='Antworten';
+      reply.setAttribute('aria-label','Auf Kommentar von '+name.textContent+' antworten');
+      reply.addEventListener('click',()=>openForm({id:item.id,name:name.textContent,card,button:reply}));
+      actions.append(reply);
+    }
     if(localStorage.getItem(ADMIN_KEY)){
       const hide=document.createElement('button');
       hide.type='button';
@@ -80,9 +95,30 @@
       hide.textContent='Ausblenden';
       hide.setAttribute('aria-label','Kommentar von '+name.textContent+' ausblenden');
       hide.addEventListener('click',()=>hideComment(String(item.id||''),hide));
-      card.append(hide);
+      actions.append(hide);
     }
-    list.append(card);
+    if(actions.childNodes.length)card.append(actions);
+    container.append(card);
+    return card;
+  }
+  function renderComments(items){
+    const roots=items.filter(c=>!c.parent_id);
+    const replies=new Map();
+    for(const comment of items){
+      if(!comment.parent_id)continue;
+      if(!replies.has(comment.parent_id))replies.set(comment.parent_id,[]);
+      replies.get(comment.parent_id).push(comment);
+    }
+    for(const root of roots){
+      const card=addComment(root,list);
+      const children=replies.get(root.id)||[];
+      if(children.length){
+        const wrap=document.createElement('div');
+        wrap.className='reader-comment-replies';
+        for(const child of children)addComment(child,wrap,true);
+        card.append(wrap);
+      }
+    }
   }
   async function load(reset=false){
     if(busy)return;
@@ -91,7 +127,7 @@
     if(reset){
       visible=0;
       list.replaceChildren();
-      setStatus('Kommentare werden geladen …');
+      setStatus('');
     }
     try{
       const response=await fetch(API+'?report_key='+encodeURIComponent(reportKey)+
@@ -100,8 +136,8 @@
       const data=await response.json();
       if(!data.ok || !Array.isArray(data.comments))throw Error('bad_response');
       if(reset)list.replaceChildren();
-      data.comments.forEach(addComment);
-      visible+=data.comments.length;
+      renderComments(data.comments);
+      visible+=Number(data.root_count??data.comments.filter(c=>!c.parent_id).length);
       hasMore=Boolean(data.has_more);
       moreButton.hidden=!hasMore;
       if(!visible){
@@ -110,7 +146,7 @@
         empty.textContent='Noch keine Kommentare. Schreibe den ersten!';
         list.append(empty);
       }
-      setStatus(visible? 'Neueste Kommentare zuerst' : '');
+      setStatus('');
     }catch{
       if(reset)list.replaceChildren();
       setStatus('Kommentare konnten gerade nicht geladen werden. Bitte später erneut versuchen.',true);
@@ -146,6 +182,7 @@
   async function submit(e){
     e.preventDefault();
     if(busy)return;
+    const requestedParent=replyToId;
     const nameInput=form.querySelector('.reader-comment-name');
     const messageInput=form.querySelector('.reader-comment-text');
     const submitButton=form.querySelector('.reader-comment-submit');
@@ -172,6 +209,7 @@
         body:JSON.stringify({
           action:'create',report_key:reportKey,
           display_name:name,body:message,device_id:deviceId(),
+          parent_id:requestedParent,
           website:form.querySelector('.reader-comment-website').value
         })
       });
@@ -180,6 +218,7 @@
         if(res.status===429)throw Error('Bitte kurz warten, bevor du einen weiteren Kommentar veröffentlichst.');
         if(res.status===409)throw Error('Diesen Kommentar hast du bereits abgeschickt.');
         if(data.error==='no_links')throw Error('Bitte keine Links oder E-Mail-Adressen veröffentlichen.');
+        if(data.error==='parent_not_found')throw Error('Der ursprüngliche Kommentar ist nicht mehr verfügbar.');
         if(data.error==='invalid_input')throw Error('Bitte Vorname und Kommentar überprüfen.');
         throw Error('Der Kommentar konnte nicht gespeichert werden. Versuche es nochmals.');
       }
@@ -202,30 +241,45 @@
   }
 
   function closePanel(){
-    if(!form||form.hidden)return;
+    if(!form)return;
+    const wasOpen=!form.hidden;
     form.hidden=true;
-    const intro=panel?.querySelector('.reader-comments-intro');
+    if(formContext)formContext.hidden=true;
+    replyToId=null;
+    replyToName='';
+    replyingButton=null;
     const closeButton=panel?.querySelector('.reader-comments-close');
-    if(intro)intro.hidden=true;
     if(closeButton)closeButton.hidden=true;
+    panel.insertBefore(form,status);
     toggleButton?.setAttribute('aria-expanded','false');
     toggleButton?.setAttribute('aria-label','Kommentar schreiben');
-    toggleButton?.focus({preventScroll:true});
+    if(wasOpen)toggleButton?.focus({preventScroll:true});
   }
-  function togglePanel(){
+  function openForm(target=null){
     if(!form)return;
-    if(!form.hidden){
+    if(!target && !form.hidden && !replyToId){
       closePanel();
       return;
     }
+    replyToId=target?.id||null;
+    replyToName=target?.name||'';
+    replyingButton=target?.button||null;
     form.hidden=false;
-    const intro=panel?.querySelector('.reader-comments-intro');
-    const closeButton=panel?.querySelector('.reader-comments-close');
-    if(intro)intro.hidden=false;
+    formContext.hidden=!replyToId;
+    formContext.textContent=replyToId?'Antwort an '+replyToName:'';
+    const closeButton=panel.querySelector('.reader-comments-close');
     if(closeButton)closeButton.hidden=false;
-    toggleButton?.setAttribute('aria-expanded','true');
-    toggleButton?.setAttribute('aria-label','Kommentarfeld schliessen');
+    if(target?.card){
+      target.card.append(form);
+    }else{
+      panel.insertBefore(form,status);
+    }
+    toggleButton?.setAttribute('aria-expanded',String(!replyToId));
+    toggleButton?.setAttribute('aria-label',replyToId?'Kommentar schreiben':'Kommentarfeld schliessen');
     form.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+  function togglePanel(){
+    openForm();
   }
 
   function mount(d){
@@ -238,8 +292,8 @@
     reportKey=keyForReport(d);
     panel=document.createElement('section');
     panel.id='readerCommentsPanel';
-    panel.className='card reader-comments-card';
-    panel.setAttribute('aria-labelledby','readerCommentsTitle');
+    panel.className='reader-comments-card';
+    panel.setAttribute('aria-label','Fan-Kommentare');
     toggleButton=document.createElement('button');
     toggleButton.id='readerCommentsToggle';
     toggleButton.className='reader-comments-toggle';
@@ -260,28 +314,22 @@
     if(reviewText)reviewText.insertAdjacentElement('afterend',toolbar);
     else review.append(toolbar);
 
-    const header=document.createElement('div');
-    header.className='reader-comments-panel-header';
-    const headline=document.createElement('h2');
-    headline.id='readerCommentsTitle';
-    headline.textContent='Kommentare zum Spielbericht';
     const closeButton=document.createElement('button');
     closeButton.type='button';
     closeButton.className='reader-comments-close';
-    closeButton.setAttribute('aria-label','Kommentare schliessen');
+    closeButton.setAttribute('aria-label','Kommentarfeld schliessen');
     closeButton.textContent='×';
     closeButton.hidden=true;
     closeButton.addEventListener('click',closePanel);
-    header.append(headline,closeButton);
-    const intro=document.createElement('p');
-    intro.className='reader-comments-intro';
-    intro.textContent='Was meinst du zum Spiel? Teile deine Meinung mit anderen Eschenbach-Fans.';
-    intro.hidden=true;
 
     form=document.createElement('form');
     form.id='readerCommentsForm';
     form.className='reader-comment-form';
     form.hidden=true;
+    formContext=document.createElement('div');
+    formContext.className='reader-comment-reply-context';
+    formContext.hidden=true;
+    form.append(formContext,closeButton);
     const nameLabel=document.createElement('label');
     nameLabel.textContent='Dein Vorname';
     const nameInput=document.createElement('input');
@@ -319,9 +367,6 @@
     status.className='reader-comments-status';
     status.setAttribute('role','status');
     status.setAttribute('aria-live','polite');
-    const subTitle=document.createElement('h3');
-    subTitle.textContent='Stimmen der Fans';
-    subTitle.className='reader-comments-subtitle';
     list=document.createElement('div');
     list.className='reader-comments-list';
     moreButton=document.createElement('button');
@@ -330,7 +375,7 @@
     moreButton.textContent='Weitere Kommentare anzeigen';
     moreButton.hidden=true;
     moreButton.addEventListener('click',()=>load(false));
-    panel.append(header,intro,form,status,subTitle,list,moreButton);
+    panel.append(form,status,list,moreButton);
     toolbar.after(panel);
     // Kommentare werden unabhängig davon geladen, ob das Eingabefeld geöffnet ist.
     load(true);
