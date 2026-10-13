@@ -403,6 +403,7 @@
       q.forEach(x=>{if(x.match_key===matchKey(currentMatch))x.approved=true;});
       setQueue(q);
       await flushQueue();
+      if(getQueue().some(x=>x.match_key===matchKey(currentMatch)))throw Error('comments_not_synced');
       await api('approve_all',{match_key:matchKey(currentMatch)});
       await loadComments();
       setStatus('Alle Kommentare sind für den nächsten Rückblick freigegeben.','active');
@@ -438,12 +439,12 @@
       <div class="commentary-status" id="commentaryStatus">Headset verbinden und Aufnahme starten. Sprechpausen sind erlaubt; sie endet erst mit «Aufnahme beenden».</div>
       <div class="commentary-live" id="commentaryLive" aria-live="polite"></div>
       <div class="commentary-counts" id="commentaryCounts"></div>
-      <div class="commentary-notes" id="commentaryNotes"></div>
+      <div class="commentary-notes" id="commentaryNotes" aria-label="Matchkommentare, neueste zuerst"></div>
       <div class="commentary-manual" id="commentaryManual" ${Recognition?'hidden':''}>
         <textarea id="commentaryManualText" placeholder="Notiz eintippen …" aria-label="Kommentar als Text eingeben"></textarea>
         <div class="commentary-controls" style="margin-top:7px"><button type="button" class="commentary-secondary" id="commentaryManualAdd">Notiz hinzufügen</button></div>
       </div>
-      <p class="commentary-help">Nur auf deinem freigeschalteten Gerät sichtbar. Pausen unterbrechen deinen Kommentar nicht. Der erkannte Text wird beim Beenden als zusammenhängender Kommentar gespeichert, keine Audiodatei. Bearbeitete oder freigegebene Texte fliessen beim nächsten Update in den Rückblick ein.</p>`;
+      <p class="commentary-help">Nur auf deinem freigeschalteten Gerät sichtbar. Pausen unterbrechen deinen Kommentar nicht. Der erkannte Text wird beim Beenden als zusammenhängender Kommentar gespeichert, keine Audiodatei. Damit wirklich alle Kommentare im nächsten Rückblick berücksichtigt werden, zuerst «Alle für Rückblick freigeben» wählen und die Synchronisation abwarten. Danach beim Update «Ja, erneuern» wählen.</p>`;
     review.parentNode.insertBefore(panel,review);
     statusEl=panel.querySelector('#commentaryStatus');
     liveEl=panel.querySelector('#commentaryLive');
