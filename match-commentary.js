@@ -24,6 +24,7 @@
   let startButton=null;
   let approveAllButton=null;
   let manualWrap=null;
+  let pasteToggleButton=null;
   let activateTimer=null;
   let suppressLogoClick=false;
 
@@ -321,8 +322,8 @@
   function startSpeech(){
     if(speechActive){stopSpeech();return;}
     if(!Recognition){
-      setStatus('Diese iPhone-/Browser-Version unterstützt die automatische Transkription hier nicht. Du kannst unten Textnotizen eingeben.','error');
-      if(manualWrap)manualWrap.hidden=false;
+      setStatus('Die automatische Spracherkennung ist hier nicht verfügbar. Du kannst einen in ChatGPT transkribierten Kommentar einfügen.','error');
+      togglePastePanel(true);
       return;
     }
     clearSpeechTimers();
@@ -411,12 +412,61 @@
     finally{approveAllButton.disabled=false;}
   }
 
+  function togglePastePanel(forceOpen=false){
+    if(!manualWrap)return;
+    const show=forceOpen || manualWrap.hidden;
+    manualWrap.hidden=!show;
+    if(pasteToggleButton){
+      pasteToggleButton.setAttribute('aria-expanded',String(show));
+      pasteToggleButton.classList.toggle('is-active',show);
+    }
+    if(show){
+      const field=manualWrap.querySelector('#commentaryManualText');
+      field?.focus({preventScroll:true});
+      manualWrap.scrollIntoView({behavior:'smooth',block:'nearest'});
+    }
+  }
+
+  async function pasteFromClipboard(){
+    const field=panel?.querySelector('#commentaryManualText');
+    if(!field)return;
+    if(!navigator.clipboard?.readText){
+      setStatus('Bitte das Textfeld antippen und den kopierten Text über «Einfügen» einsetzen.','');
+      field.focus();
+      return;
+    }
+    try{
+      const text=await navigator.clipboard.readText();
+      if(!text.trim()){
+        setStatus('Die Zwischenablage enthält keinen Text. Kopiere deinen Kommentar zuerst in ChatGPT.','error');
+        return;
+      }
+      // Bereits eingefügte Zeilen nicht versehentlich ersetzen.
+      field.value=field.value.trim()?field.value.trim()+'\n\n'+text:text;
+      field.focus({preventScroll:true});
+      setStatus('Text eingefügt. Prüfe ihn und tippe dann auf «Kommentar übernehmen».','active');
+    }catch{
+      setStatus('Einfügen über die Schaltfläche nicht möglich. Bitte das Textfeld lange antippen und «Einfügen» wählen.','');
+      field.focus();
+    }
+  }
+
   function manualAdd(){
     const field=panel?.querySelector('#commentaryManualText');
     const text=String(field?.value||'').trim();
-    if(!text)return;
+    if(!text){
+      setStatus('Bitte zuerst den Text aus ChatGPT einfügen.','error');
+      field?.focus();
+      return;
+    }
+    if(!currentMatch){
+      setStatus('Kein Spiel ausgewählt. Kommentar kann nicht gespeichert werden.','error');
+      return;
+    }
     queueTranscript(text);
     field.value='';
+    togglePastePanel();
+    setStatus('Text als Matchkommentar übernommen. Bitte kontrollieren und für den Rückblick freigeben.','active');
   }
 
   function mountPanel(){
@@ -434,17 +484,25 @@
       <div class="commentary-date">${esc(localDateLabel(currentMatch.date))}${currentMatch.time?` · ${esc(currentMatch.time)} Uhr`:''}</div>
       <div class="commentary-controls">
         <button type="button" class="commentary-primary" id="commentaryStart">🎙 Kommentar-Modus starten</button>
+        <button type="button" class="commentary-secondary commentary-paste-toggle" id="commentaryPasteToggle" aria-controls="commentaryManual" aria-expanded="false">📋 Text aus ChatGPT einfügen</button>
+      </div>
+      <div class="commentary-controls commentary-approval-controls">
         <button type="button" class="commentary-secondary" id="commentaryApproveAll">Alle für Rückblick freigeben</button>
       </div>
       <div class="commentary-status" id="commentaryStatus">Headset verbinden und Aufnahme starten. Sprechpausen sind erlaubt; sie endet erst mit «Aufnahme beenden».</div>
       <div class="commentary-live" id="commentaryLive" aria-live="polite"></div>
       <div class="commentary-counts" id="commentaryCounts"></div>
       <div class="commentary-notes" id="commentaryNotes" aria-label="Matchkommentare, neueste zuerst"></div>
-      <div class="commentary-manual" id="commentaryManual" ${Recognition?'hidden':''}>
-        <textarea id="commentaryManualText" placeholder="Notiz eintippen …" aria-label="Kommentar als Text eingeben"></textarea>
-        <div class="commentary-controls" style="margin-top:7px"><button type="button" class="commentary-secondary" id="commentaryManualAdd">Notiz hinzufügen</button></div>
+      <div class="commentary-manual" id="commentaryManual" hidden>
+        <label class="commentary-manual-label" for="commentaryManualText">Matchkommentar aus ChatGPT</label>
+        <p class="commentary-paste-help">Kopiere den Text in ChatGPT und füge ihn hier ein. Du kannst ihn vor dem Übernehmen noch ändern.</p>
+        <textarea id="commentaryManualText" placeholder="Hier den Text aus ChatGPT einfügen …" aria-label="Matchkommentar aus ChatGPT einfügen"></textarea>
+        <div class="commentary-controls commentary-paste-controls">
+          <button type="button" class="commentary-secondary" id="commentaryPasteClipboard">Aus Zwischenablage einfügen</button>
+          <button type="button" class="commentary-primary" id="commentaryManualAdd">Kommentar übernehmen</button>
+        </div>
       </div>
-      <p class="commentary-help">Nur auf deinem freigeschalteten Gerät sichtbar. Pausen unterbrechen deinen Kommentar nicht. Der erkannte Text wird beim Beenden als zusammenhängender Kommentar gespeichert, keine Audiodatei. Damit wirklich alle Kommentare im nächsten Rückblick berücksichtigt werden, zuerst «Alle für Rückblick freigeben» wählen und die Synchronisation abwarten. Danach beim Update «Ja, erneuern» wählen.</p>`;
+      <p class="commentary-help">Nur auf deinem freigeschalteten Gerät sichtbar. Du kannst Kommentare direkt aufnehmen oder aus ChatGPT einfügen. Aufgenommene Texte bleiben auch bei Sprechpausen erhalten. Beide Wege speichern die Kommentare in derselben Liste. Prüfe sie und wähle «Alle für Rückblick freigeben». Warte auf die Synchronisation und wähle beim Update «Ja, erneuern».</p>`;
     review.parentNode.insertBefore(panel,review);
     statusEl=panel.querySelector('#commentaryStatus');
     liveEl=panel.querySelector('#commentaryLive');
@@ -453,10 +511,13 @@
     startButton=panel.querySelector('#commentaryStart');
     approveAllButton=panel.querySelector('#commentaryApproveAll');
     manualWrap=panel.querySelector('#commentaryManual');
+    pasteToggleButton=panel.querySelector('#commentaryPasteToggle');
     startButton.addEventListener('click',startSpeech);
+    pasteToggleButton.addEventListener('click',()=>togglePastePanel());
     approveAllButton.addEventListener('click',approveAll);
     notesEl.addEventListener('click',handleNoteAction);
     panel.querySelector('#commentaryManualAdd')?.addEventListener('click',manualAdd);
+    panel.querySelector('#commentaryPasteClipboard')?.addEventListener('click',pasteFromClipboard);
     renderNotes();
     loadComments();
     flushQueue();
@@ -464,7 +525,7 @@
 
   function unmountPanel(){
     stopSpeech();
-    panel?.remove();panel=null;statusEl=null;liveEl=null;notesEl=null;countEl=null;startButton=null;approveAllButton=null;manualWrap=null;
+    panel?.remove();panel=null;statusEl=null;liveEl=null;notesEl=null;countEl=null;startButton=null;approveAllButton=null;manualWrap=null;pasteToggleButton=null;
   }
 
   async function initAdmin(){
