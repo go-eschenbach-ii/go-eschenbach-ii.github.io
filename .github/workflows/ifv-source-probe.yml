@@ -7,6 +7,7 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Test direct IFV and official club mirror
         run: |
           python - <<'PY'
@@ -23,4 +24,19 @@ jobs:
                 raw=r.read().decode('utf-8','ignore')
                 print(u, 'STATUS',r.status,'LEN',len(raw),'TEAMS',raw.count('FC Eschenbach II'), 'HTML',raw[:60])
             except Exception as e:print(u,'ERROR',str(e))
+          PY
+      - name: Parse fallback schedule without publishing
+        run: |
+          python - <<'PY'
+          import json
+          a=json.load(open('data/report.json'))
+          print('BEFORE',[(x.get('date'),x.get('home'),x.get('away')) for x in a.get('upcoming_matches',[])])
+          PY
+          python scripts/sync_ifv_schedule.py
+          python - <<'PY'
+          import json
+          a=json.load(open('data/report.json'))
+          print('STATUS',a.get('schedule_sync_status'),a.get('schedule_sync_source'))
+          print('AFTER_FIXTURES',[(x.get('date'),x.get('time'),x.get('home'),x.get('away')) for x in a.get('upcoming_matches',[])])
+          print('AFTER_RESULTS',[(x.get('date'),x.get('home'),x.get('away'),x.get('home_goals'),x.get('away_goals')) for x in a.get('recent_results',[])[:15]])
           PY
