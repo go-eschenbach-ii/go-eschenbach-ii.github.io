@@ -1,6 +1,7 @@
 """Create one-time in-app update news by comparing published and new reports."""
 import json
 import os
+import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -14,7 +15,7 @@ def loaded(path):
 
 
 def team_match(match):
-    return any('fc eschenbach ii' in str(match.get(k, '')).casefold() for k in ('home', 'away'))
+    return any(re.search(r'\bFC\s+Eschenbach\s+II\b', str(match.get(k, '')), re.I) for k in ('home', 'away'))
 
 
 def match_key(match):

@@ -3,6 +3,7 @@
   if(!host)return;
   const SEEN_KEY='go-eschenbach-seen-update-news-id';
   const AUTO_CLOSE_MS=18000;
+  let checking=false;
 
   const getSeen=()=>{try{return localStorage.getItem(SEEN_KEY)||'';}catch{return'';}};
   const markSeen=id=>{try{localStorage.setItem(SEEN_KEY,id);}catch{}};
@@ -49,6 +50,8 @@
   };
 
   const check=async()=>{
+    if(checking)return;
+    checking=true;
     try{
       const [newsResponse,reportResponse]=await Promise.all([
         fetch('data/update-news.json?t='+Date.now(),{cache:'no-store'}),
@@ -63,6 +66,9 @@
       if(!Number.isFinite(expiry)||Date.now()>expiry)return;
       show(news);
     }catch{}
+    finally{checking=false;}
   };
   check();
+  window.addEventListener('pageshow',check);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)check();});
 })();
