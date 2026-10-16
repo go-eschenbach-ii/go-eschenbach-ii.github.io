@@ -63,14 +63,24 @@ const fixtureKey=m=>[
   String(m?.away||'').trim().toLocaleLowerCase('de-CH')
 ].join('|');
 
-function visibleUpcomingMatches(d){
+function pendingFixtureLists(d){
   const completed=new Set(
     (Array.isArray(d?.recent_results)?d.recent_results:[])
       .filter(m=>m&&m.home_goals!==null&&m.home_goals!==undefined&&m.away_goals!==null&&m.away_goals!==undefined)
       .map(fixtureKey)
   );
-  return (Array.isArray(d?.upcoming_matches)?d.upcoming_matches:[])
-    .filter(m=>!completed.has(fixtureKey(m)));
+  const upcoming=[];
+  const waiting=[];
+  const now=Date.now();
+  (Array.isArray(d?.upcoming_matches)?d.upcoming_matches:[])
+    .filter(m=>!completed.has(fixtureKey(m))).forEach(m=>{
+      const dt=String(m.date||'').match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+      const tm=String(m.time||'').match(/^(\d{1,2}):(\d{2})$/);
+      const kickoff=dt&&tm?new Date(Number(dt[3]),Number(dt[2])-1,Number(dt[1]),Number(tm[1]),Number(tm[2])).getTime():null;
+      if(kickoff!==null && now>=kickoff+120*60*1000)waiting.push(m);
+      else upcoming.push(m);
+    });
+  return {upcoming,waiting};
 }
 
 // Übergang für den bereits gespeicherten Bericht vom 06.09.2026.
@@ -124,7 +134,7 @@ function render(d){
   const outlook=readerText(d.outlook);
   const lead=readerText(d.lead);
   const scorerInfo=scorerSummary(d);
-  const upcoming=visibleUpcomingMatches(d);
+  const {upcoming,waiting}=pendingFixtureLists(d);
   const auditMatches=Array.isArray(d.scorer_audit?.checked_matches)?d.scorer_audit.checked_matches:[];
   app.innerHTML=`
 <section class="team-photo-block" id="teamPhotoCard">
@@ -144,6 +154,7 @@ function render(d){
 <section class="card"><h2>Rückblick</h2><p>${esc(review)}</p>${(d.recent_results||[]).map(m=>recentMatchHTML(m,auditMatches)).join('')}</section>
 <section class="card standings-card"><h2>Aktuelle Situation</h2><p>${esc(situation)}</p><div class="table-wrap"><table class="standings"><thead><tr><th>#</th><th>Team</th><th>Sp</th><th>S</th><th>U</th><th>N</th><th>Str</th><th>Tore</th><th>TD</th><th>Pkt</th></tr></thead><tbody>${(d.standings||[]).map(raw=>{const r=fullRow(raw);return`<tr class="${r.is_eschenbach?'fce':''}"><td>${val(r.rank)}</td><td>${esc(r.team)}</td><td>${val(r.played)}</td><td>${val(r.wins)}</td><td>${val(r.draws)}</td><td>${val(r.losses)}</td><td>${val(r.penalty_points)}</td><td>${r.goals_for!=null&&r.goals_against!=null?`${r.goals_for}:${r.goals_against}`:'–'}</td><td>${r.goal_difference!=null?`${r.goal_difference>0?'+':''}${r.goal_difference}`:'–'}</td><td><strong>${val(r.points)}</strong></td></tr>`}).join('')}</tbody></table></div><div class="table-legend">Sp = Spiele · S = Siege · U = Unentschieden · N = Niederlagen · Str = Strafpunkte · TD = Tordifferenz</div></section>
 <section class="card"><h2>Ausblick</h2><p>${esc(outlook)}</p><h3 class="section-subtitle">Kommende Spiele</h3>${upcoming.map(matchHTML).join('')}</section>
+${waiting.length?`<section class="card"><h2>Resultat noch ausstehend</h2><p class="muted">Für diese Spiele liegt in der App noch kein bestätigtes Resultat vor.</p>${waiting.map(matchHTML).join('')}</section>`:''}
 ${d.scorers?.length?`<section class="card"><h2>Eschenbach-Torschützen</h2>${scorersHTML(d.scorers)}${scorerInfo?`<div class="muted">${esc(scorerInfo)}</div>`:''}</section>`:''}`;
 }
 
@@ -160,4 +171,4 @@ logoButton?.addEventListener('click',openLogo);
 logoClose?.addEventListener('click',closeLogo);
 logoModal?.addEventListener('click',e=>{if(e.target===logoModal)closeLogo();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&logoModal&&!logoModal.hidden)closeLogo();});
-if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js?v=44').catch(()=>{})}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js?v=45').catch(()=>{})}

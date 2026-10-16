@@ -82,6 +82,17 @@
     yes.focus();
   });
 
+  const warnWhenScheduleUnavailable=async()=>{
+    try{
+      const r=await fetch('data/report.json?syncstatus='+Date.now(),{cache:'no-store'});
+      if(!r.ok)return;
+      const report=await r.json();
+      if(report.schedule_sync_status==='unavailable'){
+        setStatus('Bericht gespeichert – offizieller Spielplan derzeit nicht erreichbar. Resultate können fehlen.','error');
+      }
+    }catch{}
+  };
+
   const getReportVersion=async()=>{
     try{
       const r=await fetch(`data/report.json?updatecheck=${Date.now()}`,{cache:'no-store'});
@@ -108,7 +119,8 @@
     localStorage.removeItem(REQUEST_KEY);
     setStatus('Aktualisiert ✓','done');
     el.textContent='Aktualisiert';
-    setTimeout(()=>location.reload(),700);
+    setTimeout(warnWhenScheduleUnavailable,200);
+    setTimeout(()=>location.reload(),2000);
   };
 
   const checkPublishedReport=async()=>{
@@ -303,6 +315,7 @@
         localStorage.removeItem(BASELINE_KEY);
         localStorage.removeItem(REQUEST_KEY);
       }
+      await warnWhenScheduleUnavailable();
     }catch{}
   })();
 })();

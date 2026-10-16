@@ -150,6 +150,9 @@
     const candidates=(Array.isArray(d.upcoming_matches)?d.upcoming_matches:[])
       .filter(isEschenbach)
       .filter(m=>!completed.has(fixtureKey(m)))
+      // Ein Spiel kann auch ohne bereits gemeldetes Resultat nicht mehr getippt werden.
+      // Nach Anpfiff sofort das nächste noch offene Spiel anbieten.
+      .filter(m=>{const kickoff=parseKickoff(m.date,m.time);return !kickoff||kickoff.getTime()>Date.now();})
       .sort((a,b)=>{
         const ta=parseKickoff(a.date,a.time)?.getTime()??Number.MAX_SAFE_INTEGER;
         const tb=parseKickoff(b.date,b.time)?.getTime()??Number.MAX_SAFE_INTEGER;

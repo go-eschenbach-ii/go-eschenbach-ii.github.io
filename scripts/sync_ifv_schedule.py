@@ -6,7 +6,12 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 REPORT_PATH='data/report.json'
-SCHEDULE_URL='https://matchcenter.ifv.ch/default.aspx?a=msp&ln=13040&lng=1&ls=25897&oid=7&s=2027&sg=70471'
+SCHEDULE_URLS=[
+    'https://matchcenter.ifv.ch/default.aspx?a=msp&ln=13040&lng=1&ls=25897&oid=7&s=2027&sg=70471',
+    'https://club.football.ch/?lng=1&tab=3396&v=376&t=31274&ls=25897&sg=70471&tg=4328790',
+    'https://club.football.ch/?lng=1&tab=3410&v=376',
+    'https://www.fcschoetz.ch/de/club/teams/team/spielplan-gruppe/%26v%3D376%26t%3D31274%26ls%3D25897%26sg%3D70471',
+]
 
 with open(REPORT_PATH,'r',encoding='utf-8') as f:
     data=json.load(f)
@@ -34,9 +39,30 @@ headers={
     'Cache-Control':'no-cache',
     'Pragma':'no-cache'
 }
-req=urllib.request.Request(SCHEDULE_URL,headers=headers)
-with urllib.request.urlopen(req,timeout=60) as r:
-    raw=r.read().decode('utf-8','ignore')
+raw=None
+used_source=None
+failures=[]
+for url in SCHEDULE_URLS:
+    try:
+        req=urllib.request.Request(url,headers=headers)
+        with urllib.request.urlopen(req,timeout=22) as response:
+            candidate=response.read().decode('utf-8','ignore')
+        if any(token in candidate for token in ('FC Eschenbach II','FC Hochdorf III','FC Dagmersellen')):
+            raw=candidate
+            used_source=url
+            break
+        failures.append(f'{url}: kein Gruppenspielplan im Inhalt')
+    except Exception as exc:
+        failures.append(f'{url}: {exc}')
+
+if raw is None:
+    print('IFV-Spielplan nicht erreichbar. Quellen:', ' | '.join(failures))
+    # Frühere Partien dürfen nicht als frisch abgeglichen deklariert werden.
+    data['schedule_sync_status']='unavailable'
+    with open(REPORT_PATH,'w',encoding='utf-8') as f:
+        json.dump(data,f,ensure_ascii=False,indent=2)
+        f.write('\n')
+    raise SystemExit(0)
 
 raw=re.sub(r'(?is)<script\b.*?</script>|<style\b.*?</style>',' ',raw)
 raw=re.sub(r'(?s)<[^>]+>','\n',raw)
@@ -169,7 +195,12 @@ for i,line in enumerate(lines):
         fixtures[key(item)]=item
 
 if not fixtures and not results:
-    raise SystemExit('Keine Gruppenspiele aus dem offiziellen IFV-Spielplan erkannt; Bericht bleibt unverändert.')
+    data['schedule_sync_status']='unavailable'
+    with open(REPORT_PATH,'w',encoding='utf-8') as f:
+        json.dump(data,f,ensure_ascii=False,indent=2)
+        f.write('\n')
+    print('IFV-Spielplan konnte nicht eindeutig gelesen werden; vorheriger Datenstand bleibt erhalten.')
+    raise SystemExit(0)
 
 # Offizielle Resultate der letzten 7 Tage ergänzen.
 merged_results={}
@@ -198,6 +229,9 @@ if fixtures:
         key=lambda m:(dmy(m.get('date')) or future_end,m.get('time',''),m.get('home',''))
     )
 
+data['schedule_sync_status']='verified'
+data['schedule_sync_source']=used_source
+data['schedule_sync_at']=now.isoformat()
 with open(REPORT_PATH,'w',encoding='utf-8') as f:
     json.dump(data,f,ensure_ascii=False,indent=2)
     f.write('\n')
