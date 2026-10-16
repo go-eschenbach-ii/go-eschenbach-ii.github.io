@@ -58,3 +58,11 @@ jobs:
                   print('MATCH',i,' | '.join(lines[max(0,i-6):min(len(lines),i+27)])[:500])
           except Exception as e:print('STANDINGS_SOURCE_ERROR',str(e))
           PY
+      - name: Validate official mirror table against current report
+        run: |
+          python scripts/sync_ifv_table.py
+          python - <<'PY'
+          import json
+          data=json.load(open('data/report.json'))
+          print('VERIFIED_ROWS',[(r['rank'],r['team'],r['played'],r['penalty_points'],r['points']) for r in data['standings']])
+          PY
