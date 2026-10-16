@@ -1,5 +1,10 @@
 {
-  "id": "",
-  "report_version": "",
-  "items": []
+  "id": "0dbc8787-a464-4e54-9684-273a6814be66",
+  "report_version": "16.10.2026 22:30:32",
+  "created_at": "2026-10-16T20:30:32Z",
+  "expires_at": "2026-10-19T20:30:32Z",
+  "title": "Das ist neu!",
+  "items": [
+    "Der Tagesbericht wurde überprüft und aktualisiert."
+  ]
 }

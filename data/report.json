@@ -26,16 +26,25 @@
       "away": "FC Grosswangen-Ettiswil",
       "home_goals": 0,
       "away_goals": 3,
-      "note": "Meisterschaft"
+      "note": ""
     },
     {
       "date": "12.10.2026",
-      "time": "",
+      "time": "20:15",
       "home": "SC Nebikon",
       "away": "FC Eschenbach II",
       "home_goals": 0,
       "away_goals": 7,
-      "note": "Meisterschaft"
+      "note": ""
+    },
+    {
+      "date": "10.10.2026",
+      "time": "19:15",
+      "home": "FC Eschenbach II",
+      "away": "FC Dagmersellen",
+      "home_goals": 2,
+      "away_goals": 1,
+      "note": ""
     },
     {
       "date": "10.10.2026",
@@ -45,15 +54,6 @@
       "home_goals": 2,
       "away_goals": 3,
       "note": ""
-    },
-    {
-      "date": "10.10.2026",
-      "time": "",
-      "home": "FC Eschenbach II",
-      "away": "FC Dagmersellen",
-      "home_goals": 2,
-      "away_goals": 1,
-      "note": "Meisterschaft"
     },
     {
       "date": "09.10.2026",
@@ -620,6 +620,6 @@
       }
     ]
   },
-  "generated_at": "16.10.2026 18:06:43",
+  "generated_at": "16.10.2026 22:30:32",
   "heart_cycle_key": "review:52694ad5-eae9-42dc-b806-df7a5f8ff001"
 }
