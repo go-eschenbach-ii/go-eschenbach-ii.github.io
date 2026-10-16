@@ -1,0 +1,26 @@
+name: Probe IFV mirrors
+on:
+  push:
+    paths:
+      - '.github/workflows/ifv-source-probe.yml'
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test direct IFV and official club mirror
+        run: |
+          python - <<'PY'
+          import urllib.request
+          urls=[
+          'https://matchcenter.ifv.ch/default.aspx?a=msp&ln=13040&lng=1&ls=25897&oid=7&s=2027&sg=70471',
+          'https://club.football.ch/?lng=1&tab=3396&v=376&t=31274&ls=25897&sg=70471&tg=4328790',
+          'https://club.football.ch/?lng=1&tab=3410&v=376',
+          'https://www.fcschoetz.ch/de/club/teams/team/spielplan-gruppe/%26v%3D376%26t%3D31274%26ls%3D25897%26sg%3D70471']
+          for u in urls:
+            try:
+              req=urllib.request.Request(u,headers={'User-Agent':'Mozilla/5.0','Accept-Language':'de-CH,de;q=0.9'})
+              with urllib.request.urlopen(req,timeout=15) as r:
+                raw=r.read().decode('utf-8','ignore')
+                print(u, 'STATUS',r.status,'LEN',len(raw),'TEAMS',raw.count('FC Eschenbach II'), 'HTML',raw[:60])
+            except Exception as e:print(u,'ERROR',str(e))
+          PY
