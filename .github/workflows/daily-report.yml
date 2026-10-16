@@ -104,6 +104,10 @@ jobs:
           REPORT_BASELINE: /tmp/report-before-update.json
         run: python scripts/protect_scorers.py
 
+      - name: Offizielle Tabelle via Vereins-Spiegel prüfen
+        continue-on-error: true
+        run: python scripts/sync_ifv_table.py
+
       - name: Bericht auf Widersprüche prüfen
         run: python scripts/validate_report.py
 

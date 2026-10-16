@@ -219,10 +219,13 @@ data['recent_results']=sorted(
     reverse=True
 )
 
-# Der direkt gelesene IFV-Spielplan ist für die nächsten 14 Tage verbindlich.
+# Nur bisher belegte bzw. durch die vorgängige Recherche bestätigte
+# Paarungen werden übernommen. Vereinsseiten enthalten auch weitere Saisons
+# und Teams; dort können vermeintliche Datumszuordnungen entstehen.
 if fixtures:
+    verified_keys={key(m) for m in data.get('upcoming_matches',[]) if isinstance(m,dict)}
     for k in list(fixtures):
-        if k in results:
+        if k in results or k not in verified_keys:
             fixtures.pop(k,None)
     data['upcoming_matches']=sorted(
         fixtures.values(),
