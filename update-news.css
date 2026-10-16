@@ -6,12 +6,13 @@
 .update-news-card{
   pointer-events:auto;overflow:hidden;color:#111;background:#ffde32;
   border:3px solid #111;border-radius:18px;box-shadow:6px 7px 0 #d71920,0 14px 35px rgba(0,0,0,.3);
-  animation:update-news-in .32s ease-out both;
+  animation:update-news-in .32s ease-out both;cursor:pointer;
 }
 .update-news-heading{display:flex;align-items:center;gap:10px;padding:12px 14px 9px;border-bottom:2px solid rgba(0,0,0,.24)}
 .update-news-symbol{display:grid;place-items:center;flex:0 0 auto;width:32px;height:32px;border-radius:50%;background:#d71920;color:#fff;font-size:21px;font-weight:950}
 .update-news-heading strong{flex:1;font-size:clamp(20px,5vw,25px);font-weight:950;line-height:1.1;text-transform:uppercase}
-.update-news-close{appearance:none;display:grid;place-items:center;border:2px solid #111;border-radius:50%;width:32px;height:32px;flex:0 0 auto;background:#fff;color:#111;cursor:pointer;font-size:23px;font-weight:700;line-height:1}
+.update-news-card:focus-visible{outline:3px solid #d71920;outline-offset:5px}
+.update-news-hint{padding:0 15px 12px;text-align:center;font-weight:850;font-size:12px;text-transform:uppercase;letter-spacing:.03em;opacity:.8}
 .update-news-list{margin:0;padding:12px 21px 16px 34px;display:grid;gap:7px;font-size:15px;font-weight:750;line-height:1.35}
 .update-news-list li{padding-left:2px}
 .update-news-leaving{animation:update-news-out .24s ease-in both}
