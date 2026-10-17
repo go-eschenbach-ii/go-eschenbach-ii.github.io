@@ -88,7 +88,6 @@
           '<span>'+(e.event_type==='goal'?'⚽ Tor für ':'↩️ Korrektur für ')+esc(team)+
           ' · <strong>'+Number(e.home_goals)+':'+Number(e.away_goals)+'</strong></span></li>';
       }).join('')+'</ol>':'<p>Noch keine Tore eingetragen.</p>')+
-      (unread?'<div class="live-ticker-tap-hint">Antippen, um das neue Tor als gelesen zu markieren</div>':'')+
       '</div>':'';
     const admin=m&&active&&adminToken?'<div class="live-ticker-admin">'+
       '<div class="live-ticker-admin-title">Nur für Admin: Tor erfassen</div>'+
