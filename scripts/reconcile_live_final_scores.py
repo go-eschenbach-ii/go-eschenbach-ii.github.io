@@ -42,6 +42,7 @@ confirmed = {
     if isinstance(x, dict) and x.get('status') == 'finished'
 }
 changes = 0
+conflicts = []
 for key, original in candidates.items():
     url = API + '?' + urllib.parse.urlencode({'match_key': key})
     try:
@@ -78,11 +79,13 @@ for key, original in candidates.items():
         changes += 1
     elif (old.get('home_goals'), old.get('away_goals')) != (hg, ag):
         print('Falsches Resultat ersetzt:', key, '->', hg, ag)
+        conflicts.append({'date': live['date'], 'home': live['home'], 'away': live['away']})
         old['home_goals'], old['away_goals'] = hg, ag
         changes += 1
 
 if confirmed:
     report['confirmed_live_scores'] = list(confirmed.values())
+    report['live_result_conflicts'] = conflicts
     known = {result_key(item) for item in report.get('recent_results', []) if isinstance(item, dict)}
     report['upcoming_matches'] = [
         item for item in report.get('upcoming_matches', [])
