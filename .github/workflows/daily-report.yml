@@ -92,6 +92,10 @@ jobs:
           MATCH_COMMENTS_FILE: /tmp/go-eschenbach-match-comments.json
         run: python scripts/verify_match_comment_coverage.py
 
+      - name: Endresultate des Admin-Livetickers uebernehmen
+        continue-on-error: true
+        run: python scripts/reconcile_live_final_scores.py
+
       - name: Letzten korrekten Stand gegen Rueckschritte schuetzen
         if: always()
         env:
