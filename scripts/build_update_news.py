@@ -41,48 +41,108 @@ def next_match(report):
 
 
 def changes(old, new):
+    """Only report specific, verifiable differences, never generic update status."""
     items = []
-    old_results = {match_key(m): m for m in old.get('recent_results', []) if isinstance(m, dict)}
-    fresh_results = [m for m in new.get('recent_results', []) if isinstance(m, dict)
-                     and score(m) is not None and score(m) != score(old_results.get(match_key(m), {}))]
-    team_results = [m for m in fresh_results if team_match(m)]
-    for m in team_results[:1]:
-        items.append('Neues Resultat: ' + match_name(m))
 
-    prev, curr = old.get('eschenbach') or {}, new.get('eschenbach') or {}
-    if any(prev.get(key) != curr.get(key) for key in ('rank', 'points')) and curr.get('rank') is not None:
-        items.append(f"Eschenbach II: Rang {curr['rank']} mit {curr.get('points', '–')} Punkten.")
-    elif old.get('standings') != new.get('standings'):
-        items.append('Die Tabelle wurde aktualisiert.')
+    old_results = {
+        match_key(m): m for m in old.get('recent_results', [])
+        if isinstance(m, dict)
+    }
+    fresh_results = [
+        m for m in new.get('recent_results', []) if isinstance(m, dict)
+        and score(m) is not None
+        and score(m) != score(old_results.get(match_key(m), {}))
+    ]
+    # Prefer Eschenbach matches, then the newest other group results.
+    fresh_results.sort(
+        key=lambda m: (
+            team_match(m),
+            str(m.get('date', '')).split('.')[::-1],
+            str(m.get('time', ''))
+        ),
+        reverse=True,
+    )
+    for m in fresh_results[:2]:
+        items.append(
+            f"{m.get('home', '')} – {m.get('away', '')}: "
+            f"{m.get('home_goals')}:{m.get('away_goals')}."
+        )
 
-    old_scorers = {str(s.get('name', '')).strip().casefold(): s.get('goals')
-                   for s in old.get('scorers', []) if isinstance(s, dict)}
-    changed = [s for s in new.get('scorers', []) if isinstance(s, dict)
-               and old_scorers.get(str(s.get('name', '')).strip().casefold()) != s.get('goals')]
-    if changed:
-        leading = ', '.join(f"{s.get('name', '')} ({s.get('goals', 0)})" for s in changed[:2])
-        items.append('Torschützen aktualisiert: ' + leading + (' …' if len(changed) > 2 else '') + '.')
+    old_table = {
+        str(r.get('team', '')).strip(): r
+        for r in old.get('standings', []) if isinstance(r, dict)
+    }
+    new_table = [
+        r for r in new.get('standings', []) if isinstance(r, dict)
+    ]
+    moved = [
+        r for r in new_table
+        if r.get('team') in old_table
+        and r.get('rank') is not None
+        and old_table[r['team']].get('rank') is not None
+        and old_table[r['team']].get('rank') != r.get('rank')
+    ]
+    moved.sort(
+        key=lambda r: (
+            r.get('team') == 'FC Eschenbach II',
+            abs(int(old_table[r['team']]['rank']) - int(r['rank'])),
+        ),
+        reverse=True,
+    )
+    if moved:
+        snippets = [f"{r['team']} neu Rang {r['rank']}" for r in moved[:2]]
+        items.append('Rangliste: ' + ', '.join(snippets) + '.')
+    else:
+        prev, curr = old.get('eschenbach') or {}, new.get('eschenbach') or {}
+        if (
+            prev.get('points') is not None
+            and curr.get('points') is not None
+            and prev.get('points') != curr.get('points')
+        ):
+            items.append(f"Eschenbach II hat neu {curr['points']} Punkte.")
+
+    old_scorers = {
+        str(s.get('name', '')).strip().casefold(): s.get('goals')
+        for s in old.get('scorers', []) if isinstance(s, dict)
+    }
+    changed_scorers = [
+        s for s in new.get('scorers', []) if isinstance(s, dict)
+        and old_scorers.get(str(s.get('name', '')).strip().casefold()) != s.get('goals')
+    ]
+    if changed_scorers:
+        snippets = [
+            f"{s.get('name', '')}: {s.get('goals', 0)} Tore"
+            for s in changed_scorers[:2]
+        ]
+        items.append('Torschützen: ' + ', '.join(snippets) + '.')
 
     old_next, new_next = next_match(old), next_match(new)
     if new_next and (not old_next or upcoming_key(new_next) != upcoming_key(old_next)):
         date_time = f"{new_next.get('date', '')} {new_next.get('time', '')}".strip()
-        items.append(f"Nächstes Spiel: {new_next.get('home')} – {new_next.get('away')} ({date_time}).")
+        items.append(
+            f"Nächstes Eschenbach-Spiel: "
+            f"{new_next.get('home')} – {new_next.get('away')} ({date_time})."
+        )
+    else:
+        old_fixtures = {
+            match_key(m) for m in old.get('upcoming_matches', [])
+            if isinstance(m, dict)
+        }
+        additions = [
+            m for m in new.get('upcoming_matches', [])
+            if isinstance(m, dict) and match_key(m) not in old_fixtures
+        ]
+        if additions:
+            m = additions[0]
+            date_time = f"{m.get('date', '')} {m.get('time', '')}".strip()
+            items.append(
+                f"Neues Spiel: {m.get('home', '')} – {m.get('away', '')} "
+                f"({date_time})."
+            )
 
-    if new.get('review', '').strip() != old.get('review', '').strip():
-        items.append('Der Rückblick wurde erneuert.')
-    elif new.get('outlook', '').strip() != old.get('outlook', '').strip():
-        items.append('Der Ausblick auf die kommenden Spiele wurde erneuert.')
-
-    if not team_results and fresh_results and len(items) < 3:
-        items.append('Neue Ligaresultate: ' + match_name(fresh_results[0]) + '.')
-
-    if new.get('title', '').strip() != old.get('title', '').strip() and len(items) < 4:
-        items.append('Neuer Bericht: ' + str(new['title']).strip())
-
-    if not items:
-        items.append('Der Tagesbericht wurde überprüft und aktualisiert.')
+    # No news banner if the report contains only wording changes,
+    # verifications, timestamps or another update without concrete news.
     return items[:4]
-
 
 def main():
     previous, current = loaded(BASELINE), loaded(REPORT)
