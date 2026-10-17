@@ -314,8 +314,8 @@ if (baseline_consistent and new_esch
 # If the new table still reflects an incorrect score for the very same
 # number of games, retain the previously reconciled match statistics.
 if corrections and baseline.get('standings') and protected.get('standings'):
-    base_rows = {r.get('team'): r for r in baseline['standings'] if isinstance(r, dict)}
-    new_rows = {r.get('team'): r for r in protected['standings'] if isinstance(r, dict)}
+    base_rows = {str(r.get('team','')).casefold(): r for r in baseline['standings'] if isinstance(r, dict)}
+    new_rows = {str(r.get('team','')).casefold(): r for r in protected['standings'] if isinstance(r, dict)}
     fields = ('played', 'wins', 'draws', 'losses', 'points',
               'goals_for', 'goals_against', 'goal_difference')
     for key in corrections:
