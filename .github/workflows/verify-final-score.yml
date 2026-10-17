@@ -1,4 +1,5 @@
 name: Verify Corrected Match Result
+# Second run verifies corrected standings synchronization
 on:
   push:
     paths: ['.github/workflows/verify-final-score.yml']
