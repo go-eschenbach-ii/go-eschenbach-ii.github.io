@@ -16,8 +16,10 @@
 
   const show=news=>{
     const current=host.querySelector('.update-news-card');
-    if(current?.dataset.newsId===news.id)return;
+    const signature=JSON.stringify([news.title, ...news.items.slice(0,4)]);
+    if(current?.dataset.newsId===news.id && current.dataset.newsSignature===signature)return;
     const card=document.createElement('section');
+    card.dataset.newsSignature=signature;
     card.className='update-news-card';
     card.dataset.newsId=news.id;
     card.setAttribute('role','button');
