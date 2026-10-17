@@ -1,11 +1,12 @@
 {
-  "id": "892d3a1c-d07f-4479-a5e8-dd719e9d7d10",
-  "report_version": "17.10.2026 19:50:37",
-  "created_at": "2026-10-17T17:50:39Z",
+  "id": "result-correction-20261017-hochdorf-3-0",
+  "report_version": "17.10.2026 19:54:46",
+  "created_at": "2026-10-17T17:54:55.146Z",
   "expires_at": "2026-10-20T17:50:39Z",
-  "title": "Das ist neu!",
+  "title": "Resultat korrigiert!",
   "items": [
-    "FC Hochdorf III – FC Eschenbach II: 3:1.",
-    "Nächstes Eschenbach-Spiel: FC Eschenbach II – FC Ruswil III (24.10.2026 19:00)."
+    "FC Hochdorf III – FC Eschenbach II: 3:0 (statt 3:1).",
+    "Eschenbach II bleibt mit 21 Punkten auf Rang 1.",
+    "Hochdorf III neu Rang 2 mit 18 Punkten."
   ]
 }
