@@ -130,6 +130,9 @@ for key, verified in confirmed.items():
         corrections.add(key)
         print(f'Admin-Endresultat hat Vorrang: {key}: {old_score} -> {verified_score}')
     merged[key] = {**(existing or {}), **verified}
+for conflict in current.get('live_result_conflicts', []):
+    if isinstance(conflict, dict) and result_key(conflict) in confirmed:
+        corrections.add(result_key(conflict))
 if confirmed:
     protected['confirmed_live_scores'] = list(confirmed.values())
 
@@ -366,6 +369,7 @@ if final_table:
 
 # Ein erfolgreicher Update-Lauf soll in der App als neuer Lauf erkennbar sein,
 # auch wenn wegen einer IFV-Sperre bewusst der letzte bestaetigte Strukturstand erhalten blieb.
+protected.pop('live_result_conflicts', None)
 protected['generated_at']=datetime.now(ZoneInfo('Europe/Zurich')).strftime('%d.%m.%Y %H:%M:%S')
 
 with open(PATH,'w',encoding='utf-8') as f:
