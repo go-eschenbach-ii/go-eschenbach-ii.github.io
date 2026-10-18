@@ -115,6 +115,20 @@
     box.querySelectorAll('textarea[data-key]').forEach(el=>{fields[el.dataset.key]=el.value.trim();});
     return fields;
   }
+  async function waitForPublicReport(expected,timeout=150000){
+    const begin=Date.now();
+    while(Date.now()-begin<timeout){
+      try{
+        const response=await fetch('data/report.json?approval='+Date.now(),{cache:'no-store'});
+        if(response.ok){
+          const current=await response.json();
+          if(String(current.generated_at||'')===String(expected))return true;
+        }
+      }catch{}
+      await new Promise(resolve=>setTimeout(resolve,5000));
+    }
+    return false;
+  }
   async function change(action,message,box){
     if(busy||!draft)return;
     if(action==='publish'&&!window.confirm('Den Bericht jetzt für alle Nutzer veröffentlichen?'))return;
@@ -128,12 +142,19 @@
         draft.report=saved.report;
       }
       if(action==='publish'){
+        const expectedVersion=String(draft.report.generated_at||'');
         const published=await api('publish');
         if(!published.published)throw Error('not_published');
         draft=null;banner();close();
-        if(statusEl){statusEl.textContent='Aktualisiert ✓';statusEl.dataset.state='done';}
-        if(button){button.textContent='Aktualisiert';button.disabled=false;}
-        setTimeout(()=>location.reload(),2200);
+        if(statusEl){statusEl.textContent='Freigegeben. Veröffentlichung läuft …';statusEl.dataset.state='publishing';}
+        if(button){button.textContent='Veröffentlicht';button.disabled=true;}
+        const live=await waitForPublicReport(expectedVersion);
+        if(statusEl){
+          statusEl.textContent=live?'Aktualisiert ✓':'Freigegeben. Der neue Bericht erscheint in Kürze.';
+          statusEl.dataset.state=live?'done':'info';
+        }
+        if(button){button.textContent=live?'Aktualisiert':'Update';button.disabled=false;}
+        if(live)setTimeout(()=>location.reload(),2200);
       }else if(action==='discard'){
         await api('discard');
         draft=null;banner();close();
