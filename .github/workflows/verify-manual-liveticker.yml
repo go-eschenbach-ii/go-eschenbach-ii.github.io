@@ -1,0 +1,50 @@
+name: Check manual live ticker start
+on:
+  push:
+    paths:
+      - '.github/workflows/verify-manual-liveticker.yml'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax and manual start assertions
+        run: |
+          node --check live-ticker.js
+          node --check sw.js
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('live-ticker.js').read_text()
+          assert '▶ Liveticker jetzt starten' in s
+          assert 'data-action="start"' in s
+          assert 'window.confirm(' in s
+          assert "if(!adminToken||!candidates.length||live.match?.status==='live')return''" in s
+          assert 'Math.abs(t-current)<47*3600000' not in s
+          assert '370*24*3600000' in s
+          assert 'Noch nicht gestartet' in s
+          assert 'previewMatch(nextFixture())' in s
+          html=Path('index.html').read_text()
+          assert 'live-ticker.js?v=4' in html
+          assert 'live-ticker.css?v=3' in html
+          print('MANUAL_START_READY')
+          PY
+      - name: Confirm anonymous start is rejected
+        run: |
+          python - <<'PY'
+          import urllib.request,urllib.error,json
+          payload={
+            'action':'start',
+            'match_key':'24.10.2026|19:00|FC Eschenbach II|FC Ruswil III',
+            'match_date':'2026-10-24','match_time':'19:00',
+            'home':'FC Eschenbach II','away':'FC Ruswil III'
+          }
+          url='https://kfpxheegmeupnuzqjqqt.supabase.co/functions/v1/live-ticker'
+          r=urllib.request.Request(url,data=json.dumps(payload).encode(),method='POST',
+            headers={'Origin':'https://go-eschenbach-ii.github.io','Content-Type':'application/json'})
+          try:
+              urllib.request.urlopen(r,timeout=15)
+              raise AssertionError('Unauthorised admin start accepted')
+          except urllib.error.HTTPError as e:
+              assert e.code in (401,403),e.code
+              print('SERVER_AUTH_REQUIRED',e.code)
+          PY
