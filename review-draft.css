@@ -1,0 +1,23 @@
+.review-draft-notice{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:12px auto;padding:12px 15px;border:2px solid #111;border-radius:12px;background:#fff2af;color:#111;font-weight:850;max-width:740px}
+.review-draft-notice[hidden]{display:none!important}
+.review-draft-notice button{padding:9px 13px;background:#111;color:#fff;font-weight:900;border:0;border-radius:8px;font:inherit}
+.review-draft-overlay{position:fixed;inset:0;z-index:100020;background:#000a;display:flex;align-items:center;justify-content:center;padding:10px}
+.review-draft-panel{width:min(800px,100%);max-height:calc(100dvh - 20px);background:#fff;color:#111;border-radius:16px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 18px 60px #0008;font:inherit}
+.review-draft-top{display:flex;gap:15px;justify-content:space-between;align-items:flex-start;padding:15px 17px;background:#141414;color:#fff}
+.review-draft-top strong{font-size:19px}
+.review-draft-top p{color:#eee;font-size:13px;margin:4px 0 0}
+.review-draft-close{border:0;background:#fff;color:#111;border-radius:50%;width:34px;height:34px;flex:0 0 auto;font-size:24px}
+.review-draft-body{overflow:auto;padding:14px 17px;overscroll-behavior:contain}
+.review-draft-info{background:#fff6ca;padding:11px;border-radius:9px;margin-bottom:14px;font-size:13px}
+.review-draft-field{display:block;margin:0 0 15px}
+.review-draft-field strong{display:block;margin-bottom:6px;font-size:14px}
+.review-draft-field textarea{display:block;box-sizing:border-box;width:100%;padding:12px;border:1.5px solid #aaa;border-radius:9px;background:#fff;color:#111;resize:vertical;font-size:15px;line-height:1.5;font-family:inherit}
+.review-draft-facts{border-top:2px solid #ddd;padding:10px 0;font-size:13px;line-height:1.5}
+.review-draft-facts h3{font-size:15px;margin:15px 0 7px}
+.review-draft-facts p{margin:3px 0}
+.review-draft-actions{padding:11px 15px;display:flex;flex-wrap:wrap;gap:8px;border-top:1px solid #ccc;background:#fafafa}
+.review-draft-actions button{border:2px solid #111;border-radius:9px;font-size:14px;font-weight:900;padding:10px 12px;background:#fff;color:#111;cursor:pointer}
+.review-draft-actions .review-draft-primary{background:#f1cb00}
+.review-draft-actions .review-draft-danger{border-color:#bbb;color:#666}
+.review-draft-status{width:100%;font-size:12px;font-weight:800;margin:1px 0}
+@media(max-width:600px){.review-draft-overlay{padding:0}.review-draft-panel{width:100%;max-height:100dvh;border-radius:0}.review-draft-actions{position:relative}.review-draft-actions button{flex:1 1 43%}}
