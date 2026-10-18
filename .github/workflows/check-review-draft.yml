@@ -1,0 +1,53 @@
+name: Check Draft Approval And Next Match
+on:
+  push:
+    paths: ['.github/workflows/check-review-draft.yml']
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check browser and workflow code
+        run: |
+          node --check admin-update.js
+          node --check review-draft.js
+          node --check live-ticker.js
+          node --check sw.js
+          python -m py_compile scripts/stage_report_draft.py
+          python - <<'PY'
+          from pathlib import Path
+          y=Path('.github/workflows/daily-report.yml').read_text()
+          assert 'python scripts/stage_report_draft.py' in y
+          assert 'git push origin HEAD:main' not in y
+          assert 'review-draft.js?v=1' in Path('index.html').read_text()
+          print('NO_AUTOMATIC_PUBLICATION',True)
+          PY
+      - name: Verify approval endpoints reject anonymous changes
+        run: |
+          python - <<'PY'
+          import json,urllib.request,urllib.error
+          base='https://kfpxheegmeupnuzqjqqt.supabase.co/functions/v1/report-draft'
+          for payload in (
+              {'action':'status'},
+              {'action':'publish'},
+              {'action':'submit','request_id':'00000000-0000-0000-0000-000000000000','comments_token':'x'*65}
+          ):
+              r=urllib.request.Request(base,data=json.dumps(payload).encode(),method='POST',
+                  headers={'Content-Type':'application/json','Origin':'https://go-eschenbach-ii.github.io'} if payload['action']!='submit' else {'Content-Type':'application/json'})
+              try:
+                  urllib.request.urlopen(r,timeout=20)
+                  raise AssertionError('Unprotected draft action: '+payload['action'])
+              except urllib.error.HTTPError as e:
+                  print('PROTECTED',payload['action'],e.code)
+                  assert e.code in (401,403)
+          PY
+      - name: Check scheduled next match
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('data/report.json'))
+          upcoming=[m for m in d['upcoming_matches'] if 'FC Eschenbach II' in (m['home'],m['away'])]
+          assert upcoming and upcoming[0]['date']=='24.10.2026'
+          assert 'previewMatch(nextFixture())' in open('live-ticker.js').read()
+          print('NEXT_GAME',upcoming[0])
+          PY
