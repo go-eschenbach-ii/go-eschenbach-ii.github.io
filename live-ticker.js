@@ -43,8 +43,8 @@
     const current=Date.now();
     return [...uniq.values()].filter(m=>{
       const t=Date.parse(dateISO(m.date)+'T12:00:00Z');
-      return Number.isFinite(t)&&Math.abs(t-current)<47*3600000;
-    }).sort((a,b)=>dateISO(a.date).localeCompare(dateISO(b.date)));
+      return Number.isFinite(t)&&t>=current-48*3600000&&t<=current+370*24*3600000;
+    }).sort((a,b)=>dateISO(a.date).localeCompare(dateISO(b.date))||String(a.time).localeCompare(String(b.time)));
   }
   function acknowledge(){
     const m=live.match,ev=live.events?.[0];
@@ -65,16 +65,25 @@
   }
   function choicesPanel(){
     const candidates=choices();
-    if(!adminToken||!candidates.length)return'';
+    // A fixture is visible to visitors before kickoff, but starts LIVE only
+    // when the authorised administrator taps the start button.
+    if(!adminToken||!candidates.length||live.match?.status==='live')return'';
     if(!selectedKey||!candidates.some(m=>makeKey(m)===selectedKey)){
       const today=new Date().toLocaleDateString('de-CH',{timeZone:'Europe/Zurich',day:'2-digit',month:'2-digit',year:'numeric'});
       const preferred=candidates.find(m=>m.date===today)||candidates[0];
       selectedKey=makeKey(preferred);
     }
-    return '<div class="live-ticker-admin-start"><span>Admin · Livematch auswählen</span>'+
-      '<select id="liveTickerMatchSelect" aria-label="Match auswählen">'+
-       candidates.map(m=>'<option value="'+esc(makeKey(m))+'"'+(makeKey(m)===selectedKey?' selected':'')+'>'+esc(matchLabel(m))+'</option>').join('')+
-      '</select><button type="button" data-action="start">Liveticker starten</button></div>';
+    const fixtureSelector=candidates.length===1
+      ?'<div class="live-ticker-single-match">'+esc(matchLabel(candidates[0]))+'</div>'
+      :'<select id="liveTickerMatchSelect" aria-label="Match auswählen">'+
+         candidates.map(m=>'<option value="'+esc(makeKey(m))+'"'+(makeKey(m)===selectedKey?' selected':'')+'>'+esc(matchLabel(m))+'</option>').join('')+
+       '</select>';
+    return '<div class="live-ticker-admin-start">'+
+      '<span class="live-ticker-admin-label">Nur für Admin · manueller Start</span>'+
+      fixtureSelector+
+      '<button class="live-ticker-start-button" type="button" data-action="start">▶ Liveticker jetzt starten</button>'+
+      '<p class="live-ticker-start-note">Der Liveticker startet erst, wenn du diesen Knopf antippst. Vorher sehen alle «Noch nicht gestartet».</p>'+
+      '</div>';
   }
   function render(force=false){
     const m=live.match?.status==='live'?live.match:previewMatch(nextFixture());
@@ -143,7 +152,7 @@
     if(action==='start'){
       const match=choices().find(m=>makeKey(m)===selectedKey);
       if(!match)return;
-      if(!window.confirm('Liveticker starten für:\n'+matchLabel(match)+'?'))return;
+      if(!window.confirm('Liveticker JETZT für alle starten?\n'+matchLabel(match)+'\n\nDanach erscheint «LIVE» und du kannst Tore erfassen.'))return;
       Object.assign(payload,{match_key:makeKey(match),match_date:dateISO(match.date),
         match_time:match.time,home:match.home,away:match.away});
     }else{

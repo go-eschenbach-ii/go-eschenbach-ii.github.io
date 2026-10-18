@@ -24,6 +24,10 @@
 .live-ticker-admin-actions button.live-finish{grid-column:1/-1;background:#111;color:#fff}
 .live-ticker-admin-actions button:disabled,.live-ticker-admin-start button:disabled{opacity:.5}
 .live-ticker-admin-start{display:grid;gap:8px;padding:12px 14px;background:#fffbe5;border-top:1px solid #ddd}
-.live-ticker-admin-start span{font-size:12px;font-weight:900}
+.live-ticker-admin-label{font-size:12px;font-weight:900;letter-spacing:.025em}
+.live-ticker-single-match{font-size:14px;font-weight:850;line-height:1.4;padding:10px 0}
+.live-ticker-admin-start button.live-ticker-start-button{display:block;width:100%;background:#f9d500;color:#111;font-size:17px;font-weight:950;padding:15px 12px;box-shadow:3px 3px 0 #111}
+.live-ticker-start-note{font-size:12px;color:#444;margin:1px 0 0;line-height:1.5}
+.live-ticker-admin-start button.live-ticker-start-button:disabled{box-shadow:none}
 .live-ticker-admin-start select{max-width:100%;width:100%;border:1px solid #999;border-radius:9px;background:#fff;padding:11px;font-size:13px;color:#111}
 @media(max-width:520px){.live-ticker-host{width:calc(100% - 22px)}.live-ticker-score{gap:6px;padding:17px 9px 8px}.live-ticker-admin-actions{gap:7px}}
