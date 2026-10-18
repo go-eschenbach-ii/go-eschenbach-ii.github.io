@@ -162,6 +162,14 @@
       const r=await fetch(`${API}?t=${Date.now()}`,{cache:'no-store'});
       if(!r.ok)throw Error();
       const d=await r.json();
+      if(d.draft_ready&&!d.pending){
+        stopReportWatch();
+        el.disabled=false;
+        el.textContent='Entwurf prüfen';
+        setStatus('Berichtsentwurf bereit. Bitte vor der Veröffentlichung prüfen.','review');
+        window.dispatchEvent(new Event('go-draft-ready'));
+        return;
+      }
       if(d.pending){
         const started=d.requested_at?new Date(d.requested_at).getTime():0;
         const age=started?Date.now()-started:0;
@@ -219,6 +227,10 @@
   };
 
   const requestUpdate=async(updateReview=null)=>{
+    if(window.GoDraftReview?.hasPending){
+      window.GoDraftReview.open();
+      return;
+    }
     if(el.disabled||decisionPending)return;
     if(updateReview===null){
       decisionPending=true;
@@ -252,6 +264,12 @@
         if(configured)setTimeout(()=>requestUpdate(updateReview),400);
         return;
       }
+      if(r.status===409&&d.draft_ready){
+        el.disabled=false;
+        el.textContent='Entwurf prüfen';
+        window.dispatchEvent(new Event('go-draft-ready'));
+        return;
+      }
       if(r.status===429){
         const mins=Math.max(1,Math.ceil(Number(d.cooldown_seconds||60)/60));
         setStatus(`Bereits kürzlich aktualisiert. In ca. ${mins} Min. wieder möglich.`,'info');
@@ -273,7 +291,6 @@
           :(d.phase==='running'?'Aktualisierung läuft – Rückblick bleibt bestehen …':'Update gestartet – Rückblick bleibt bestehen …'),'running');
       }
       el.textContent='Läuft …';
-      watchPublishedReport();
       poll();
     }catch{
       stopReportWatch();
@@ -283,7 +300,10 @@
     }
   };
 
-  el.addEventListener('click',e=>e.preventDefault());
+  el.addEventListener('click',e=>{
+    e.preventDefault();
+    if(window.GoDraftReview?.hasPending)window.GoDraftReview.open();
+  });
   el.addEventListener('contextmenu',e=>e.preventDefault());
   el.addEventListener('pointerdown',()=>{
     cancelHold();
@@ -299,6 +319,13 @@
       const r=await fetch(`${API}?t=${Date.now()}`,{cache:'no-store'});
       if(!r.ok)return;
       const d=await r.json();
+      if(d.draft_ready&&!d.pending){
+        el.textContent='Entwurf prüfen';
+        el.disabled=false;
+        setStatus('Berichtsentwurf bereit. Bitte vor der Veröffentlichung prüfen.','review');
+        window.dispatchEvent(new Event('go-draft-ready'));
+        return;
+      }
       if(d.pending){
         beforeGeneratedAt=localStorage.getItem(BASELINE_KEY)||await getReportVersion();
         requestedAt=d.requested_at||localStorage.getItem(REQUEST_KEY);
