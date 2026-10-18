@@ -334,7 +334,6 @@
         const started=d.requested_at?new Date(d.requested_at).getTime():0;
         const age=started?Date.now()-started:0;
         setStatus(age>5*60*1000?'Update dauert länger als üblich …':(d.phase==='running'?'Aktualisierung läuft …':'Update startet …'),'running');
-        watchPublishedReport();
         poll();
       }else{
         beforeGeneratedAt=localStorage.getItem(BASELINE_KEY)||'';
