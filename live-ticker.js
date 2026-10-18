@@ -18,6 +18,22 @@
     try{return new Date(t).toLocaleTimeString('de-CH',{timeZone:'Europe/Zurich',hour:'2-digit',minute:'2-digit'})+' Uhr';}
     catch{return'';}
   };
+  function nextFixture(){
+    const all=(report?.upcoming_matches||[]).filter(m=>m&&isEschenbach(m)&&m.date&&m.time);
+    const upcoming=all.filter(m=>{
+      const start=Date.parse(dateISO(m.date)+'T'+String(m.time).padStart(5,'0')+':00+02:00');
+      return Number.isFinite(start)&&start>Date.now()-3*3600000;
+    });
+    upcoming.sort((a,b)=>dateISO(a.date).localeCompare(dateISO(b.date))||String(a.time).localeCompare(String(b.time)));
+    return upcoming[0]||null;
+  }
+  function previewMatch(f){
+    return f?{
+      match_key:makeKey(f),match_date:dateISO(f.date),match_time:f.time,
+      home:f.home,away:f.away,home_goals:0,away_goals:0,status:'upcoming',
+      updated_at:''
+    }:null;
+  }
   function choices(){
     if(!report)return[];
     const all=[...(report.upcoming_matches||[]),...(report.recent_results||[])].filter(m=>
@@ -61,7 +77,8 @@
       '</select><button type="button" data-action="start">Liveticker starten</button></div>';
   }
   function render(force=false){
-    const m=live.match,events=live.events||[];
+    const m=live.match?.status==='live'?live.match:previewMatch(nextFixture());
+    const events=m?.status==='live'?live.events||[]:[];
     if(!m&&!adminToken){host.hidden=true;return;}
     const latest=events[0]?.id||'';
     let seen='';
@@ -72,16 +89,17 @@
     shownSignature=signature;
     host.hidden=false;
     const active=m?.status==='live';
-    const heading='<div class="live-ticker-head"><strong>'+(active?'🔴 LIVE':'⚽ LIVETICKER')+'</strong>'+
+    const planned=m?.status==='upcoming';
+    const heading='<div class="live-ticker-head"><strong>'+(active?'🔴 LIVE':planned?'⚽ NÄCHSTES SPIEL':'⚽ LIVETICKER')+'</strong>'+
       (unread?'<span class="live-ticker-one" aria-label="Neue Tore">1</span>':'')+
       '<span class="live-ticker-head-caption">'+(active?'Spielstand · laufend':'Spielstand')+'</span></div>';
     const scoreboard=m?'<div class="live-ticker-score">'+
       '<div class="live-ticker-team">'+esc(shortTeam(m.home))+'</div>'+
-      '<div class="live-ticker-numbers">'+Number(m.home_goals)+' : '+Number(m.away_goals)+'</div>'+
+      '<div class="live-ticker-numbers">'+(planned?'– : –':Number(m.home_goals)+' : '+Number(m.away_goals))+'</div>'+
       '<div class="live-ticker-team">'+esc(shortTeam(m.away))+'</div></div>'+
       '<div class="live-ticker-meta">'+esc(m.match_date.split('-').reverse().join('.'))+
-      ' · '+esc(m.match_time)+' Uhr · '+(active?'Liveticker aktiv':'Spiel beendet')+'</div>':'';
-    const feed=m?'<div class="live-ticker-events"><strong>Tor-Ticker</strong>'+
+      ' · '+esc(m.match_time)+' Uhr · '+(active?'Liveticker aktiv':planned?'Noch nicht gestartet':'Spiel beendet')+'</div>':'';
+    const feed=m&&!planned?'<div class="live-ticker-events"><strong>Tor-Ticker</strong>'+
       (events.length?'<ol>'+events.map(e=>{
         const team=e.team==='home'?m.home:m.away;
         return '<li><span class="live-ticker-event-time">'+esc(minute(e.created_at))+'</span>'+
@@ -109,6 +127,11 @@
       if(!r.ok)throw Error('fetch_failed');
       const data=await r.json();
       live={match:data.match||null,events:data.events||[]};
+      if(!report||Date.now()-(window.__goLiveReportLoadedAt||0)>60000){
+        try{const fresh=await fetch('data/report.json?live='+Date.now(),{cache:'no-store'});
+          if(fresh.ok){report=await fresh.json();window.__goLiveReportLoadedAt=Date.now();}
+        }catch{}
+      }
       render();
     }catch(err){
       console.warn('Liveticker zurzeit nicht abrufbar',err);
@@ -153,7 +176,7 @@
   (async()=>{
     try{
       const r=await fetch('data/report.json?liveticker='+Date.now(),{cache:'no-store'});
-      if(r.ok)report=await r.json();
+      if(r.ok){report=await r.json();window.__goLiveReportLoadedAt=Date.now();}
     }catch{}
     await load();
     // Admin sees the start panel even if the server has no active match.
