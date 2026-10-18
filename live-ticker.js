@@ -36,7 +36,7 @@
   }
   function choices(){
     if(!report)return[];
-    const all=[...(report.upcoming_matches||[]),...(report.recent_results||[])].filter(m=>
+    const all=[...(report.upcoming_matches||[])].filter(m=>
       m&&isEschenbach(m)&&m.time&&m.date
     );
     const uniq=new Map(all.map(m=>[makeKey(m),m]));
