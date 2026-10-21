@@ -24,7 +24,7 @@
     const overlay=document.createElement('div');
     overlay.setAttribute('role','dialog');
     overlay.setAttribute('aria-modal','true');
-    overlay.setAttribute('aria-label','Rückblick aktualisieren');
+    overlay.setAttribute('aria-label','Art des Updates wählen');
     Object.assign(overlay.style,{
       position:'fixed',inset:'0',zIndex:'99999',display:'flex',alignItems:'center',justifyContent:'center',
       padding:'24px',background:'rgba(0,0,0,.48)'
@@ -32,16 +32,16 @@
 
     const box=document.createElement('div');
     Object.assign(box.style,{
-      width:'min(360px,100%)',background:'#fff',color:'#111',borderRadius:'16px',padding:'20px',
+      width:'min(430px,100%)',background:'#fff',color:'#111',borderRadius:'16px',padding:'20px',
       boxShadow:'0 18px 50px rgba(0,0,0,.28)',fontFamily:'inherit'
     });
 
     const title=document.createElement('div');
-    title.textContent='Rückblick aktualisieren?';
+    title.textContent='Was möchtest du aktualisieren?';
     Object.assign(title.style,{fontSize:'19px',fontWeight:'700',marginBottom:'8px'});
 
     const text=document.createElement('div');
-    text.textContent='Soll der Text «Rückblick» bei diesem Update ebenfalls erneuert werden?';
+    text.textContent='Ohne neuen Bericht werden Resultate, Rangliste, Spielplan und Torschützen direkt aktualisiert. Die bisherigen Berichtstexte und Herzen bleiben bestehen.';
     Object.assign(text.style,{fontSize:'15px',lineHeight:'1.4',marginBottom:'18px'});
 
     const buttons=document.createElement('div');
@@ -58,7 +58,7 @@
 
     const no=document.createElement('button');
     no.type='button';
-    no.textContent='Nein, beibehalten';
+    no.textContent='Nur Daten aktualisieren';
     Object.assign(no.style,{
       flex:'1',padding:'11px 10px',border:'1px solid #ccc',borderRadius:'10px',background:'#fff',
       color:'#111',font:'inherit',fontWeight:'600'
@@ -67,7 +67,7 @@
 
     const yes=document.createElement('button');
     yes.type='button';
-    yes.textContent='Ja, erneuern';
+    yes.textContent='Neuen Bericht erstellen';
     Object.assign(yes.style,{
       flex:'1',padding:'11px 10px',border:'0',borderRadius:'10px',background:'#111',
       color:'#fff',font:'inherit',fontWeight:'700'
@@ -79,7 +79,7 @@
     overlay.append(box);
     document.body.append(overlay);
     document.addEventListener('keydown',onKey);
-    yes.focus();
+    no.focus();
   });
 
   const warnWhenScheduleUnavailable=async()=>{
