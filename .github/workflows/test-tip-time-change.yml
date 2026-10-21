@@ -1,0 +1,25 @@
+name: Verify restored match tips
+on:
+  push:
+    paths: ['.github/workflows/test-tip-time-change.yml']
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check vote continuity across kickoff-time changes
+        run: |
+          python - <<'PY'
+          import requests
+          url='https://kfpxheegmeupnuzqjqqt.supabase.co/functions/v1/match-tips-public'
+          counts=[]
+          for time in ('19:00','19:15','19:30'):
+              key=f'24.10.2026|{time}|FC Eschenbach II|FC Ruswil III'
+              response=requests.get(url,params={'match_key':key},timeout=20)
+              assert response.status_code==200,response.status_code
+              result=response.json()
+              counts.append((time,result.get('total')))
+              assert result.get('total')==2,(time,result.get('total'))
+              assert len(result.get('tips',[]))==2,(time,len(result.get('tips',[])))
+          print('PRESERVED_TIP_COUNTS',counts)
+          PY
