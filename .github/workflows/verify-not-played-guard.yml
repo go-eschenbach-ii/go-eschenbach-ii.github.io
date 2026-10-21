@@ -1,0 +1,45 @@
+name: Check Match Result Time Guard
+on:
+  push:
+    paths:
+      - '.github/workflows/verify-not-played-guard.yml'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile guard scripts and check future fixtures
+        run: |
+          python -m py_compile scripts/validate_report.py scripts/sync_ifv_schedule.py
+          python - <<'PY'
+          import json,sys,tempfile,subprocess
+          from datetime import datetime,timedelta
+          from zoneinfo import ZoneInfo
+          from pathlib import Path
+          repo=Path.cwd()
+          today=datetime.now(ZoneInfo('Europe/Zurich')).date()
+          future=today+timedelta(days=5)
+          original=json.loads((repo/'data/report.json').read_text(encoding='utf-8'))
+          fixture={
+            'date':future.strftime('%d.%m.%Y'),'time':'20:00',
+            'home':'FC Hochdorf III','away':'SC Nebikon',
+            'home_goals':3,'away_goals':0,'note':''
+          }
+          if any(x.get('date')=='21.10.2026' and x.get('home')=='FC Hochdorf III' and x.get('away')=='SC Nebikon' for x in original.get('recent_results',[])):
+              raise AssertionError('Fictitious 21 October result still publicly stored')
+          with tempfile.TemporaryDirectory() as temp:
+              root=Path(temp)
+              (root/'data').mkdir()
+              original['recent_results'].append(fixture)
+              (root/'data/report.json').write_text(json.dumps(original,ensure_ascii=False),encoding='utf-8')
+              subprocess.run([sys.executable,str(repo/'scripts/validate_report.py')],cwd=root,check=True)
+              d=json.loads((root/'data/report.json').read_text(encoding='utf-8'))
+              assert not any(x.get('date')==fixture['date'] and x.get('home')=='FC Hochdorf III' for x in d['recent_results'])
+              assert any(x.get('date')==fixture['date'] and x.get('home')=='FC Hochdorf III' and x.get('away')=='SC Nebikon' and x.get('home_goals') is None for x in d['upcoming_matches'])
+              assert d['heart_cycle_key']==original['heart_cycle_key']
+              assert d['standings']==original['standings']
+              print('FUTURE_MATCH_REMOVED_AND_RETURNED_TO_UPCOMING')
+          code=(repo/'scripts/sync_ifv_schedule.py').read_text(encoding='utf-8')
+          assert 'kickoff_could_be_finished(current_date, tm)' in code
+          assert 'kickoff_could_be_finished(current_date, current_time)' in code
+          PY
