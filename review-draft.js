@@ -102,7 +102,7 @@
         block.append(empty);
       }
       items.forEach((item,i)=>{
-        const row=document.createElement('label');
+        const row=document.createElement('div');
         row.className='review-news-item';
         const check=document.createElement('input');
         check.type='checkbox';check.checked=true;check.className='review-news-include';
@@ -198,7 +198,7 @@
       ?'Dieses Daten-Update ohne Veröffentlichung verwerfen?'
       :'Den unveröffentlichten Berichtsentwurf wirklich verwerfen?'))return;
     busy=true;
-    box.querySelectorAll('button,textarea').forEach(el=>el.disabled=true);
+    box.querySelectorAll('button,textarea,input').forEach(el=>el.disabled=true);
     message.textContent=action==='publish'?'Veröffentlichung läuft …':action==='save'?'Änderungen werden gespeichert …':'Entwurf wird verworfen …';
     try{
       if(action==='save'||action==='publish'){
@@ -238,7 +238,7 @@
       message.textContent='Konnte nicht abgeschlossen werden: '+String(e.message||e);
     }finally{
       busy=false;
-      if(dialog)box.querySelectorAll('button,textarea').forEach(el=>el.disabled=false);
+      if(dialog)box.querySelectorAll('button,textarea,input').forEach(el=>el.disabled=false);
     }
   }
   window.GoDraftReview={open,refresh,get hasPending(){return Boolean(draft);}};
