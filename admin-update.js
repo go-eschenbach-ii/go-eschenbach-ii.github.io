@@ -41,7 +41,7 @@
     Object.assign(title.style,{fontSize:'19px',fontWeight:'700',marginBottom:'8px'});
 
     const text=document.createElement('div');
-    text.textContent='Ohne neuen Bericht werden Resultate, Rangliste, Spielplan und Torschützen direkt aktualisiert. Die bisherigen Berichtstexte und Herzen bleiben bestehen.';
+    text.textContent='Ohne neuen Bericht werden Resultate, Rangliste, Spielplan und Torschützen vorbereitet. Vor der Veröffentlichung siehst du genau, welche Meldungen unter «Neuigkeiten» erscheinen würden. Die bisherigen Berichtstexte und Herzen bleiben bestehen.';
     Object.assign(text.style,{fontSize:'15px',lineHeight:'1.4',marginBottom:'18px'});
 
     const buttons=document.createElement('div');
@@ -165,8 +165,8 @@
       if(d.draft_ready&&!d.pending){
         stopReportWatch();
         el.disabled=false;
-        el.textContent='Entwurf prüfen';
-        setStatus('Berichtsentwurf bereit. Bitte vor der Veröffentlichung prüfen.','review');
+        el.textContent=d.review_required===false?'Neuigkeiten prüfen':'Entwurf prüfen';
+        setStatus(d.review_required===false?'Neuigkeiten vor Veröffentlichung prüfen.':'Berichtsentwurf bereit. Bitte vor der Veröffentlichung prüfen.','review');
         window.dispatchEvent(new Event('go-draft-ready'));
         return;
       }
@@ -267,7 +267,7 @@
       }
       if(r.status===409&&d.draft_ready){
         el.disabled=false;
-        el.textContent='Entwurf prüfen';
+        el.textContent=d.review_required===false?'Neuigkeiten prüfen':'Entwurf prüfen';
         window.dispatchEvent(new Event('go-draft-ready'));
         return;
       }
@@ -321,9 +321,9 @@
       if(!r.ok)return;
       const d=await r.json();
       if(d.draft_ready&&!d.pending){
-        el.textContent='Entwurf prüfen';
+        el.textContent=d.review_required===false?'Neuigkeiten prüfen':'Entwurf prüfen';
         el.disabled=false;
-        setStatus('Berichtsentwurf bereit. Bitte vor der Veröffentlichung prüfen.','review');
+        setStatus(d.review_required===false?'Neuigkeiten vor Veröffentlichung prüfen.':'Berichtsentwurf bereit. Bitte vor der Veröffentlichung prüfen.','review');
         window.dispatchEvent(new Event('go-draft-ready'));
         return;
       }
