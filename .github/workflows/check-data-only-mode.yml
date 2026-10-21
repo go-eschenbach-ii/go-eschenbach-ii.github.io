@@ -15,7 +15,114 @@ jobs:
           from pathlib import Path
           import json, subprocess, tempfile, textwrap, os
           y=Path('.github/workflows/daily-report.yml').read_text(encoding='utf-8')
-          assert 'if: ${{ inputs.update_review == false }}' in y
+          assert ('if: 
+          assert ('if: 
+          assert 'Nur Daten ohne Berichtfreigabe direkt veröffentlichen' in y
+          assert 'Bericht als geschuetzten Entwurf speichern' in y
+          assert 'git push origin HEAD:main' in y
+          assert 'heart_cycle_key' in y
+          assert 'Berichtstexte bei Datenupdate beibehalten' in y
+          script=y.split('      - name: Bestehende Berichtstexte bei Datenupdate beibehalten',1)[1].split('      - name: Berichtssprache ohne Gedankenstriche sicherstellen',1)[0]
+          code=textwrap.dedent(script.split("python - <<'PY'\n",1)[1].split('          PY',1)[0])
+          with tempfile.TemporaryDirectory() as td:
+              root=Path(td)
+              (root/'data').mkdir()
+              old={'title':'Originaltitel','lead':'Originaleinleitung','review':'Alter Bericht','current_situation':'Alte Lage','outlook':'Alter Ausblick','heart_cycle_key':'alte-herzen','standings':[{'team':'Eschenbach','points':21}],'generated_at':'v1'}
+              fresh={**old,'title':'Neuer Titel','lead':'Neue Einleitung','review':'Neuer Rückblick','current_situation':'Neue Lage','outlook':'Neuer Ausblick','standings':[{'team':'Eschenbach','points':24}],'generated_at':'v2'}
+              (root/'baseline.json').write_text(json.dumps(old),encoding='utf-8')
+              (root/'data/report.json').write_text(json.dumps(fresh),encoding='utf-8')
+              env={**os.environ,'REPORT_BASELINE':str(root/'baseline.json')}
+              subprocess.run(['python','-c',code],cwd=root,env=env,check=True)
+              after=json.loads((root/'data/report.json').read_text())
+              for key in ('title','lead','review','current_situation','outlook','heart_cycle_key'):
+                  assert after[key]==old[key],(key,after[key])
+              assert after['standings'][0]['points']==24
+              assert after['generated_at']=='v2'
+          print('DATA_ONLY_TEXT_PRESERVED_STATISTICS_UPDATED')
+          PY
+      - name: Verify protected backend update modes
+        run: |
+          python - <<'PY'
+          import json,urllib.request,urllib.error
+          url='https://kfpxheegmeupnuzqjqqt.supabase.co/functions/v1/report-update-request-v2'
+          req=urllib.request.Request(url,headers={'Origin':'https://go-eschenbach-ii.github.io'})
+          with urllib.request.urlopen(req,timeout=15) as res:
+              data=json.load(res)
+          print('UPDATE_SERVICE',data['phase'],'pending',data['pending'])
+          assert 'draft_ready' in data
+          PY
++'{{ inputs.update_review == false }}') in y
+          assert 'if: ${{ inputs.update_review != false }}' in y
+          assert 'Nur Daten ohne Berichtfreigabe direkt veröffentlichen' in y
+          assert 'Bericht als geschuetzten Entwurf speichern' in y
+          assert 'git push origin HEAD:main' in y
+          assert 'heart_cycle_key' in y
+          assert 'Berichtstexte bei Datenupdate beibehalten' in y
+          script=y.split('      - name: Bestehende Berichtstexte bei Datenupdate beibehalten',1)[1].split('      - name: Berichtssprache ohne Gedankenstriche sicherstellen',1)[0]
+          code=textwrap.dedent(script.split("python - <<'PY'\n",1)[1].split('          PY',1)[0])
+          with tempfile.TemporaryDirectory() as td:
+              root=Path(td)
+              (root/'data').mkdir()
+              old={'title':'Originaltitel','lead':'Originaleinleitung','review':'Alter Bericht','current_situation':'Alte Lage','outlook':'Alter Ausblick','heart_cycle_key':'alte-herzen','standings':[{'team':'Eschenbach','points':21}],'generated_at':'v1'}
+              fresh={**old,'title':'Neuer Titel','lead':'Neue Einleitung','review':'Neuer Rückblick','current_situation':'Neue Lage','outlook':'Neuer Ausblick','standings':[{'team':'Eschenbach','points':24}],'generated_at':'v2'}
+              (root/'baseline.json').write_text(json.dumps(old),encoding='utf-8')
+              (root/'data/report.json').write_text(json.dumps(fresh),encoding='utf-8')
+              env={**os.environ,'REPORT_BASELINE':str(root/'baseline.json')}
+              subprocess.run(['python','-c',code],cwd=root,env=env,check=True)
+              after=json.loads((root/'data/report.json').read_text())
+              for key in ('title','lead','review','current_situation','outlook','heart_cycle_key'):
+                  assert after[key]==old[key],(key,after[key])
+              assert after['standings'][0]['points']==24
+              assert after['generated_at']=='v2'
+          print('DATA_ONLY_TEXT_PRESERVED_STATISTICS_UPDATED')
+          PY
+      - name: Verify protected backend update modes
+        run: |
+          python - <<'PY'
+          import json,urllib.request,urllib.error
+          url='https://kfpxheegmeupnuzqjqqt.supabase.co/functions/v1/report-update-request-v2'
+          req=urllib.request.Request(url,headers={'Origin':'https://go-eschenbach-ii.github.io'})
+          with urllib.request.urlopen(req,timeout=15) as res:
+              data=json.load(res)
+          print('UPDATE_SERVICE',data['phase'],'pending',data['pending'])
+          assert 'draft_ready' in data
+          PY
++'{{ inputs.update_review != false }}') in y
+          assert 'Nur Daten ohne Berichtfreigabe direkt veröffentlichen' in y
+          assert 'Bericht als geschuetzten Entwurf speichern' in y
+          assert 'git push origin HEAD:main' in y
+          assert 'heart_cycle_key' in y
+          assert 'Berichtstexte bei Datenupdate beibehalten' in y
+          script=y.split('      - name: Bestehende Berichtstexte bei Datenupdate beibehalten',1)[1].split('      - name: Berichtssprache ohne Gedankenstriche sicherstellen',1)[0]
+          code=textwrap.dedent(script.split("python - <<'PY'\n",1)[1].split('          PY',1)[0])
+          with tempfile.TemporaryDirectory() as td:
+              root=Path(td)
+              (root/'data').mkdir()
+              old={'title':'Originaltitel','lead':'Originaleinleitung','review':'Alter Bericht','current_situation':'Alte Lage','outlook':'Alter Ausblick','heart_cycle_key':'alte-herzen','standings':[{'team':'Eschenbach','points':21}],'generated_at':'v1'}
+              fresh={**old,'title':'Neuer Titel','lead':'Neue Einleitung','review':'Neuer Rückblick','current_situation':'Neue Lage','outlook':'Neuer Ausblick','standings':[{'team':'Eschenbach','points':24}],'generated_at':'v2'}
+              (root/'baseline.json').write_text(json.dumps(old),encoding='utf-8')
+              (root/'data/report.json').write_text(json.dumps(fresh),encoding='utf-8')
+              env={**os.environ,'REPORT_BASELINE':str(root/'baseline.json')}
+              subprocess.run(['python','-c',code],cwd=root,env=env,check=True)
+              after=json.loads((root/'data/report.json').read_text())
+              for key in ('title','lead','review','current_situation','outlook','heart_cycle_key'):
+                  assert after[key]==old[key],(key,after[key])
+              assert after['standings'][0]['points']==24
+              assert after['generated_at']=='v2'
+          print('DATA_ONLY_TEXT_PRESERVED_STATISTICS_UPDATED')
+          PY
+      - name: Verify protected backend update modes
+        run: |
+          python - <<'PY'
+          import json,urllib.request,urllib.error
+          url='https://kfpxheegmeupnuzqjqqt.supabase.co/functions/v1/report-update-request-v2'
+          req=urllib.request.Request(url,headers={'Origin':'https://go-eschenbach-ii.github.io'})
+          with urllib.request.urlopen(req,timeout=15) as res:
+              data=json.load(res)
+          print('UPDATE_SERVICE',data['phase'],'pending',data['pending'])
+          assert 'draft_ready' in data
+          PY
++'{{ inputs.update_review == false }}') in y
           assert 'if: ${{ inputs.update_review != false }}' in y
           assert 'Nur Daten ohne Berichtfreigabe direkt veröffentlichen' in y
           assert 'Bericht als geschuetzten Entwurf speichern' in y
