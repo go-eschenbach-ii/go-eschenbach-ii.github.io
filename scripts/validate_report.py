@@ -93,8 +93,7 @@ def fixture_date_time(match):
 
 current_time=datetime.now(ZoneInfo('Europe/Zurich'))
 existing_upcoming=data.get('upcoming_matches',[])
-if not isinstance(existing_upcoming,list):
-    existing_upcoming=[]
+existing_upcoming=list(existing_upcoming) if isinstance(existing_upcoming,list) else []
 filtered_results=[]
 for match in data.get('recent_results',[]) if isinstance(data.get('recent_results'),list) else []:
     if not isinstance(match,dict):
@@ -102,7 +101,10 @@ for match in data.get('recent_results',[]) if isinstance(data.get('recent_result
     kickoff=fixture_date_time(match)
     # Das Sicherheitsfenster deckt die 90 Minuten und Nachspielzeit ab.
     cutoff=(kickoff+timedelta(minutes=110)) if kickoff else None
-    if cutoff and current_time<cutoff:
+    admin_finished=(match.get('verified_by')=='admin_liveticker'
+                    and match.get('status')=='finished'
+                    and kickoff is not None and current_time>=kickoff)
+    if cutoff and current_time<cutoff and not admin_finished:
         fixture={
             'date':match.get('date',''),'time':match.get('time',''),
             'home':match.get('home',''),'away':match.get('away',''),'note':''
