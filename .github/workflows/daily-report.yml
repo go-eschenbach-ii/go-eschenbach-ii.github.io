@@ -75,12 +75,14 @@ jobs:
         run: python scripts/sync_ifv_schedule.py
 
       - name: Matchkommentare endgültig in Rückblick einarbeiten
+        if: ${{ inputs.update_review != false }}
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           MATCH_COMMENTS_FILE: /tmp/go-eschenbach-match-comments.json
         run: python scripts/apply_match_comments.py
 
       - name: Sprachliche Schlussredaktion
+        if: ${{ inputs.update_review != false }}
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python scripts/polish_language.py
@@ -115,7 +117,7 @@ jobs:
       - name: Bericht auf Widersprüche prüfen
         run: python scripts/validate_report.py
 
-      - name: Rückblick auf bisherigen Stand zurücksetzen
+      - name: Bestehende Berichtstexte bei Datenupdate beibehalten
         if: ${{ inputs.update_review == false }}
         env:
           REPORT_BASELINE: /tmp/report-before-update.json
@@ -129,16 +131,18 @@ jobs:
           baseline_path = Path(os.environ['REPORT_BASELINE'])
           report = json.loads(report_path.read_text(encoding='utf-8'))
           baseline = json.loads(baseline_path.read_text(encoding='utf-8'))
-          if 'review' in baseline:
-              report['review'] = baseline['review']
-              report_path.write_text(
-                  json.dumps(report, ensure_ascii=False, indent=2) + '\n',
-                  encoding='utf-8'
-              )
+          for field in ('title', 'lead', 'review', 'current_situation', 'outlook'):
+              if field in baseline:
+                  report[field] = baseline[field]
+          report_path.write_text(
+              json.dumps(report, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8'
+          )
           PY
 
 
       - name: Berichtssprache ohne Gedankenstriche sicherstellen
+        if: ${{ inputs.update_review != false }}
         run: python scripts/enforce_report_style.py
 
       - name: Herz-Zyklus an Rückblick koppeln
@@ -203,7 +207,40 @@ jobs:
         run: python scripts/build_update_news.py
 
       - name: Bericht als geschuetzten Entwurf speichern
+        if: ${{ inputs.update_review != false }}
         env:
           REQUEST_ID: ${{ inputs.request_id }}
           COMMENTS_TOKEN: ${{ inputs.comments_token }}
         run: python scripts/stage_report_draft.py
+
+      - name: Nur Daten ohne Berichtfreigabe direkt veröffentlichen
+        if: ${{ inputs.update_review == false }}
+        run: |
+          cp data/report.json /tmp/report-generated.json
+          cp data/update-news.json /tmp/update-news-generated.json
+          git fetch origin main
+          git show origin/main:data/report.json > /tmp/report-current-published.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          old = json.loads(Path('/tmp/report-before-update.json').read_text(encoding='utf-8'))
+          live = json.loads(Path('/tmp/report-current-published.json').read_text(encoding='utf-8'))
+          if old.get('generated_at') != live.get('generated_at'):
+              raise SystemExit('Neuer Bericht bereits veröffentlicht. Daten-Update wird nicht überschreiben.')
+          new = json.loads(Path('/tmp/report-generated.json').read_text(encoding='utf-8'))
+          for key in ('title','lead','review','current_situation','outlook','heart_cycle_key'):
+              if new.get(key) != old.get(key):
+                  raise SystemExit(f'Datenupdate darf {key} nicht verändern.')
+          PY
+          git reset --hard origin/main
+          cp /tmp/report-generated.json data/report.json
+          cp /tmp/update-news-generated.json data/update-news.json
+          if git diff --quiet -- data/report.json data/update-news.json; then
+            echo "Keine Änderungen zu veröffentlichen."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/report.json data/update-news.json
+          git commit -m "Daten-Update ohne neuen Bericht veröffentlichen"
+          git push origin HEAD:main
