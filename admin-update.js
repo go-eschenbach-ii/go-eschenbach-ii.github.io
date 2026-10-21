@@ -53,7 +53,7 @@
       resolve(value);
     };
     const onKey=e=>{
-      if(e.key==='Escape')finish(false);
+      if(e.key==='Escape')finish(null);
     };
 
     const no=document.createElement('button');
@@ -239,6 +239,7 @@
       }finally{
         decisionPending=false;
       }
+      if(updateReview===null)return;
     }
     if(el.disabled)return;
 
