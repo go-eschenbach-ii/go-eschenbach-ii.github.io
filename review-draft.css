@@ -21,3 +21,10 @@
 .review-draft-actions .review-draft-danger{border-color:#bbb;color:#666}
 .review-draft-status{width:100%;font-size:12px;font-weight:800;margin:1px 0}
 @media(max-width:600px){.review-draft-overlay{padding:0}.review-draft-panel{width:100%;max-height:100dvh;border-radius:0}.review-draft-actions{position:relative}.review-draft-actions button{flex:1 1 43%}}
+.review-news-preview{border:2px solid #111;background:#fffdfa;border-radius:12px;padding:14px;margin:14px 0 20px}
+.review-news-preview h3{font-size:17px;font-weight:950;margin:0 0 12px;color:#111}
+.review-news-item{display:grid;grid-template-columns:25px minmax(0,1fr);align-items:start;gap:9px;padding:11px 0;border-top:1px solid #ddd}
+.review-news-item .review-news-include{margin:11px 0;width:19px;height:19px;accent-color:#111;cursor:pointer}
+.review-news-item .review-news-text{box-sizing:border-box;display:block;width:100%;min-height:60px;border:1.5px solid #aaa;border-radius:8px;padding:10px;font-size:14px;color:#111;background:#fff;font:inherit;resize:vertical;line-height:1.4}
+.review-news-item.is-excluded .review-news-text{opacity:.45;text-decoration:line-through;background:#f4f4f4}
+.review-news-empty{font-size:14px;line-height:1.5;margin:4px 0 0;color:#555}
