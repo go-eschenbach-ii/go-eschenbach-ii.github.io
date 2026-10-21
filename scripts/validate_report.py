@@ -1,4 +1,6 @@
 import json
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 PATH='data/report.json'
 with open(PATH,'r',encoding='utf-8') as f:
@@ -67,6 +69,65 @@ elif expected and accounted>expected:
     changed=True
 
 data['scorer_audit']=audit
+
+# Ein Resultat kann niemals schon vor Spielende feststehen.
+# Die automatischen Quellen liefern mitunter 3:0 o.ae. als vermeintliche
+# Resultate, obwohl im IFV-Spielplan noch eine künftige Partie steht.
+# Vor Anpfiff und waehrend der regulaeren Spieldauer wird ein solcher
+# Eintrag sicherheitshalber in die kommenden Spiele verschoben.
+def fixture_date_time(match):
+    try:
+        date=datetime.strptime(str(match.get('date','')).strip(),'%d.%m.%Y').date()
+    except (ValueError,TypeError):
+        return None
+    time=str(match.get('time','')).strip()
+    try:
+        hh,mm=map(int,time.split(':'))
+        if not 0<=hh<=23 or not 0<=mm<=59:
+            raise ValueError('invalid kickoff')
+        return datetime(date.year,date.month,date.day,hh,mm,tzinfo=ZoneInfo('Europe/Zurich'))
+    except (ValueError,TypeError):
+        # Ohne Anspielzeit ein Spiel vom aktuellen Tag erst nach
+        # Mitternacht automatisch als beendet betrachten.
+        return datetime(date.year,date.month,date.day,23,59,tzinfo=ZoneInfo('Europe/Zurich'))
+
+current_time=datetime.now(ZoneInfo('Europe/Zurich'))
+existing_upcoming=data.get('upcoming_matches',[])
+if not isinstance(existing_upcoming,list):
+    existing_upcoming=[]
+filtered_results=[]
+for match in data.get('recent_results',[]) if isinstance(data.get('recent_results'),list) else []:
+    if not isinstance(match,dict):
+        continue
+    kickoff=fixture_date_time(match)
+    # Das Sicherheitsfenster deckt die 90 Minuten und Nachspielzeit ab.
+    cutoff=(kickoff+timedelta(minutes=110)) if kickoff else None
+    if cutoff and current_time<cutoff:
+        fixture={
+            'date':match.get('date',''),'time':match.get('time',''),
+            'home':match.get('home',''),'away':match.get('away',''),'note':''
+        }
+        if not any(
+            str(x.get('date','')).strip()==str(fixture['date']).strip()
+            and str(x.get('home','')).strip().casefold()==str(fixture['home']).strip().casefold()
+            and str(x.get('away','')).strip().casefold()==str(fixture['away']).strip().casefold()
+            for x in existing_upcoming if isinstance(x,dict)
+        ):
+            existing_upcoming.append(fixture)
+        changed=True
+        print('Zu fruehes Resultat entfernt, Partie bleibt offen:',
+              match.get('date'),match.get('home'),match.get('away'))
+    else:
+        filtered_results.append(match)
+if filtered_results!=data.get('recent_results'):
+    data['recent_results']=filtered_results
+if existing_upcoming!=data.get('upcoming_matches'):
+    data['upcoming_matches']=sorted(
+        existing_upcoming,
+        key=lambda x:(fixture_date_time(x) or current_time,
+                      str(x.get('home',''))),
+    )
+    changed=True
 
 # Ein Spiel mit bestätigtem Resultat darf nie gleichzeitig als kommendes Spiel erscheinen.
 def fixture_key(match):
