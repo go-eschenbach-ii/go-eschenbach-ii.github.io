@@ -15,8 +15,8 @@ jobs:
           from pathlib import Path
           import json, subprocess, tempfile, textwrap, os
           y=Path('.github/workflows/daily-report.yml').read_text(encoding='utf-8')
-          assert ('if: 
-          assert ('if: 
+          assert 'inputs.update_review == false' in y
+          assert 'inputs.update_review != false' in y
           assert 'Nur Daten ohne Berichtfreigabe direkt veröffentlichen' in y
           assert 'Bericht als geschuetzten Entwurf speichern' in y
           assert 'git push origin HEAD:main' in y
