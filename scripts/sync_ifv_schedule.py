@@ -77,6 +77,22 @@ def dmy(value):
         return None
 
 
+def kickoff_could_be_finished(date, time):
+    # Keine automatischen Resultate vor Abpfiff; auch IFV-Zeilen koennen
+    # zusaetzliche Zahlen enthalten, die faelschlich als Tore erkannt werden.
+    if date<today:
+        return True
+    if date>today:
+        return False
+    try:
+        hh,mm=map(int,str(time).strip().split(':'))
+        kickoff=datetime(date.year,date.month,date.day,hh,mm,
+                         tzinfo=ZoneInfo('Europe/Zurich'))
+        return now>=kickoff+timedelta(minutes=110)
+    except (ValueError,TypeError):
+        return False
+
+
 def key(item):
     return (
         str(item.get('date','')),
@@ -140,7 +156,7 @@ for i,line in enumerate(lines):
         away_pos=line.casefold().find(away.casefold(),hits[1][0])
         score=score_after_away(line,away,away_pos)
         item={'date':current_date.strftime('%d.%m.%Y'),'time':tm,'home':home,'away':away,'note':''}
-        if score and current_date<=today:
+        if score and kickoff_could_be_finished(current_date, tm):
             item['home_goals']=score[0]
             item['away_goals']=score[1]
             results[key(item)]=item
@@ -186,7 +202,7 @@ for i,line in enumerate(lines):
         k+=1
 
     item={'date':current_date.strftime('%d.%m.%Y'),'time':current_time,'home':home,'away':away,'note':''}
-    if len(score)>=2 and current_date<=today:
+    if len(score)>=2 and kickoff_could_be_finished(current_date, current_time):
         item['home_goals']=score[0]
         item['away_goals']=score[1]
         results[key(item)]=item
