@@ -1,5 +1,5 @@
 {
-  "report_date": "16.10.2026",
+  "report_date": "21.10.2026",
   "title": "Erste Niederlage: Eschenbach II verliert 0:3 in Hochdorf",
   "lead": "Eschenbach II musste sich beim FC Hochdorf III mit 0:3 geschlagen geben. Nach sieben Siegen ist dies die erste Niederlage der Saison. Mit 21 Punkten aus acht Spielen bleibt Eschenbach Tabellenführer, Hochdorf folgt mit 18 Punkten auf Rang 2.",
   "review": "Der FC Eschenbach II musste sich beim FC Hochdorf III mit 0:3 geschlagen geben und kassierte damit die erste Niederlage der Saison. Die ersten 15 Minuten gehörten mehrheitlich den Gastgebern. Nach längerer Absenz führte Muff die Mannschaft als Captain aufs Spielfeld. Danach kam Eschenbach besser ins Spiel und hatte mehrere Möglichkeiten zur Führung. In der 20. Minute verpasste Bucher das 0:1 nur knapp, ehe Almeida in der 21. Minute ebenfalls nur die Latte traf. Wenig später traf auch Fischer nur den Querbalken. Das 0:1 lag in dieser Phase in der Luft. Hochdorf blieb jedoch gefährlich. In der 27. Minute kam ein Hochdorfer frei zum Abschluss, doch Torhüter Bienz parierte souverän. In der 30. Minute gingen die Gastgeber nach einem Freistoss in Führung. Kurz nach der Pause erhöhte Hochdorf auf 2:0. In der 56. Minute traf ein Hochdorfer erneut nur die Latte, wobei Eschenbach zu diesem Zeitpunkt näher am Anschlusstreffer war. Im weiteren Verlauf war jedoch Hochdorf dem dritten Tor näher als Eschenbach dem 1:2. In der 75. Minute fiel das 3:0, das zugleich den Endstand bedeutete. Eschenbach blieb ohne Tor. Die zweite Halbzeit verlief zunehmend hektisch. Eschenbach verpasste es, Ruhe zu bewahren und konzentriert zu spielen, und wirkte zeitweise unkonzentriert. Luis Nabulon verdiente sich ein Lob, weil er sich sichtbar darum bemühte, seine Torbilanz zu verbessern. Insgesamt setzte sich ein aggressiver und sehr fokussierter FC Hochdorf verdient durch. Trotz der ersten Saisonniederlage bleibt Eschenbach II mit sieben Siegen aus acht Spielen, 29 erzielten Toren und 21 Punkten an der Tabellenspitze.",
@@ -16,17 +16,37 @@
     "goals_against": 8,
     "goal_difference": 21,
     "points": 21,
-    "form": "7 Siege, 1 Niederlage"
+    "form": "WWWWWWL"
   },
   "recent_results": [
+    {
+      "date": "21.10.2026",
+      "time": "20:00",
+      "home": "FC Hochdorf III",
+      "away": "SC Nebikon",
+      "home_goals": 3,
+      "away_goals": 0,
+      "note": ""
+    },
+    {
+      "date": "20.10.2026",
+      "time": "20:00",
+      "home": "FC Wauwil-Egolzwil",
+      "away": "FC Schötz III",
+      "note": "",
+      "home_goals": 16,
+      "away_goals": 1
+    },
     {
       "date": "17.10.2026",
       "time": "18:00",
       "home": "FC Hochdorf III",
       "away": "FC Eschenbach II",
+      "note": "",
       "home_goals": 3,
       "away_goals": 0,
-      "note": "Eschenbach verlor auswärts 0:3."
+      "status": "finished",
+      "verified_by": "admin_liveticker"
     },
     {
       "date": "16.10.2026",
@@ -383,15 +403,15 @@
     {
       "rank": 8,
       "team": "FC Wauwil-Egolzwil",
-      "played": 7,
-      "wins": 2,
+      "played": 8,
+      "wins": 3,
       "draws": 0,
       "losses": 5,
       "penalty_points": 6,
-      "goals_for": 13,
-      "goals_against": 22,
-      "goal_difference": -9,
-      "points": 6,
+      "goals_for": 29,
+      "goals_against": 23,
+      "goal_difference": 6,
+      "points": 9,
       "is_eschenbach": false
     },
     {
@@ -411,33 +431,19 @@
     {
       "rank": 10,
       "team": "FC Schötz III",
-      "played": 6,
+      "played": 7,
       "wins": 0,
       "draws": 1,
-      "losses": 5,
+      "losses": 6,
       "penalty_points": 21,
-      "goals_for": 4,
-      "goals_against": 38,
-      "goal_difference": -34,
+      "goals_for": 5,
+      "goals_against": 54,
+      "goal_difference": -49,
       "points": 1,
       "is_eschenbach": false
     }
   ],
   "upcoming_matches": [
-    {
-      "date": "20.10.2026",
-      "time": "20:00",
-      "home": "FC Wauwil-Egolzwil",
-      "away": "FC Schötz III",
-      "note": ""
-    },
-    {
-      "date": "21.10.2026",
-      "time": "20:00",
-      "home": "FC Hochdorf III",
-      "away": "SC Nebikon",
-      "note": ""
-    },
     {
       "date": "22.10.2026",
       "time": "20:15",
@@ -468,7 +474,7 @@
     },
     {
       "date": "24.10.2026",
-      "time": "19:00",
+      "time": "19:15",
       "home": "FC Eschenbach II",
       "away": "FC Ruswil III",
       "note": ""
@@ -538,24 +544,16 @@
   "scorer_note": "24 Spielertore plus 2 Eigentore zugunsten von Eschenbach plus 3 Forfait-Tore ergeben 29 Saisontore.",
   "sources": [
     {
-      "title": "IFV Matchcenter, 5. Liga Gruppe 4, Resultate und Rangliste",
-      "url": "https://matchcenter.ifv.ch/default.aspx?a=mrr&ln=13040&lng=1&ls=25897&oid=7&s=2027&sg=70471"
+      "title": "IFV Matchcenter, 5. Liga Gruppe 4, Resultate und Tabelle",
+      "url": "https://matchcenter.ifv.ch/Default.aspx?a=mrr&ln=13040&lng=1&ls=25897&oid=7&s=2027&sg=70471"
     },
     {
-      "title": "IFV Matchcenter, Spielplan 5. Liga Gruppe 4",
-      "url": "https://matchcenter.ifv.ch/default.aspx?a=msp&ln=13040&lng=1&ls=25897&oid=7&s=2027&sg=70471"
+      "title": "IFV Matchcenter, 5. Liga Gruppe 4, Spielplan",
+      "url": "https://matchcenter.ifv.ch/Default.aspx?a=msp&ln=13040&lng=1&ls=25897&oid=7&s=2027&sg=70471"
     },
     {
-      "title": "IFV Matchcenter, Gruppeneinteilung 2026/27",
-      "url": "https://matchcenter.ifv.ch/default.aspx?a=mgr&ln=13040&lng=1&ls=25897&oid=7&s=2027&sg=0"
-    },
-    {
-      "title": "FC Eschenbach, Unsere 5. Liga Teams sorgen für Furore",
-      "url": "https://fceschenbach.ch/news/unsere-5-liga-teams-sorgen-f%C3%BCr-furore"
-    },
-    {
-      "title": "FC Eschenbach, 2. Mannschaft",
-      "url": "https://fceschenbach.ch/aktive/2-mannschaft"
+      "title": "FC Eschenbach LU",
+      "url": "https://fceschenbach.ch/"
     }
   ],
   "own_goals": 2,
@@ -572,7 +570,7 @@
         "date": "02.10.2026",
         "opponent": "FC Schötz III",
         "result": "3:0",
-        "scorers": "Forfait; keine Spielertore zugeordnet",
+        "scorers": "Forfait; keine Spielerzuordnung",
         "own_goals": 0
       },
       {
@@ -586,35 +584,42 @@
         "date": "10.10.2026",
         "opponent": "FC Dagmersellen",
         "result": "2:1",
-        "scorers": "Im erneut geprüften Material keine eindeutigen Torschützen oder Eigentore genannt",
+        "scorers": "FC Eschenbach II: Torschützen im Matchcenter nicht angegeben",
         "own_goals": 0
       },
       {
         "date": "12.09.2026",
         "opponent": "FC Knutwil II",
         "result": "3:0",
-        "scorers": "Forfait; keine Spielertore zugeordnet",
+        "scorers": "FC Eschenbach II: Torschützen im Matchcenter nicht angegeben",
         "own_goals": 0
       },
       {
         "date": "12.10.2026",
         "opponent": "SC Nebikon",
         "result": "7:0",
-        "scorers": "Timo Bossert (2), Mino Vidi, Noe Fischer; der Matchbericht nennt keine weiteren drei Torschützen eindeutig. Noah Sticher wird als auffällig beschrieben, aber nicht als Torschütze genannt",
+        "scorers": "FC Eschenbach II: Torschützen im Matchcenter nicht angegeben",
         "own_goals": 0
       },
       {
         "date": "15.08.2026",
         "opponent": "SC Steinhausen IV",
         "result": "1:1",
-        "scorers": "Eschenbacher Torschütze im geprüften Material nicht genannt",
+        "scorers": "FC Eschenbach II: nicht verifiziert",
+        "own_goals": 0
+      },
+      {
+        "date": "17.10.2026",
+        "opponent": "FC Hochdorf III",
+        "result": "0:3",
+        "scorers": "keine",
         "own_goals": 0
       },
       {
         "date": "22.08.2026",
         "opponent": "FC Altbüron-Grossdietwil",
         "result": "6:2",
-        "scorers": "Eigentor, Luis Nabulon (2), Joel Häusler, Ramon Brugger, Ilay Brandenberger",
+        "scorers": "Eigentor Fabio Meier (Altbüron-Grossdietwil), Luis Nabulon (2), Joel Häusler, Ramon Brugger, Ilay Brandenberger",
         "own_goals": 1
       },
       {
@@ -626,13 +631,10 @@
       }
     ]
   },
-  "generated_at": "17.10.2026 19:54:46",
-  "heart_cycle_key": "review:892d3a1c-d07f-4479-a5e8-dd719e9d7d10",
+  "generated_at": "21.10.2026 06:55:44",
   "schedule_sync_status": "verified",
   "schedule_sync_source": "https://www.fcschoetz.ch/de/club/teams/team/spielplan-gruppe/%26v%3D376%26t%3D31274%26ls%3D25897%26sg%3D70471",
-  "standings_sync_status": "verified",
-  "standings_sync_source": "https://www.fcschoetz.ch/de/club/teams/team/resultate-und-rangliste/%26v%3D376%26t%3D31274",
-  "standings_sync_at": "2026-10-17T19:50:39.370800+02:00",
+  "schedule_sync_at": "2026-10-21T06:55:39.399301+02:00",
   "confirmed_live_scores": [
     {
       "date": "17.10.2026",
@@ -641,7 +643,11 @@
       "away": "FC Eschenbach II",
       "home_goals": 3,
       "away_goals": 0,
-      "status": "finished"
+      "status": "finished",
+      "verified_by": "admin_liveticker"
     }
-  ]
+  ],
+  "standings_sync_status": "verified",
+  "standings_sync_at": "2026-10-21T06:55:45.867506+02:00",
+  "heart_cycle_key": "review:892d3a1c-d07f-4479-a5e8-dd719e9d7d10"
 }
