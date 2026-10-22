@@ -9,6 +9,15 @@
       "home_goals": 10,
       "away_goals": 0,
       "match_number": "117834"
+    },
+    {
+      "date": "22.10.2026",
+      "home": "FC Schötz III",
+      "away": "FC Dagmersellen",
+      "home_goals": 0,
+      "away_goals": 14,
+      "match_number": "117836",
+      "source": "https://www.fcschoetz.ch/de/club/teams/team/spielplan-gruppe/%26v%3D376%26t%3D31274%26ls%3D25897%26sg%3D70471"
     }
   ]
 }
