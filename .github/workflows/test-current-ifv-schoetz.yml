@@ -1,0 +1,38 @@
+name: Diagnose IFV live fixture 117836
+on:
+  push:
+    paths:
+      - '.github/workflows/test-current-ifv-schoetz.yml'
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch official IFV pages and inspect match fixture
+        run: |
+          python - <<'PY'
+          import urllib.request,html,re
+          URLs=[
+            'https://matchcenter.ifv.ch/default.aspx?a=msp&ln=13040&lng=1&ls=25897&oid=7&s=2027&sg=70471',
+            'https://club.football.ch/?lng=1&tab=3396&v=376&t=31274&ls=25897&sg=70471&tg=4328790',
+            'https://club.football.ch/?lng=1&tab=3410&v=376',
+            'https://www.fcschoetz.ch/de/club/teams/team/spielplan-gruppe/%26v%3D376%26t%3D31274%26ls%3D25897%26sg%3D70471',
+            'https://www.fcschoetz.ch/?lng=1&tab=3410&v=376',
+            'https://matchcenter.ifv.ch/default.aspx?a=pt&lng=1&ls=24463&oid=7&sg=67650&t=31274&v=376'
+          ]
+          for url in URLs:
+            try:
+              req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0','Cache-Control':'no-cache'})
+              with urllib.request.urlopen(req,timeout=18) as r:
+                raw=r.read().decode('utf-8','ignore')
+              cleaned=re.sub(r'(?is)<script\\b.*?</script>|<style\\b.*?</style>',' ',raw)
+              cleaned=re.sub(r'(?s)<[^>]+>','\\n',cleaned)
+              cleaned=html.unescape(cleaned)
+              lines=[' '.join(t.split()) for t in cleaned.splitlines() if t.strip()]
+              positions=[i for i,l in enumerate(lines) if '117836' in l or l=='FC Dagmersellen']
+              print('SOURCE',url,'SIZE',len(raw),'LINES',len(lines),'POSITIONS',len(positions))
+              for idx in positions[-8:]:
+                print('SNIPPET',idx,' | '.join(lines[max(0,idx-7):idx+8])[:1200])
+            except Exception as e:
+              print('ERROR',url,type(e).__name__,str(e)[:200])
+          PY
