@@ -31,8 +31,13 @@ jobs:
               lines=[' '.join(t.split()) for t in cleaned.splitlines() if t.strip()]
               positions=[i for i,l in enumerate(lines) if '117836' in l or l=='FC Dagmersellen']
               print('SOURCE',url,'SIZE',len(raw),'LINES',len(lines),'POSITIONS',len(positions))
-              for idx in positions[-8:]:
-                print('SNIPPET',idx,' | '.join(lines[max(0,idx-7):idx+8])[:1200])
+              for idx in positions[:9]:
+                print('SNIPPET',idx,' | '.join(lines[max(0,idx-10):idx+13])[:1800])
+              target=[i for i,l in enumerate(lines) if l=='Do 22.10.2026' or l=='FC Schötz III']
+              for idx in target[:20]:
+                snippet=' | '.join(lines[max(0,idx-2):idx+10])
+                if 'FC Dagmersellen' in snippet:
+                  print('TARGET',idx,snippet[:1500])
             except Exception as e:
               print('ERROR',url,type(e).__name__,str(e)[:200])
           PY
