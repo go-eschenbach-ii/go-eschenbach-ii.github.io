@@ -75,24 +75,56 @@ def changes(old, new):
     new_table = [
         r for r in new.get('standings', []) if isinstance(r, dict)
     ]
+    # The local team's change of rank is always important, including
+    # updates without a newly written match report. Put it first so it
+    # cannot be cut by the four-item limit of the Neuigkeiten banner.
+    def rank_of_eschenbach(report):
+        team = next(
+            (r for r in report.get('standings', [])
+             if isinstance(r, dict)
+             and (r.get('is_eschenbach') is True
+                  or str(r.get('team', '')).strip().casefold() == 'fc eschenbach ii')),
+            None,
+        )
+        raw = (team or {}).get('rank')
+        if raw is None:
+            raw = (report.get('eschenbach') or {}).get('rank')
+        try:
+            rank = int(raw)
+            return rank if rank > 0 else None
+        except (ValueError, TypeError):
+            return None
+
+    previous_rank = rank_of_eschenbach(old)
+    current_rank = rank_of_eschenbach(new)
+    eschenbach_rank_changed = (
+        previous_rank is not None and current_rank is not None
+        and previous_rank != current_rank
+    )
+    if eschenbach_rank_changed:
+        direction = 'vorgerückt' if current_rank < previous_rank else 'zurückgefallen'
+        items.insert(
+            0,
+            f"Eschenbach II ist in der Rangliste von Rang {previous_rank} "
+            f"auf Rang {current_rank} {direction}.",
+        )
+
     moved = [
         r for r in new_table
         if r.get('team') in old_table
+        and str(r.get('team', '')).strip().casefold() != 'fc eschenbach ii'
         and r.get('rank') is not None
         and old_table[r['team']].get('rank') is not None
         and old_table[r['team']].get('rank') != r.get('rank')
     ]
     moved.sort(
-        key=lambda r: (
-            r.get('team') == 'FC Eschenbach II',
-            abs(int(old_table[r['team']]['rank']) - int(r['rank'])),
-        ),
+        key=lambda r: abs(int(old_table[r['team']]['rank']) - int(r['rank'])),
         reverse=True,
     )
     if moved:
         snippets = [f"{r['team']} neu Rang {r['rank']}" for r in moved[:2]]
         items.append('Rangliste: ' + ', '.join(snippets) + '.')
-    else:
+    elif not eschenbach_rank_changed:
         prev, curr = old.get('eschenbach') or {}, new.get('eschenbach') or {}
         if (
             prev.get('points') is not None
