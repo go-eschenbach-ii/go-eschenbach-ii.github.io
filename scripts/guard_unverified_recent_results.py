@@ -1,7 +1,7 @@
 """Hold newly inferred match scores if the official table does not corroborate them.
 
-The IFV mirror often publishes fixtures for a past date before a verified
-result. AI guessing e.g. Hochdorf–Nebikon 10:0 must never be published as fact.
+The IFV mirror sometimes lags behind official match results. A score explicitly
+verified in the official IFV match center has priority over stale standings.
 Only newly introduced results are checked; already published confirmed results
 and manually finished admin live-ticker scores remain untouched.
 """
@@ -29,6 +29,18 @@ new_table={str(r.get('team','')).strip():r
            for r in report.get('standings',[]) if isinstance(r,dict)}
 confirmed={key(m) for m in report.get('confirmed_live_scores',[])
     if isinstance(m,dict) and m.get('status')=='finished'}
+# Independently verified match-center results have priority even if the
+# separately cached standings page is delayed.
+verified_file=Path('data/ifv-verified-results.json')
+if verified_file.exists():
+    verified_doc=json.loads(verified_file.read_text(encoding='utf-8'))
+    official_results={
+        key(m):(int(m['home_goals']),int(m['away_goals']))
+        for m in verified_doc.get('matches',[]) if isinstance(m,dict)
+    }
+else:
+    official_results={}
+
 results=[]
 held=[]
 for m in report.get('recent_results',[]):
@@ -37,6 +49,9 @@ for m in report.get('recent_results',[]):
     k=key(m)
     if k in previous or k in confirmed or (
         m.get('verified_by')=='admin_liveticker' and m.get('status')=='finished'
+    ) or (
+        k in official_results and
+        (m.get('home_goals'),m.get('away_goals'))==official_results[k]
     ):
         results.append(m)
         continue
