@@ -239,7 +239,7 @@
         }
         if(button){button.textContent=result==='published'?'Aktualisiert':'Update';button.disabled=false;}
         if(result==='published')setTimeout(()=>location.reload(),2200);
-        if(result==='retry')await refresh();
+        if(result==='retry'){busy=false;await refresh();}
       }else if(action==='discard'){
         await api('discard');
         draft=null;banner();close();
@@ -252,11 +252,13 @@
       }
     }catch(e){
       const code=String(e.message||e);
-      message.textContent=code==='unconfirmed_new_result'
-        ?'Ein Resultat ist noch nicht durch die Rangliste bestätigt. Bitte den Entwurf erneut prüfen.'
-        :code==='github_dispatch_failed'
-          ?'GitHub konnte die Veröffentlichung nicht starten. Bitte nochmals versuchen.'
-          :'Konnte nicht abgeschlossen werden: '+code;
+      message.textContent=code==='unverified_news_score'
+        ?'Ein Spielstand in den Neuigkeiten ist nicht bestätigt. Bitte die Vorschau schliessen und neu öffnen.'
+        :code==='unconfirmed_new_result'
+          ?'Ein Resultat ist noch nicht durch die Rangliste bestätigt. Bitte den Entwurf erneut prüfen.'
+          :code==='github_dispatch_failed'
+            ?'GitHub konnte die Veröffentlichung nicht starten. Bitte nochmals versuchen.'
+            :'Konnte nicht abgeschlossen werden: '+code;
     }finally{
       busy=false;
       if(dialog)box.querySelectorAll('button,textarea,input').forEach(el=>el.disabled=false);
