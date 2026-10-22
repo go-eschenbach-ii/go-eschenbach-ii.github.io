@@ -162,6 +162,13 @@
       const r=await fetch(`${API}?t=${Date.now()}`,{cache:'no-store'});
       if(!r.ok)throw Error();
       const d=await r.json();
+      if(d.publishing){
+        el.textContent='Veröffentlichung läuft …';
+        el.disabled=true;
+        setStatus('Freigegebenes Update wird veröffentlicht …','publishing');
+        pollTimer=setTimeout(poll,7000);
+        return;
+      }
       if(d.draft_ready&&!d.pending){
         stopReportWatch();
         el.disabled=false;
@@ -320,6 +327,13 @@
       const r=await fetch(`${API}?t=${Date.now()}`,{cache:'no-store'});
       if(!r.ok)return;
       const d=await r.json();
+      if(d.publishing){
+        el.textContent='Veröffentlichung läuft …';
+        el.disabled=true;
+        setStatus('Freigegebenes Update wird veröffentlicht …','publishing');
+        poll();
+        return;
+      }
       if(d.draft_ready&&!d.pending){
         el.textContent=d.review_required===false?'Neuigkeiten prüfen':'Entwurf prüfen';
         el.disabled=false;
