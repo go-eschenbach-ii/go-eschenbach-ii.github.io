@@ -31,13 +31,21 @@
     notice.hidden=!draft;
     if(draft){
       const isData=draft.review_required===false;
+      const publishing=Boolean(draft.publishing);
       const span=notice.querySelector('#reviewDraftNoticeText');
-      if(span)span.textContent=isData
-        ?'🔎 Neuigkeiten vor der Veröffentlichung prüfen'
-        :'✍️ Ein Berichtsentwurf wartet auf deine Freigabe.';
+      if(span)span.textContent=publishing
+        ?'Veröffentlichung läuft. Die Freigabe wurde angenommen.'
+        :isData?'🔎 Neuigkeiten vor der Veröffentlichung prüfen'
+               :'✍️ Ein Berichtsentwurf wartet auf deine Freigabe.';
       const action=notice.querySelector('button');
-      if(action)action.textContent=isData?'Neuigkeiten ansehen':'Entwurf prüfen';
-      if(button && !button.disabled)button.textContent=isData?'Neuigkeiten prüfen':'Entwurf prüfen';
+      if(action){
+        action.textContent=publishing?'Veröffentlichung läuft …':isData?'Neuigkeiten ansehen':'Entwurf prüfen';
+        action.disabled=publishing;
+      }
+      if(button){
+        button.textContent=publishing?'Veröffentlichung läuft …':isData?'Neuigkeiten prüfen':'Entwurf prüfen';
+        button.disabled=publishing;
+      }
     }
   }
   async function refresh(){
@@ -48,11 +56,12 @@
       draft=d.pending?d:null;
       banner();
       if(draft && !dialog && statusEl){
-        statusEl.textContent=draft.review_required===false
-          ?'Neuigkeiten-Vorschau bereit. Bitte vor Veröffentlichung prüfen.'
-          :'Neuer Berichtsentwurf bereit. Bitte vor Veröffentlichung prüfen.';
-        statusEl.dataset.state='review';
-        if(button){button.textContent=draft.review_required===false?'Neuigkeiten prüfen':'Entwurf prüfen';button.disabled=false;}
+        statusEl.textContent=draft.publishing
+          ?'Veröffentlichung läuft …'
+          :draft.review_required===false
+            ?'Neuigkeiten-Vorschau bereit. Bitte vor Veröffentlichung prüfen.'
+            :'Neuer Berichtsentwurf bereit. Bitte vor Veröffentlichung prüfen.';
+        statusEl.dataset.state=draft.publishing?'publishing':'review';
       }
     }catch(e){console.warn('Entwurfsprüfung derzeit nicht erreichbar',e);}
     finally{refreshing=false;}
@@ -156,6 +165,7 @@
   async function open(){
     if(dialog){dialog.querySelector('textarea')?.focus();return;}
     if(!draft){await refresh();if(!draft)return;}
+    if(draft.publishing)return;
     dialog=buildPanel(draft);
     document.body.append(dialog);
     dialog.querySelector('textarea')?.focus();
@@ -181,12 +191,14 @@
         const response=await fetch('data/report.json?approval='+Date.now(),{cache:'no-store'});
         if(response.ok){
           const current=await response.json();
-          if(String(current.generated_at||'')===String(expected))return true;
+          if(String(current.generated_at||'')===String(expected))return 'published';
         }
+        const state=await api('status');
+        if(state.pending && !state.publishing && String(state.report?.generated_at||'')===String(expected))return 'retry';
       }catch{}
       await new Promise(resolve=>setTimeout(resolve,5000));
     }
-    return false;
+    return 'timeout';
   }
   async function change(action,message,box){
     if(busy||!draft)return;
@@ -217,13 +229,17 @@
         draft=null;banner();close();
         if(statusEl){statusEl.textContent='Freigegeben. Veröffentlichung läuft …';statusEl.dataset.state='publishing';}
         if(button){button.textContent='Veröffentlicht';button.disabled=true;}
-        const live=await waitForPublicReport(expectedVersion);
+        const result=await waitForPublicReport(expectedVersion);
         if(statusEl){
-          statusEl.textContent=live?'Aktualisiert ✓':'Freigegeben. Der neue Bericht erscheint in Kürze.';
-          statusEl.dataset.state=live?'done':'info';
+          statusEl.textContent=result==='published'
+            ?'Aktualisiert ✓'
+            :result==='retry'?'Veröffentlichung fehlgeschlagen. Entwurf erhalten – bitte erneut freigeben.'
+              :'Freigegeben. Die Veröffentlichung wird noch geprüft.';
+          statusEl.dataset.state=result==='published'?'done':result==='retry'?'error':'info';
         }
-        if(button){button.textContent=live?'Aktualisiert':'Update';button.disabled=false;}
-        if(live)setTimeout(()=>location.reload(),2200);
+        if(button){button.textContent=result==='published'?'Aktualisiert':'Update';button.disabled=false;}
+        if(result==='published')setTimeout(()=>location.reload(),2200);
+        if(result==='retry')await refresh();
       }else if(action==='discard'){
         await api('discard');
         draft=null;banner();close();
@@ -235,7 +251,12 @@
           :'Korrekturen gespeichert. Der Bericht ist weiterhin unveröffentlicht.';
       }
     }catch(e){
-      message.textContent='Konnte nicht abgeschlossen werden: '+String(e.message||e);
+      const code=String(e.message||e);
+      message.textContent=code==='unconfirmed_new_result'
+        ?'Ein Resultat ist noch nicht durch die Rangliste bestätigt. Bitte den Entwurf erneut prüfen.'
+        :code==='github_dispatch_failed'
+          ?'GitHub konnte die Veröffentlichung nicht starten. Bitte nochmals versuchen.'
+          :'Konnte nicht abgeschlossen werden: '+code;
     }finally{
       busy=false;
       if(dialog)box.querySelectorAll('button,textarea,input').forEach(el=>el.disabled=false);
