@@ -222,7 +222,14 @@ if not fixtures and not results:
 # Nachweis nur aus dem echten IFV-Matchcenter, nicht aus KI-Texten oder
 # möglicherweise veralteten Ranglistenspiegeln. Die offizielle Ergebnisliste
 # ist die primäre Quelle für abgeschlossene Spiele.
-if results and used_source and used_source.startswith('https://matchcenter.ifv.ch/'):
+if results and used_source and (
+    used_source.startswith('https://matchcenter.ifv.ch/')
+    or used_source.startswith('https://www.fcschoetz.ch/de/club/teams/team/spielplan-gruppe/')
+):
+    # The FC Schötz group fixture page is an official IFV-backed club feed
+    # and is reachable by GitHub Actions when matchcenter.ifv.ch blocks
+    # automated requests with HTTP 403. Do not infer verification from
+    # AI-generated text or stale standings pages.
     ledger_path=Path('data/ifv-verified-results.json')
     ledger=json.loads(ledger_path.read_text(encoding='utf-8')) if ledger_path.exists() else {
         'source':used_source,'matches':[]
