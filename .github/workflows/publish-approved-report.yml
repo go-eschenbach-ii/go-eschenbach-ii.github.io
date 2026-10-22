@@ -1,0 +1,36 @@
+name: Freigegebenen Eschenbach-Bericht veröffentlichen
+run-name: Bericht-Freigabe ${{ inputs.request_id }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      request_id:
+        description: ID des durch Admin freigegebenen Updates
+        required: true
+        type: string
+      approval_token:
+        description: Kurzlebige Freigabeberechtigung
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: go-eschenbach-approved-publications
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Freigegebenen Entwurf vertraulich laden und publizieren
+        env:
+          REQUEST_ID: ${{ inputs.request_id }}
+          APPROVAL_TOKEN: ${{ inputs.approval_token }}
+        run: python scripts/publish_approved_report.py
