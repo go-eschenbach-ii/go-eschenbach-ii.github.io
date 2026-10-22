@@ -67,3 +67,10 @@ jobs:
           print('GUARD_RESULT',match)
           assert match and (match[0].get('home_goals'),match[0].get('away_goals'))==(0,14)
           PY
+          REPORT_BASELINE=/tmp/report-before-update.json REQUEST_ID=test-fixture-117836 python scripts/build_update_news.py
+          python - <<'PY'
+          import json
+          news=json.load(open('data/update-news.json'))
+          assert 'FC Schötz III – FC Dagmersellen: 0:14.' in news['items'],news['items']
+          print('PREVIEW_INCLUDES_OFFICIAL_RESULT',news['items'])
+          PY
