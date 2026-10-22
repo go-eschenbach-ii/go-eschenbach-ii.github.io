@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 import re
 import urllib.request
 import html as html_lib
@@ -217,6 +218,26 @@ if not fixtures and not results:
         f.write('\n')
     print('IFV-Spielplan konnte nicht eindeutig gelesen werden; vorheriger Datenstand bleibt erhalten.')
     raise SystemExit(0)
+
+# Nachweis nur aus dem echten IFV-Matchcenter, nicht aus KI-Texten oder
+# möglicherweise veralteten Ranglistenspiegeln. Die offizielle Ergebnisliste
+# ist die primäre Quelle für abgeschlossene Spiele.
+if results and used_source and used_source.startswith('https://matchcenter.ifv.ch/'):
+    ledger_path=Path('data/ifv-verified-results.json')
+    ledger=json.loads(ledger_path.read_text(encoding='utf-8')) if ledger_path.exists() else {
+        'source':used_source,'matches':[]
+    }
+    by_key={key(m):m for m in ledger.get('matches',[]) if isinstance(m,dict)}
+    for item in results.values():
+        saved={
+            'date':item['date'],'home':item['home'],'away':item['away'],
+            'home_goals':int(item['home_goals']),'away_goals':int(item['away_goals'])
+        }
+        by_key[key(saved)]=saved
+    ledger['source']=used_source
+    ledger['matches']=list(by_key.values())
+    ledger_path.write_text(json.dumps(ledger,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+    print('Offizielle IFV-Resultate unabhängig von der verzögerten Tabelle bestätigt:',len(results))
 
 # Offizielle Resultate der letzten 7 Tage ergänzen.
 merged_results={}
