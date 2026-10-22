@@ -1,0 +1,45 @@
+name: Verify Eschenbach Rank News
+on:
+  push:
+    paths: ['.github/workflows/test-eschenbach-rank-news.yml']
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test change detection and preview priority
+        run: |
+          python -m py_compile scripts/build_update_news.py
+          python - <<'PY'
+          import sys,copy
+          sys.path.insert(0,'scripts')
+          from build_update_news import changes
+          base={'standings':[{'team':'FC Eschenbach II','rank':1,'is_eschenbach':True},{'team':'FC Hochdorf III','rank':2},{'team':'SC Nebikon','rank':9}],'eschenbach':{'rank':1,'points':21},'recent_results':[],'upcoming_matches':[],'scorers':[]}
+          new=copy.deepcopy(base)
+          new['standings'][0]['rank']=2
+          new['standings'][1]['rank']=1
+          new['eschenbach']['rank']=2
+          downs=changes(base,new)
+          assert downs[0]=='Eschenbach II ist in der Rangliste von Rang 1 auf Rang 2 zurückgefallen.',downs
+          promoted=changes(new,base)
+          assert promoted[0]=='Eschenbach II ist in der Rangliste von Rang 2 auf Rang 1 vorgerückt.',promoted
+          assert not any('Rang 1 auf Rang' in text for text in changes(base,copy.deepcopy(base)))
+          # Test news cap of four: ranking move must still be first.
+          for i in range(5):
+              new['recent_results'].append({'date':f'0{i+1}.10.2026','home':f'Team {i}','away':'FC Schötz III','home_goals':i+1,'away_goals':0})
+          new['scorers']=[{'name':'Person A','goals':3}]
+          many=changes(base,new)
+          assert len(many)<=4 and many[0].startswith('Eschenbach II ist in der Rangliste von Rang 1 auf Rang 2'),many
+          # If the denormalised eschenbach field lags behind, standings are authoritative.
+          new['eschenbach']['rank']=1
+          assert changes(base,new)[0].startswith('Eschenbach II ist in der Rangliste von Rang 1 auf Rang 2')
+          print('ESCHENBACH_RANK_CHANGE_NEWS_TESTS_PASSED',downs,promoted,many)
+          PY
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('.github/workflows/daily-report.yml').read_text()
+          assert 'scripts/build_update_news.py' in p and 'scripts/stage_report_draft.py' in p
+          script=Path('update-news.js').read_text()
+          assert 'news.items.slice(0,4)' in script
+          print('PREVIEW_AND_PUBLISHED_NEWS_SHARE_RANK_MESSAGES')
+          PY
