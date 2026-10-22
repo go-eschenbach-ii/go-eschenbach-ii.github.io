@@ -117,6 +117,11 @@ jobs:
       - name: Bericht auf Widersprüche prüfen
         run: python scripts/validate_report.py
 
+      - name: Unbestaetigte neue Resultate zurueckhalten
+        env:
+          REPORT_BASELINE: /tmp/report-before-update.json
+        run: python scripts/guard_unverified_recent_results.py
+
       - name: Bestehende Berichtstexte bei Datenupdate beibehalten
         if: ${{ inputs.update_review == false }}
         env:
