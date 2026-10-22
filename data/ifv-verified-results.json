@@ -1,0 +1,14 @@
+{
+  "source": "https://matchcenter.ifv.ch/default.aspx?a=msp&ln=13040&lng=1&ls=25897&oid=7&s=2027&sg=70471",
+  "note": "Only explicitly checked official IFV match results; do not infer from a stale standings table.",
+  "matches": [
+    {
+      "date": "21.10.2026",
+      "home": "FC Hochdorf III",
+      "away": "SC Nebikon",
+      "home_goals": 10,
+      "away_goals": 0,
+      "match_number": "117834"
+    }
+  ]
+}
