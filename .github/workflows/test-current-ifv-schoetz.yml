@@ -41,3 +41,29 @@ jobs:
             except Exception as e:
               print('ERROR',url,type(e).__name__,str(e)[:200])
           PY
+
+      - name: Test real schedule synchronisation and stale-table guard
+        run: |
+          cp data/report.json /tmp/report-before-update.json
+          python scripts/sync_ifv_schedule.py
+          python - <<'PY'
+          import json
+          p=json.load(open('data/report.json'))
+          key=lambda x:x.get('date')=='22.10.2026' and x.get('home')=='FC Schötz III' and x.get('away')=='FC Dagmersellen'
+          match=[x for x in p['recent_results'] if key(x)]
+          print('SYNC_SOURCE',p.get('schedule_sync_source'))
+          print('SYNC_MATCH',match)
+          if not match or (match[0].get('home_goals'),match[0].get('away_goals'))!=(0,14):
+              raise SystemExit('Official 0:14 was not imported by schedule parser')
+          ledger=json.load(open('data/ifv-verified-results.json'))
+          print('LEDGER_MATCH',[x for x in ledger['matches'] if key(x)])
+          assert any(key(x) and (x['home_goals'],x['away_goals'])==(0,14) for x in ledger['matches'])
+          PY
+          REPORT_BASELINE=/tmp/report-before-update.json python scripts/guard_unverified_recent_results.py
+          python - <<'PY'
+          import json
+          p=json.load(open('data/report.json'))
+          match=[x for x in p['recent_results'] if x.get('date')=='22.10.2026' and x.get('home')=='FC Schötz III' and x.get('away')=='FC Dagmersellen']
+          print('GUARD_RESULT',match)
+          assert match and (match[0].get('home_goals'),match[0].get('away_goals'))==(0,14)
+          PY
