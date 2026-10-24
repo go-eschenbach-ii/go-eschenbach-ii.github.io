@@ -110,10 +110,6 @@ jobs:
           REPORT_BASELINE: /tmp/report-before-update.json
         run: python scripts/protect_scorers.py
 
-      - name: Offizielle Tabelle via Vereins-Spiegel prüfen
-        continue-on-error: true
-        run: python scripts/sync_ifv_table.py
-
       - name: Bericht auf Widersprüche prüfen
         run: python scripts/validate_report.py
 
@@ -121,6 +117,12 @@ jobs:
         env:
           REPORT_BASELINE: /tmp/report-before-update.json
         run: python scripts/guard_unverified_recent_results.py
+
+      - name: IFV-Tabelle ist massgebend und wird zuletzt übernommen
+        # At this point all AI suggestions and local consistency repairs have
+        # finished. No later step may recalculate league positions.
+        continue-on-error: true
+        run: python scripts/sync_ifv_table.py
 
       - name: Bestehende Berichtstexte bei Datenupdate beibehalten
         if: ${{ inputs.update_review == false }}
