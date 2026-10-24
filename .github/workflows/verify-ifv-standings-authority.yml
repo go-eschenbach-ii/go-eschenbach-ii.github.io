@@ -1,0 +1,48 @@
+name: Verify IFV ranking supremacy
+on:
+  push:
+    paths: ['.github/workflows/verify-ifv-standings-authority.yml']
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate official source and published snapshot
+        run: |
+          python -m py_compile scripts/sync_ifv_table.py scripts/sync_ifv_schedule.py scripts/guard_unverified_recent_results.py
+          python - <<'PY'
+          import sys,json,copy
+          sys.path.insert(0,'scripts')
+          import sync_ifv_table
+          from pathlib import Path
+          rows=json.loads(Path('data/report.json').read_text())['standings']
+          print('PUBLISHED',[(r['rank'],r['team'],r['played'],r['points']) for r in rows])
+          assert len(rows)==10 and rows[0]['team']=='FC Eschenbach II' and rows[0]['rank']==1
+          assert rows[0]['points']==24 and rows[0]['played']==9 and (rows[0]['goals_for'],rows[0]['goals_against'])==(40,8)
+          assert (rows[1]['team'],rows[1]['points'])==('FC Hochdorf III',21)
+          assert (rows[2]['team'],rows[2]['points'])==('FC Dagmersellen',21)
+          # Regardless of which team comes first, original IFV rank is accepted.
+          def line(r):
+            return [str(r['rank'])+'.',r['team'],str(r['played']),str(r['wins']),str(r['draws']),str(r['losses']),'('+str(r['penalty_points'])+')',str(r['goals_for']),':',str(r['goals_against']),('+' if r['goal_difference']>0 else '')+str(r['goal_difference']),str(r['points'])]
+          template=[token for r in rows for token in line(r)]
+          assert [r['team'] for r in sync_ifv_table.parse(template,{r['team'] for r in rows})]==[r['team'] for r in rows]
+          alt=copy.deepcopy(rows)
+          alt[0]['team'],alt[1]['team']=alt[1]['team'],alt[0]['team']
+          alt[0]['rank']=1;alt[1]['rank']=2
+          parsed=sync_ifv_table.parse([token for r in alt for token in line(r)],{r['team'] for r in rows})
+          assert parsed and parsed[0]['team']=='FC Hochdorf III' and parsed[1]['team']=='FC Eschenbach II'
+          report=json.loads(Path('data/report.json').read_text())
+          latest=[m for m in report['recent_results'] if m.get('date')=='24.10.2026' and m.get('home')=='FC Eschenbach II']
+          assert len(latest)==1 and (latest[0]['home_goals'],latest[0]['away_goals'])==(11,0)
+          assert report['standings_sync_status']=='verified'
+          assert report['standings_authority'].startswith('IFV')
+          print('IFV_TABLE_PARSER_RANKS_AND_RESULTS_PASSED')
+          PY
+          REPORT_BASELINE=data/report.json python scripts/sync_ifv_table.py
+          python - <<'PY'
+          import json
+          d=json.load(open('data/report.json'))
+          assert d['standings'][0]['team']=='FC Eschenbach II'
+          assert d['standings'][0]['points']==24
+          print('LIVE_OFFICIAL_SNAPSHOT_MATCHES_PUBLISHED')
+          PY
