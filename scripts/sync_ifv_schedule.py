@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 import re
 import urllib.request
@@ -10,7 +11,6 @@ REPORT_PATH='data/report.json'
 SCHEDULE_URLS=[
     'https://matchcenter.ifv.ch/default.aspx?a=msp&ln=13040&lng=1&ls=25897&oid=7&s=2027&sg=70471',
     'https://club.football.ch/?lng=1&tab=3396&v=376&t=31274&ls=25897&sg=70471&tg=4328790',
-    'https://club.football.ch/?lng=1&tab=3410&v=376',
     'https://www.fcschoetz.ch/de/club/teams/team/spielplan-gruppe/%26v%3D376%26t%3D31274%26ls%3D25897%26sg%3D70471',
 ]
 
@@ -57,13 +57,9 @@ for url in SCHEDULE_URLS:
         failures.append(f'{url}: {exc}')
 
 if raw is None:
-    print('IFV-Spielplan nicht erreichbar. Quellen:', ' | '.join(failures))
-    # Frühere Partien dürfen nicht als frisch abgeglichen deklariert werden.
-    data['schedule_sync_status']='unavailable'
-    with open(REPORT_PATH,'w',encoding='utf-8') as f:
-        json.dump(data,f,ensure_ascii=False,indent=2)
-        f.write('\n')
-    raise SystemExit(0)
+    # An update without a fresh official schedule must fail BEFORE a private
+    # preview is prepared. Do not treat an outdated or AI-inferred list as fresh.
+    raise RuntimeError('IFV-Spielplan nicht erreichbar. Quellen: '+' | '.join(failures))
 
 raw=re.sub(r'(?is)<script\b.*?</script>|<style\b.*?</style>',' ',raw)
 raw=re.sub(r'(?s)<[^>]+>','\n',raw)
@@ -212,12 +208,16 @@ for i,line in enumerate(lines):
         fixtures[key(item)]=item
 
 if not fixtures and not results:
-    data['schedule_sync_status']='unavailable'
-    with open(REPORT_PATH,'w',encoding='utf-8') as f:
-        json.dump(data,f,ensure_ascii=False,indent=2)
-        f.write('\n')
-    print('IFV-Spielplan konnte nicht eindeutig gelesen werden; vorheriger Datenstand bleibt erhalten.')
-    raise SystemExit(0)
+    # It is legitimate to have no matches in the recent/next-14-day window
+    # during the winter break. Still require a real complete group-fixture
+    # page; the ranking page alone cannot count as consultation.
+    present=sum(1 for t in teamset if t.casefold() in text.casefold())
+    dates=len(re.findall(r'\b\d{2}\.\d{2}\.\d{4}\b', text))
+    if present < 8 or dates < 3:
+        raise RuntimeError(
+            f'IFV-Spielplan konnte nicht eindeutig gelesen werden: '
+            f'{present} Teams, {dates} Daten, Quelle {used_source}'
+        )
 
 # Nachweis nur aus dem echten IFV-Matchcenter, nicht aus KI-Texten oder
 # möglicherweise veralteten Ranglistenspiegeln. Die offizielle Ergebnisliste
@@ -263,21 +263,21 @@ data['recent_results']=sorted(
     reverse=True
 )
 
-# Nur bisher belegte bzw. durch die vorgängige Recherche bestätigte
-# Paarungen werden übernommen. Vereinsseiten enthalten auch weitere Saisons
-# und Teams; dort können vermeintliche Datumszuordnungen entstehen.
-if fixtures:
-    verified_keys={key(m) for m in data.get('upcoming_matches',[]) if isinstance(m,dict)}
-    for k in list(fixtures):
-        if k in results or k not in verified_keys:
-            fixtures.pop(k,None)
-    data['upcoming_matches']=sorted(
-        fixtures.values(),
-        key=lambda m:(dmy(m.get('date')) or future_end,m.get('time',''),m.get('home',''))
-    )
+# Use the official fixture list, not AI suggestions or the former preview:
+# those lists may be stale or incomplete. Both teams already belong to the
+# verified ten-team IFV group (checked during parsing).
+for k in list(fixtures):
+    if k in results:
+        fixtures.pop(k,None)
+data['upcoming_matches']=sorted(
+    fixtures.values(),
+    key=lambda m:(dmy(m.get('date')) or future_end,m.get('time',''),m.get('home',''))
+)
 
 data['schedule_sync_status']='verified'
 data['schedule_sync_source']=used_source
+data['schedule_sync_verified_results']=len(results)
+data['schedule_sync_verified_fixtures']=len(fixtures)
 data['schedule_sync_at']=now.isoformat()
 with open(REPORT_PATH,'w',encoding='utf-8') as f:
     json.dump(data,f,ensure_ascii=False,indent=2)
