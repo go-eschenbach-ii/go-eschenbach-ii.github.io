@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "explanation": "Only individually verified IFV-matchcenter goal-scorer attributions. Each match replaces, never adds to, the same match's report scorers.",
+  "matches": [
+    {
+      "date": "04.09.2026",
+      "opponent": "FC Grosswangen-Ettiswil",
+      "source_url": "https://matchcenter.el-pl.ch/Default.aspx?ln=&lng=1&oid=3&tg=4328767&v=376",
+      "scorers": [
+        {
+          "name": "Luis Nabulon",
+          "goals": 1
+        },
+        {
+          "name": "Mino Vidi",
+          "goals": 1
+        },
+        {
+          "name": "Noe Fischer",
+          "goals": 1
+        }
+      ]
+    }
+  ]
+}
