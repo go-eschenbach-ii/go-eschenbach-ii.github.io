@@ -6,11 +6,23 @@
   "scorers": [
     {
       "name": "Luis Nabulon",
-      "goals": 6
+      "goals": 8
     },
     {
       "name": "Mino Vidi",
+      "goals": 4
+    },
+    {
+      "name": "Fabio Almeida",
       "goals": 3
+    },
+    {
+      "name": "Timo Bossert",
+      "goals": 3
+    },
+    {
+      "name": "Nico Röösli",
+      "goals": 2
     },
     {
       "name": "Noe Fischer",
@@ -21,16 +33,12 @@
       "goals": 2
     },
     {
+      "name": "Riccardo Caruso",
+      "goals": 2
+    },
+    {
       "name": "Tilman Bucher",
       "goals": 2
-    },
-    {
-      "name": "Timo Bossert",
-      "goals": 2
-    },
-    {
-      "name": "Fabio Almeida",
-      "goals": 1
     },
     {
       "name": "Ilay Brandenberger",
@@ -45,11 +53,11 @@
       "goals": 1
     },
     {
-      "name": "Nando Hächler",
+      "name": "März",
       "goals": 1
     },
     {
-      "name": "Nico Röösli",
+      "name": "Nando Hächler",
       "goals": 1
     },
     {
@@ -232,15 +240,15 @@
     "goal_difference": 32
   },
   "report_date": "24.10.2026",
-  "scorer_note": "Bestätigt zugeordnet: 29 von 40 Toren; noch offen: 11. Die bestätigten Torschützen bleiben sichtbar.",
+  "scorer_note": "34 Spielertore, 2 Eigentore und 3 Forfait-Tore: 39 von 40 Saisontoren zugeordnet. Noch 1 Tor nicht eindeutig zugeordnet.",
   "generated_at": "24.10.2026 22:50:06",
   "scorer_audit": {
     "complete": false,
     "own_goals": 2,
-    "player_goals": 24,
+    "player_goals": 34,
     "forfait_goals": 3,
     "expected_goals": 40,
-    "accounted_goals": 29,
+    "accounted_goals": 39,
     "checked_matches": [
       {
         "date": "02.10.2026",
@@ -312,7 +320,11 @@
         "opponent": "FC Wauwil-Egolzwil",
         "own_goals": 0
       }
-    ]
+    ],
+    "official_priority": true,
+    "counted_matches": 2,
+    "unresolved_historical_official_matches": [],
+    "inconsistent_match_details": []
   },
   "forfait_goals": 3,
   "recent_results": [
@@ -764,5 +776,132 @@
     }
   ],
   "schedule_sync_verified_results": 9,
-  "schedule_sync_verified_fixtures": 0
+  "schedule_sync_verified_fixtures": 0,
+  "scorer_match_ledger": {
+    "schema": 1,
+    "legacy_scorers": [
+      {
+        "name": "Luis Nabulon",
+        "goals": 5
+      },
+      {
+        "name": "Mino Vidi",
+        "goals": 2
+      },
+      {
+        "name": "Noe Fischer",
+        "goals": 1
+      },
+      {
+        "name": "Ramon Brugger",
+        "goals": 2
+      },
+      {
+        "name": "Tilman Bucher",
+        "goals": 2
+      },
+      {
+        "name": "Timo Bossert",
+        "goals": 2
+      },
+      {
+        "name": "Fabio Almeida",
+        "goals": 1
+      },
+      {
+        "name": "Ilay Brandenberger",
+        "goals": 1
+      },
+      {
+        "name": "Joel Häusler",
+        "goals": 1
+      },
+      {
+        "name": "Luca Ulrich",
+        "goals": 1
+      },
+      {
+        "name": "Nando Hächler",
+        "goals": 1
+      },
+      {
+        "name": "Nico Röösli",
+        "goals": 1
+      },
+      {
+        "name": "Sandro Rosenberg",
+        "goals": 1
+      }
+    ],
+    "legacy_own_goals": 2,
+    "legacy_forfait_goals": 3,
+    "legacy_covered_matches": [
+      "02.10.2026|fc schötz iii",
+      "04.09.2026|fc grosswangen-ettiswil",
+      "10.10.2026|fc dagmersellen",
+      "12.09.2026|fc knutwil ii",
+      "12.10.2026|sc nebikon",
+      "15.08.2026|sc steinhausen iv",
+      "17.10.2026|fc hochdorf iii",
+      "22.08.2026|fc altbüron-grossdietwil",
+      "30.08.2026|fc wauwil-egolzwil"
+    ],
+    "matches": [
+      {
+        "date": "04.09.2026",
+        "opponent": "FC Grosswangen-Ettiswil",
+        "source": "ifv",
+        "source_url": "https://matchcenter.el-pl.ch/Default.aspx?ln=&lng=1&oid=3&tg=4328767&v=376",
+        "scorers": [
+          {
+            "name": "Luis Nabulon",
+            "goals": 1
+          },
+          {
+            "name": "Mino Vidi",
+            "goals": 1
+          },
+          {
+            "name": "Noe Fischer",
+            "goals": 1
+          }
+        ]
+      },
+      {
+        "date": "24.10.2026",
+        "opponent": "FC Ruswil III",
+        "source": "report",
+        "scorers": [
+          {
+            "name": "Fabio Almeida",
+            "goals": 2
+          },
+          {
+            "name": "Luis Nabulon",
+            "goals": 2
+          },
+          {
+            "name": "März",
+            "goals": 1
+          },
+          {
+            "name": "Timo Bossert",
+            "goals": 1
+          },
+          {
+            "name": "Nico Röösli",
+            "goals": 1
+          },
+          {
+            "name": "Riccardo Caruso",
+            "goals": 2
+          },
+          {
+            "name": "Mino Vidi",
+            "goals": 1
+          }
+        ]
+      }
+    ]
+  }
 }
