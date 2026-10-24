@@ -1,0 +1,35 @@
+name: Check Approved Forfait Results
+on:
+  push:
+    paths: ['.github/workflows/check-forfait-approval.yml']
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test update preview, trusted score and admin-only publishing
+        run: |
+          node --check review-draft.js
+          python -m py_compile scripts/stage_report_draft.py scripts/guard_unverified_recent_results.py
+          python - <<'PY'
+          import json,urllib.request,urllib.error
+          from pathlib import Path
+          ledger=json.loads(Path('data/ifv-verified-results.json').read_text())
+          matches=[m for m in ledger['matches'] if m['date']=='24.10.2026' and m['home']=='FC Grosswangen-Ettiswil' and m['away']=='FC Schötz III']
+          assert len(matches)==1
+          assert matches[0]['home_goals']==3 and matches[0]['away_goals']==0 and matches[0].get('forfait') is True
+          code=Path('scripts/stage_report_draft.py').read_text()
+          assert 'official_verified_results' in code
+          assert "https://www.fcschoetz.ch/de/club/teams/team/spielplan-gruppe/" in code
+          html=Path('index.html').read_text()
+          assert 'review-draft.js?v=5' in html
+          print('IFV_FORFAIT_EVIDENCE_READY')
+          body=json.dumps({'action':'publish','admin_token':'invalid'}).encode()
+          request=urllib.request.Request('https://kfpxheegmeupnuzqjqqt.supabase.co/functions/v1/report-draft',data=body,method='POST',headers={'Content-Type':'application/json','Origin':'https://go-eschenbach-ii.github.io'})
+          try:
+            urllib.request.urlopen(request,timeout=20)
+            raise AssertionError('Unprivileged report publication accepted')
+          except urllib.error.HTTPError as e:
+            assert e.code==403,e.code
+            print('ADMIN_APPROVAL_REQUIRED',e.code)
+          PY
