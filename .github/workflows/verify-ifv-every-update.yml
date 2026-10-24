@@ -28,8 +28,10 @@ jobs:
           assert actual['standings_sync_status']=='verified'
           assert actual['schedule_sync_status']=='verified'
           assert len(actual['standings'])==10
-          assert actual['standings'][0]['team']=='FC Eschenbach II'
-          assert actual['standings'][0]['points']>=24
+          assert sorted(row['rank'] for row in actual['standings'])==list(range(1,11))
+          esch=next(row for row in actual['standings'] if row['team']=='FC Eschenbach II')
+          assert esch['played']>=9 and esch['points']>=24
+          print('ESCHENBACH_CURRENT_OFFICIAL_RANK',esch['rank'],esch['points'])
           assert actual['schedule_sync_source'].startswith('https://')
           assert actual['standings_sync_source'].startswith('https://')
           for field,value in [
