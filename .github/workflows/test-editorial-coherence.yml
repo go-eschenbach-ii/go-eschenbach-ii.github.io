@@ -1,0 +1,43 @@
+name: Verify editorial coherence
+on:
+  push:
+    paths: ['.github/workflows/test-editorial-coherence.yml']
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Detect and correct stale article headers against official IFV
+        run: |
+          python -m py_compile scripts/align_editorial_with_ifv.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('data/report.json')
+          d=json.loads(p.read_text())
+          d['title']='Erste Niederlage: Eschenbach II verliert 0:3 in Hochdorf'
+          d['lead']='Eschenbach musste sich geschlagen geben. 21 Punkte, acht Spiele.'
+          d['review']='Nach der Niederlage in Hochdorf besiegte Eschenbach II den FC Ruswil III mit 11:0. Ein grossartiger Kantersieg. Eschenbach beendet die Vorrunde mit sieben Siegen aus acht Spielen, 21 Punkten auf Rang zwei.'
+          d['current_situation']='Eschenbach ist mit 21 Punkten nach acht Spielen Zweiter.'
+          d['outlook']='Am 24. Oktober folgt das Spiel gegen Ruswil III.'
+          orig=d['heart_cycle_key']
+          p.write_text(json.dumps(d,ensure_ascii=False))
+          Path('/tmp/editorial-heart-key').write_text(orig)
+          PY
+          python scripts/align_editorial_with_ifv.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('data/report.json').read_text())
+          expected={'title':'Eschenbach II gewinnt 11:0 gegen FC Ruswil III'}
+          for key,val in expected.items():assert d[key]==val,(key,d[key])
+          assert '24 Punkten' in d['lead'] and 'neun' not in d['lead'].lower()
+          assert '9 Spielen' in d['lead'] and '40:8' in d['lead']
+          assert 'Rang 1' in d['current_situation'] and '24 Punkten' in d['current_situation']
+          assert '40:8' in d['review'] and 'Rang 1' in d['review']
+          assert '21 Punkten' not in d['review'] and 'sieben Siegen' not in d['review']
+          assert '24. Oktober folgt' not in d['outlook']
+          assert d['heart_cycle_key']==Path('/tmp/editorial-heart-key').read_text()
+          print('CORRECTED_EDITORIAL',d['title'],d['lead'],d['current_situation'],d['outlook'],d['review'])
+          PY
+          git checkout -- data/report.json
