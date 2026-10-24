@@ -158,5 +158,5 @@
     resizeTimer=setTimeout(fitAllPairings,100);
   });
 
-  if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js?v=21').catch(()=>{});}
+  if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js?v=58').catch(()=>{});}
 })();
