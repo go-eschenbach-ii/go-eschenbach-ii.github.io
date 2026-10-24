@@ -1,0 +1,36 @@
+name: Test authoritative IFV table and match list
+on:
+  push:
+    paths: ['.github/workflows/test-ifv-authority.yml']
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check official IFV results and table source
+        run: |
+          python -m py_compile scripts/sync_ifv_table.py scripts/sync_ifv_schedule.py
+          cp data/report.json /tmp/ifv-before.json
+          python scripts/sync_ifv_table.py
+          python - <<'PY'
+          import json
+          d=json.load(open('data/report.json'))
+          t=d['standings']
+          print('OFFICIAL_TABLE',[(r['rank'],r['team'],r['played'],r['points'],r['goals_for'],r['goals_against']) for r in t])
+          print('SOURCE',d.get('standings_sync_source'))
+          assert len(t)==10 and [r['rank'] for r in t]==list(range(1,11))
+          assert t[0]['team']=='FC Eschenbach II',t[0]
+          assert t[0]['points']==24 and t[0]['played']==9 and t[0]['goals_for']==40,t[0]
+          assert t[1]['team']=='FC Hochdorf III'
+          assert t[2]['team']=='FC Dagmersellen'
+          PY
+          python scripts/sync_ifv_schedule.py
+          python - <<'PY'
+          import json
+          d=json.load(open('data/report.json'))
+          results=[m for m in d['recent_results'] if m['date']=='24.10.2026']
+          print('OFFICIAL_TODAY_RESULTS',results)
+          assert any(m['home']=='FC Eschenbach II' and m['away']=='FC Ruswil III' and m.get('home_goals')==11 and m.get('away_goals')==0 for m in results),results
+          PY
+          cp /tmp/ifv-before.json data/report.json
+          git diff --exit-code -- data/report.json
