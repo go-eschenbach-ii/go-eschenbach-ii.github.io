@@ -5,6 +5,7 @@ site embeds the same official Football.ch result-and-rankings table.
 Only a complete, internally consistent 10-team table may replace report data.
 """
 import html
+import os
 import json
 import re
 import urllib.request
@@ -92,21 +93,40 @@ def main():
             candidates.append((sum(row['played'] for row in rows),rows,url))
         except Exception as e:
             failures.append(f'{url}: {str(e)[:140]}')
-    if not candidates:
-        raise RuntimeError('No official IFV-backed table could be verified: '+'; '.join(failures))
     # Prefer the latest match-count snapshot when mirrors refresh at
     # different times. Never replace a newer public IFV table with an older one.
-    _,rows,source=max(candidates,key=lambda x:x[0])
-    old_by_team={r['team']:r for r in previous}
-    if any(r['played']<int(old_by_team[r['team']].get('played',0)) for r in rows):
-        raise RuntimeError('Official mirror table is older than published standings. Nothing overwritten.')
+    rows=None
+    source=None
+    if candidates:
+        _,candidate_rows,candidate_source=max(candidates,key=lambda x:x[0])
+        old_by_team={r['team']:r for r in previous}
+        if all(r['played']>=int(old_by_team[r['team']].get('played',0)) for r in candidate_rows):
+            rows,source=candidate_rows,candidate_source
+        else:
+            failures.append('Official mirror older than current verified standings')
+    if rows is None:
+        # Fail closed: an AI-calculated table must never replace the IFV.
+        baseline_path=Path(os.getenv('REPORT_BASELINE','/tmp/report-before-update.json'))
+        if not baseline_path.exists():
+            raise RuntimeError('No verified IFV standings and no saved baseline: '+'; '.join(failures))
+        baseline=json.loads(baseline_path.read_text(encoding='utf-8'))
+        rows=baseline.get('standings',[])
+        if (len(rows)!=10 or {r['team'] for r in rows}!=teams
+            or baseline.get('standings_sync_status') not in ('verified','last_verified')):
+            raise RuntimeError('No trusted IFV standings to preserve: '+'; '.join(failures))
+        source=baseline.get('standings_sync_source','official IFV baseline')
+        report['standings_sync_status']='last_verified'
+        report['standings_sync_note']='Official IFV source currently unavailable or older; last verified table retained.'
+        print('IFV momentan nicht frisch abrufbar; letzte offiziell bestätigte Tabelle bleibt erhalten.')
+    else:
+        report['standings_sync_status']='verified'
+        report.pop('standings_sync_note',None)
     report['standings']=rows
     esch=next(r for r in rows if r['is_eschenbach'])
     report.setdefault('eschenbach',{}).update({k:esch[k] for k in (
         'rank','played','wins','draws','losses','penalty_points',
         'goals_for','goals_against','goal_difference','points'
     )})
-    report['standings_sync_status']='verified'
     report['standings_sync_source']=source
     report['standings_sync_at']=datetime.now(ZoneInfo('Europe/Zurich')).isoformat()
     report['standings_authority']='IFV official source: original positions preserved'
