@@ -34,7 +34,7 @@ def fetch_text(url):
 
 
 def parse(lines,teamset):
-    for start in range(len(lines)-130):
+    for start in range(max(0,len(lines)-11)):
         # The leading team changes every weekend. Never assume that
         # Eschenbach is first, second, or in any particular position.
         if lines[start]!='1.' or lines[start+1] not in teamset:
