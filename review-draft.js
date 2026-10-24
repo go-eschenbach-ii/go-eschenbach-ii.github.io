@@ -11,7 +11,7 @@
     const response=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({action,admin_token:token,...extra}),cache:'no-store'});
     const data=await response.json().catch(()=>({}));
-    if(!response.ok)throw Error(data.error||'Netzwerkfehler');
+    if(!response.ok){const problem=Error(data.error||'Netzwerkfehler');problem.match=data.match||'';throw problem;}
     return data;
   }
   function banner(){
@@ -255,7 +255,7 @@
       message.textContent=code==='unverified_news_score'
         ?'Ein Spielstand in den Neuigkeiten ist nicht bestätigt. Bitte die Vorschau schliessen und neu öffnen.'
         :code==='unconfirmed_new_result'
-          ?'Ein Resultat ist noch nicht durch die Rangliste bestätigt. Bitte den Entwurf erneut prüfen.'
+          ?'Resultat noch nicht bestätigt: '+String(e.match||'unbekannte Partie')+'. Bitte die Vorschau schliessen und die Spielergebnisse prüfen.'
           :code==='github_dispatch_failed'
             ?'GitHub konnte die Veröffentlichung nicht starten. Bitte nochmals versuchen.'
             :'Konnte nicht abgeschlossen werden: '+code;
