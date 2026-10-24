@@ -119,9 +119,8 @@ jobs:
         run: python scripts/guard_unverified_recent_results.py
 
       - name: IFV-Tabelle ist massgebend und wird zuletzt übernommen
-        # At this point all AI suggestions and local consistency repairs have
-        # finished. No later step may recalculate league positions.
-        continue-on-error: true
+        # Abort the update rather than publish AI-calculated standings if neither
+        # an official snapshot nor the previously verified IFV table is available.
         run: python scripts/sync_ifv_table.py
 
       - name: Bestehende Berichtstexte bei Datenupdate beibehalten
