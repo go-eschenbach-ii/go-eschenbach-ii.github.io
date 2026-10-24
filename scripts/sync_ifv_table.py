@@ -13,11 +13,16 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 REPORT=Path('data/report.json')
-URL='https://www.fcschoetz.ch/de/club/teams/team/resultate-und-rangliste/%26v%3D376%26t%3D31274'
+URLS=[
+    # Both club pages contain the very same IFV/football.ch group table.
+    # The direct IFV host frequently returns 403 to GitHub Actions.
+    'https://www.fcschoetz.ch/?lng=1&tab=3410&v=376',
+    'https://www.fcschoetz.ch/de/club/teams/team/resultate-und-rangliste/%26v%3D376%26t%3D31274',
+]
 
 
-def fetch_text():
-    req=urllib.request.Request(URL,headers={
+def fetch_text(url):
+    req=urllib.request.Request(url,headers={
         'User-Agent':'Mozilla/5.0',
         'Accept-Language':'de-CH,de;q=0.9'
     })
@@ -29,7 +34,9 @@ def fetch_text():
 
 def parse(lines,teamset):
     for start in range(len(lines)-130):
-        if lines[start:start+2]!=['1.','FC Eschenbach II']:
+        # The leading team changes every weekend. Never assume that
+        # Eschenbach is first, second, or in any particular position.
+        if lines[start]!='1.' or lines[start+1] not in teamset:
             continue
         found=[]
         i=start
@@ -74,12 +81,25 @@ def main():
     teams={x['team'] for x in previous if isinstance(x,dict) and x.get('team')}
     if len(teams)!=10:
         raise RuntimeError('Expected exactly 10 group-4 teams')
-    rows=parse(fetch_text(),teams)
-    if not rows:
-        raise RuntimeError('Official mirror returned no complete coherent group-4 table')
+    candidates=[]
+    failures=[]
+    for url in URLS:
+        try:
+            rows=parse(fetch_text(url),teams)
+            if not rows:
+                failures.append(f'{url}: no complete, coherent ten-team table')
+                continue
+            candidates.append((sum(row['played'] for row in rows),rows,url))
+        except Exception as e:
+            failures.append(f'{url}: {str(e)[:140]}')
+    if not candidates:
+        raise RuntimeError('No official IFV-backed table could be verified: '+'; '.join(failures))
+    # Prefer the latest match-count snapshot when mirrors refresh at
+    # different times. Never replace a newer public IFV table with an older one.
+    _,rows,source=max(candidates,key=lambda x:x[0])
     old_by_team={r['team']:r for r in previous}
     if any(r['played']<int(old_by_team[r['team']].get('played',0)) for r in rows):
-        raise RuntimeError('Source table is older than currently published report; preserving existing results')
+        raise RuntimeError('Official mirror table is older than published standings. Nothing overwritten.')
     report['standings']=rows
     esch=next(r for r in rows if r['is_eschenbach'])
     report.setdefault('eschenbach',{}).update({k:esch[k] for k in (
@@ -87,7 +107,9 @@ def main():
         'goals_for','goals_against','goal_difference','points'
     )})
     report['standings_sync_status']='verified'
+    report['standings_sync_source']=source
     report['standings_sync_at']=datetime.now(ZoneInfo('Europe/Zurich')).isoformat()
+    report['standings_authority']='IFV official source: original positions preserved'
     REPORT.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     print('Verifizierte IFV-Tabelle übernommen: ' + ', '.join(f"{r['rank']}. {r['team']} ({r['points']})" for r in rows))
 
