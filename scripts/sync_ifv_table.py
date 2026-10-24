@@ -99,11 +99,12 @@ def main():
     source=None
     if candidates:
         _,candidate_rows,candidate_source=max(candidates,key=lambda x:x[0])
-        old_by_team={r['team']:r for r in previous}
-        if all(r['played']>=int(old_by_team[r['team']].get('played',0)) for r in candidate_rows):
-            rows,source=candidate_rows,candidate_source
-        else:
-            failures.append('Official mirror older than current verified standings')
+        # The official IFV table takes precedence over provisional AI
+        # standings, even if IFV retrospectively corrects a match or points.
+        # All ten ranks and score columns are checked in parse().
+        rows,source=candidate_rows,candidate_source
+    if rows is None and os.getenv('IFV_REQUIRE_FRESH','').strip()=='1':
+        raise RuntimeError('Frische offizielle IFV-Tabelle bei diesem Update nicht abrufbar: '+'; '.join(failures))
     if rows is None:
         # Fail closed: an AI-calculated table must never replace the IFV.
         baseline_path=Path(os.getenv('REPORT_BASELINE','/tmp/report-before-update.json'))
@@ -131,7 +132,9 @@ def main():
     report['standings_sync_at']=datetime.now(ZoneInfo('Europe/Zurich')).isoformat()
     report['standings_authority']='IFV official source: original positions preserved'
     REPORT.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-    print('Verifizierte IFV-Tabelle übernommen: ' + ', '.join(f"{r['rank']}. {r['team']} ({r['points']})" for r in rows))
+    print(('Frische offizielle IFV-Tabelle übernommen: ' if report['standings_sync_status']=='verified'
+        else 'Letzte verifizierte IFV-Tabelle beibehalten: ')
+        + ', '.join(f"{r['rank']}. {r['team']} ({r['points']})" for r in rows))
 
 
 if __name__=='__main__':
