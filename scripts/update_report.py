@@ -209,7 +209,9 @@ VERBINDLICH:
 6. Dieselbe Torinformation aus mehreren Quellen niemals doppelt zählen. Gleiche Angaben aus Matchcenter, Matchbericht und Matchkommentar sind nur eine Bestätigung desselben Tores.
 7. Bei einem echten Widerspruch zwischen einer offiziellen Torschützenangabe und dem eigenen Matchbericht hat die offizielle Angabe Vorrang.
 8. Falls nötig, prüfe zusätzlich offizielle Vereinsberichte zum exakt passenden Spiel.
-9. Identische Spielernamen zusammenführen und Tore summieren.
+9. Erfasse Torschützen pro Spiel als strukturierte Liste (Name und Anzahl Tore). Die Saisonliste muss dieselben Spiele summieren, nie denselben Match doppelt zählen.
+9a. Wenn IFV andere Spieler nennt, gelten die IFV-Spielangaben für den betroffenen Match. Eigene Beobachtungen nur verwenden, wenn die IFV-Torschützen zu diesem Match fehlen.
+9b. In checked_matches.scorers eine Liste von Objekten verwenden, nicht einen freien Text. Bei unsicheren Spielern nur die eindeutig benannten Tore erfassen.
 10. Kontrollsumme: Spielertore plus own_goals plus forfait_goals muss exakt {expected_goals} ergeben.
 11. Nichts schätzen oder erfinden. Wenn nicht vollständig, complete=false setzen.
 
@@ -220,7 +222,7 @@ Antworte ausschliesslich als valides JSON:
   "own_goals":0,
   "forfait_goals":0,
   "scorers":[{{"name":"...","goals":1}}],
-  "checked_matches":[{{"date":"DD.MM.YYYY","opponent":"...","result":"...","scorers":"...","own_goals":0}}],
+  "checked_matches":[{{"date":"DD.MM.YYYY","opponent":"...","result":"...","scorers":[{{"name":"...","goals":1}}],"own_goals":0}}],
   "note":"..."
 }}
 '''
@@ -253,7 +255,7 @@ Gehe jedes Meisterschaftsspiel erneut einzeln durch. Ergänze fehlende Torschüt
 Ein im eigenen Matchbericht eindeutig genannter Torschütze zählt für das passende Spiel. Gleiche Angaben aus mehreren Quellen dürfen nicht doppelt gezählt werden. Forfait-Tore niemals einem Spieler zuordnen, sondern separat als forfait_goals zählen. Die Endsumme aus Spielertoren + Eigentoren + Forfait-Toren muss exakt {expected_goals} ergeben. Nichts erfinden.
 
 Antworte ausschliesslich als valides JSON im selben Format:
-{{"complete":true,"expected_goals":{expected_goals},"own_goals":0,"forfait_goals":0,"scorers":[{{"name":"...","goals":1}}],"checked_matches":[{{"date":"DD.MM.YYYY","opponent":"...","result":"...","scorers":"...","own_goals":0}}],"note":"..."}}
+{{"complete":true,"expected_goals":{expected_goals},"own_goals":0,"forfait_goals":0,"scorers":[{{"name":"...","goals":1}}],"checked_matches":[{{"date":"DD.MM.YYYY","opponent":"...","result":"...","scorers":[{{"name":"...","goals":1}}],"own_goals":0}}],"note":"..."}}
 '''
     retry=call_json(retry_prompt, timeout=240, use_web=True)
     retry_scorers=normalize_scorers(retry.get('scorers',[]))
