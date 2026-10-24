@@ -20,6 +20,28 @@ payload = {
     'report': json.loads(Path('data/report.json').read_text(encoding='utf-8')),
     'news': json.loads(Path('data/update-news.json').read_text(encoding='utf-8'))
 }
+# Verification evidence is collected by the official IFV-backed schedule
+# synchroniser. Bind it to this private draft so a delayed public table does not
+# invalidate a confirmed result when the administrator later approves it.
+ledger_file = Path('data/ifv-verified-results.json')
+verified = []
+if ledger_file.exists():
+    doc = json.loads(ledger_file.read_text(encoding='utf-8'))
+    source = str(doc.get('source', ''))
+    if source.startswith((
+        'https://matchcenter.ifv.ch/',
+        'https://www.fcschoetz.ch/de/club/teams/team/spielplan-gruppe/'
+    )):
+        for m in doc.get('matches', []):
+            if isinstance(m, dict) and all(k in m for k in
+                ('date', 'home', 'away', 'home_goals', 'away_goals')):
+                verified.append({
+                    'date': m['date'], 'home': m['home'], 'away': m['away'],
+                    'home_goals': int(m['home_goals']),
+                    'away_goals': int(m['away_goals']),
+                })
+payload['report']['official_verified_results'] = verified
+
 req = urllib.request.Request(
     'https://kfpxheegmeupnuzqjqqt.supabase.co/functions/v1/report-draft',
     data=json.dumps(payload, ensure_ascii=False).encode('utf-8'),
