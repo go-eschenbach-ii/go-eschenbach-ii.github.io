@@ -133,7 +133,7 @@ function render(d){
   const review=readerText(d.review);
   const outlook=readerText(d.outlook);
   const lead=readerText(d.lead);
-  const scorerInfo=scorerSummary(d);
+  const scorerInfo=scorerSummary(d) || (typeof d.scorer_note==='string'?d.scorer_note:'');
   const {upcoming,waiting}=pendingFixtureLists(d);
   const auditMatches=Array.isArray(d.scorer_audit?.checked_matches)?d.scorer_audit.checked_matches:[];
   app.innerHTML=`
