@@ -45,6 +45,28 @@
       #app .outlook-card .match.eschenbach-match .match-pairing{
         font-weight:950;
       }
+      /* Defeats (e.g. Hochdorf 3:0 Eschenbach) are grey, not yellow. */
+      #app .review-card .match.eschenbach-match.eschenbach-loss{
+        border-color:#4b5563!important;
+        background:linear-gradient(135deg,#f2f3f5 0%,#d1d5db 100%)!important;
+        box-shadow:0 0 0 4px #b6bcc5,7px 7px 0 #4b5563!important;
+      }
+      #app .review-card .match.eschenbach-match.eschenbach-loss:before{
+        color:#e5e7eb;
+        background:#30343b;
+        border-color:#b6bcc5;
+      }
+      #app .review-card .match.eschenbach-match.eschenbach-loss .score{
+        background:#b6bcc5!important;
+        color:#111!important;
+        border-color:#4b5563!important;
+        box-shadow:2px 2px 0 #4b5563!important;
+      }
+      @media(max-width:600px){
+        #app .review-card .match.eschenbach-match.eschenbach-loss{
+          box-shadow:0 0 0 3px #b6bcc5,5px 5px 0 #4b5563!important;
+        }
+      }
       @media(max-width:600px){
         #app .review-card .match.eschenbach-match,
         #app .outlook-card .match.eschenbach-match{
