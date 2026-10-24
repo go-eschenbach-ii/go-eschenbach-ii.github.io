@@ -26,7 +26,7 @@ function cleanScorerNoteText(value){
     .trim();
 }
 
-function scorerNoteForMatch(match,auditMatches){
+function scorerNoteForMatch(match,auditMatches,ledgerMatches){
   if(!isEschenbachMatch(match))return readerNote(match.note);
 
   const opponent=/FC\s+Eschenbach\s+II/i.test(String(match.home||''))?String(match.away||''):String(match.home||'');
@@ -35,10 +35,18 @@ function scorerNoteForMatch(match,auditMatches){
     String(a?.opponent||'').trim()===opponent.trim()
   );
 
-  if(!audit)return readerNote(match.note);
+  const credited=(ledgerMatches||[]).find(entry=>
+    String(entry?.date||'')===String(match.date||'') &&
+    String(entry?.opponent||'').trim().toLocaleLowerCase('de-CH')===opponent.trim().toLocaleLowerCase('de-CH')
+  );
+  if(!audit&&!credited)return readerNote(match.note);
 
-  let scorers=cleanScorerNoteText(audit.scorers);
-  const own=Math.max(0,Number(audit.own_goals)||0);
+  const credits=credited?.scorers ?? audit?.scorers;
+  let scorers=Array.isArray(credits)
+    ?credits.filter(x=>x&&x.name&&Number(x.goals)>0)
+      .map(x=>String(x.name)+(Number(x.goals)>1?' ('+Number(x.goals)+')':'')).join(', ')
+    :cleanScorerNoteText(credits);
+  const own=Math.max(0,Number(audit?.own_goals)||0);
   const ownAlreadyNamed=/eigentor/i.test(scorers);
   const noPlayerAssignment=/keine\s+spielerzuordnung/i.test(scorers);
 
@@ -52,8 +60,8 @@ function scorerNoteForMatch(match,auditMatches){
   return scorers?`Tore für Eschenbach II: ${scorers}.`:'';
 }
 
-function recentMatchHTML(match,auditMatches){
-  const note=scorerNoteForMatch(match,auditMatches);
+function recentMatchHTML(match,auditMatches,ledgerMatches){
+  const note=scorerNoteForMatch(match,auditMatches,ledgerMatches);
   return `<div class="match"><div class="muted">${esc(match.date)} ${esc(match.time||'')}</div><div><strong>${esc(match.home)}</strong> – <strong>${esc(match.away)}</strong> ${match.home_goals!=null?`<span class="score">${match.home_goals}:${match.away_goals}</span>`:''}</div>${note?`<div class="muted">${esc(note)}</div>`:''}</div>`;
 }
 
@@ -136,6 +144,7 @@ function render(d){
   const scorerInfo=scorerSummary(d) || (typeof d.scorer_note==='string'?d.scorer_note:'');
   const {upcoming,waiting}=pendingFixtureLists(d);
   const auditMatches=Array.isArray(d.scorer_audit?.checked_matches)?d.scorer_audit.checked_matches:[];
+  const ledgerMatches=Array.isArray(d.scorer_match_ledger?.matches)?d.scorer_match_ledger.matches:[];
   app.innerHTML=`
 <section class="team-photo-block" id="teamPhotoCard">
   <div class="team-photo-inline">
@@ -151,7 +160,7 @@ function render(d){
   <span class="pill">FC ESCHENBACH II</span><h2 style="font-size:27px;margin-top:10px">${esc(d.title)}</h2><p class="lead">${esc(lead)}</p>
 </section>
 <section class="grid"><div class="stat"><strong>${esc(e.rank?`#${e.rank}`:'–')}</strong><span>Rang</span></div><div class="stat"><strong>${val(e.points)}</strong><span>Punkte</span></div><div class="stat"><strong>${val(e.wins)}</strong><span>Siege</span></div></section>
-<section class="card"><h2>Rückblick</h2><p>${esc(review)}</p>${(d.recent_results||[]).map(m=>recentMatchHTML(m,auditMatches)).join('')}</section>
+<section class="card"><h2>Rückblick</h2><p>${esc(review)}</p>${(d.recent_results||[]).map(m=>recentMatchHTML(m,auditMatches,ledgerMatches)).join('')}</section>
 <section class="card standings-card"><h2>Aktuelle Situation</h2><p>${esc(situation)}</p><div class="table-wrap"><table class="standings"><thead><tr><th>#</th><th>Team</th><th>Sp</th><th>S</th><th>U</th><th>N</th><th>Str</th><th>Tore</th><th>TD</th><th>Pkt</th></tr></thead><tbody>${(d.standings||[]).map(raw=>{const r=fullRow(raw);return`<tr class="${r.is_eschenbach?'fce':''}"><td>${val(r.rank)}</td><td>${esc(r.team)}</td><td>${val(r.played)}</td><td>${val(r.wins)}</td><td>${val(r.draws)}</td><td>${val(r.losses)}</td><td>${val(r.penalty_points)}</td><td>${r.goals_for!=null&&r.goals_against!=null?`${r.goals_for}:${r.goals_against}`:'–'}</td><td>${r.goal_difference!=null?`${r.goal_difference>0?'+':''}${r.goal_difference}`:'–'}</td><td><strong>${val(r.points)}</strong></td></tr>`}).join('')}</tbody></table></div><div class="table-legend">Sp = Spiele · S = Siege · U = Unentschieden · N = Niederlagen · Str = Strafpunkte · TD = Tordifferenz</div></section>
 <section class="card"><h2>Ausblick</h2><p>${esc(outlook)}</p><h3 class="section-subtitle">Kommende Spiele</h3>${upcoming.map(matchHTML).join('')}</section>
 ${waiting.length?`<section class="card"><h2>Resultat noch ausstehend</h2><p class="muted">Für diese Spiele liegt in der App noch kein bestätigtes Resultat vor.</p>${waiting.map(matchHTML).join('')}</section>`:''}
