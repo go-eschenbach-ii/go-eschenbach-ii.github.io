@@ -18,6 +18,16 @@
       "away_goals": 14,
       "match_number": "117836",
       "source": "https://www.fcschoetz.ch/de/club/teams/team/spielplan-gruppe/%26v%3D376%26t%3D31274%26ls%3D25897%26sg%3D70471"
+    },
+    {
+      "date": "24.10.2026",
+      "home": "FC Grosswangen-Ettiswil",
+      "away": "FC Schötz III",
+      "home_goals": 3,
+      "away_goals": 0,
+      "match_number": "117841",
+      "forfait": true,
+      "source": "https://www.fcschoetz.ch/?lng=3&tab=3410&v=376"
     }
   ]
 }
