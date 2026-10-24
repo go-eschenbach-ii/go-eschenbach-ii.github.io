@@ -206,6 +206,10 @@ jobs:
           )
           PY
 
+      - name: Berichtstexte mit IFV-Spielstand und offizieller Tabelle abgleichen
+        if: ${{ inputs.update_review != false }}
+        run: python scripts/align_editorial_with_ifv.py
+
       - name: Neuigkeiten aus Änderungen für die App erstellen
         env:
           REPORT_BASELINE: /tmp/report-before-update.json
