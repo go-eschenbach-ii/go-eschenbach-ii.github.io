@@ -1,0 +1,32 @@
+name: Check scoreboard scorer UI
+on:
+  push:
+    paths: ['.github/workflows/check-scorer-ui.yml']
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax and published scores
+        run: |
+          node --check app.js
+          node --check sw.js
+          python -m py_compile scripts/reconcile_scorers_by_match.py scripts/update_report.py
+          python - <<'PY'
+          import json,subprocess,sys
+          from pathlib import Path
+          d=json.loads(Path('data/report.json').read_text())
+          a={x['name']:x['goals'] for x in d['scorers']}
+          assert a['Luis Nabulon']==8
+          assert a['Mino Vidi']==4
+          assert a['Fabio Almeida']==3
+          assert a['Timo Bossert']==3
+          assert a['Riccardo Caruso']==2
+          assert d['scorer_audit']['accounted_goals']==39
+          assert d['eschenbach']['goals_for']==40
+          assert len(d['scorer_match_ledger']['matches'])==2
+          assert d['scorer_match_ledger']['matches'][0]['source']=='ifv'
+          assert 'app.js?v=32' in Path('index.html').read_text()
+          assert 'ledgerMatches' in Path('app.js').read_text()
+          print('PUBLISHED_CUMULATIVE_SCORERS_VALID')
+          PY
