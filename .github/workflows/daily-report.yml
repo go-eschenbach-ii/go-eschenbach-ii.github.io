@@ -36,8 +36,18 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Ausgangsstand sichern
-        run: cp data/report.json /tmp/report-before-update.json
+      - name: Ausgangsstand und Zeitpunkt der IFV-Abfrage sichern
+        run: |
+          cp data/report.json /tmp/report-before-update.json
+          python -c "from datetime import datetime,timezone; from pathlib import Path; Path('/tmp/ifv-update-started-at.txt').write_text(datetime.now(timezone.utc).isoformat())"
+
+      - name: IFV-Rangliste zu Beginn jedes Updates abfragen
+        env:
+          IFV_REQUIRE_FRESH: '1'
+        run: python scripts/sync_ifv_table.py
+
+      - name: IFV-Spielplan und Resultate zu Beginn jedes Updates abfragen
+        run: python scripts/sync_ifv_schedule.py
 
       - name: Freigegebene Matchkommentare laden
         env:
@@ -70,8 +80,7 @@ jobs:
           REPORT_BASELINE: /tmp/report-before-update.json
         run: python scripts/ifv_live_refresh.py
 
-      - name: IFV-Spielplan deterministisch synchronisieren
-        continue-on-error: true
+      - name: IFV-Spielplan und Spielergebnisse abschliessend neu abfragen
         run: python scripts/sync_ifv_schedule.py
 
       - name: Matchkommentare endgültig in Rückblick einarbeiten
@@ -118,10 +127,15 @@ jobs:
           REPORT_BASELINE: /tmp/report-before-update.json
         run: python scripts/guard_unverified_recent_results.py
 
-      - name: IFV-Tabelle ist massgebend und wird zuletzt übernommen
-        # Abort the update rather than publish AI-calculated standings if neither
-        # an official snapshot nor the previously verified IFV table is available.
+      - name: Offizielle IFV-Tabelle zuletzt übernehmen
+        # Die IFV-Rangfolge übersteuert alle KI-Vorschläge. Kein Fallback bei
+        # einer neuen Publikation: Ein fehlender Live-Abgleich stoppt das Update.
+        env:
+          IFV_REQUIRE_FRESH: '1'
         run: python scripts/sync_ifv_table.py
+
+      - name: Frische IFV-Tabelle sowie Spiele für jedes Update verpflichtend prüfen
+        run: python scripts/require_fresh_ifv_sources.py
 
       - name: Bestehende Berichtstexte bei Datenupdate beibehalten
         if: ${{ inputs.update_review == false }}
