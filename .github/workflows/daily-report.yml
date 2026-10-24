@@ -137,6 +137,11 @@ jobs:
       - name: Frische IFV-Tabelle sowie Spiele für jedes Update verpflichtend prüfen
         run: python scripts/require_fresh_ifv_sources.py
 
+      - name: Torschützen spielweise und ohne Doppelzählung summieren
+        env:
+          REPORT_BASELINE: /tmp/report-before-update.json
+        run: python scripts/reconcile_scorers_by_match.py
+
       - name: Bestehende Berichtstexte bei Datenupdate beibehalten
         if: ${{ inputs.update_review == false }}
         env:
