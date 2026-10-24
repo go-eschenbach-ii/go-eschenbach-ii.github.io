@@ -160,7 +160,10 @@ def main():
             continue
         if k not in result_goals and k not in entries:
             continue
-        if k not in entries or entries[k].get('source')!='ifv':
+        # A repeated update with the same game does not add its goals again.
+        # Report entries stay fixed until an independently verified IFV
+        # correction replaces that entire game's scorer list.
+        if k not in entries:
             entries[k]=proposal
     for k,record in official.items():
         if k in prior and k not in entries:
