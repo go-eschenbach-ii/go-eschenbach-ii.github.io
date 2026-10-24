@@ -47,11 +47,18 @@ for m in report.get('recent_results',[]):
     if not isinstance(m,dict):
         continue
     k=key(m)
+    # Published results are retained, but a newer explicit IFV result
+    # supersedes any stale or inferred score for the same fixture.
+    official=official_results.get(k)
+    if official is not None:
+        if (m.get('home_goals'),m.get('away_goals')) != official:
+            print('IFV result overrides report estimate:',k,official)
+            m={**m,'home_goals':official[0],'away_goals':official[1],
+               'verified_by':'ifv_official'}
+        results.append(m)
+        continue
     if k in previous or k in confirmed or (
         m.get('verified_by')=='admin_liveticker' and m.get('status')=='finished'
-    ) or (
-        k in official_results and
-        (m.get('home_goals'),m.get('away_goals'))==official_results[k]
     ):
         results.append(m)
         continue
@@ -65,9 +72,9 @@ for m in report.get('recent_results',[]):
     except (TypeError,ValueError,KeyError):
         results.append(m)
         continue
-    if new_h>old_h and new_a>old_a:
-        results.append(m)
-        continue
+    # The standings alone do not prove an individual score. Only the
+    # IFV-backed result list or an explicit finished admin ticker does.
+    # In particular, a 3:0 forfait must never be invented from the table.
     print('Unbestätigtes neues Resultat zurückgehalten:',
           m.get('date'),home,away,m.get('home_goals'),m.get('away_goals'),
           'Rangliste',old_h,new_h,old_a,new_a)
