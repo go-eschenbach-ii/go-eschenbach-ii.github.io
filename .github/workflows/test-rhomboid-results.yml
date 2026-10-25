@@ -1,0 +1,42 @@
+name: Verify chronological rhomboid match results
+on:
+  push:
+    paths: ['.github/workflows/test-rhomboid-results.yml']
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify losses grey on timeline, scores yellow
+        run: |
+          node --check flippy-stats.js
+          node --check app.js
+          node --check theme-enhance.js
+          node --check sw.js
+          node <<'JS'
+          const fs=require('node:fs');
+          const vm=require('node:vm');
+          const code=fs.readFileSync('flippy-stats.js','utf8');
+          const i=code.indexOf('  function seasonTimeline(d){');
+          const j=code.indexOf('\n  const markLabel=',i);
+          if(i<0||j<0)throw Error('Timeline function missing');
+          const seasonTimeline=vm.runInNewContext(code.slice(i,j)+'\nseasonTimeline');
+          const report=JSON.parse(fs.readFileSync('data/report.json','utf8'));
+          const timeline=seasonTimeline(report);
+          console.log('MARKS',timeline.results.slice(0,9));
+          if(timeline.results.length!==18)throw Error('Expected 18 season marks');
+          if(timeline.results.slice(0,9).join(',')!==['win','win','win','win','win','win','win','loss','win'].join(','))
+            throw Error('Hochdorf loss must precede the final Ruswil victory');
+          if(timeline.results.slice(9).some(x=>x!=='future'))throw Error('Future matches must stay dark');
+          const css=fs.readFileSync('stats-flip.css','utf8');
+          if(!css.includes('.wins-mark.loss{background:#aeb5be'))throw Error('Loss grey missing');
+          if(!css.includes('.wins-mark.future{background:#454545'))throw Error('Future grey should differ');
+          const app=fs.readFileSync('app.js','utf8');
+          const theme=fs.readFileSync('theme-enhance.js','utf8');
+          if(app.includes('eschenbach-loss')||theme.includes('eschenbach-loss'))throw Error('Grey match/result box remains');
+          if(!css.includes('.wins-mark.win{background:#f4c400'))throw Error('Wins not yellow');
+          const html=fs.readFileSync('index.html','utf8');
+          for(const entry of ['app.js?v=34','flippy-stats.js?v=4','stats-flip.css?v=3','theme-enhance.js?v=6'])
+            if(!html.includes(entry))throw Error('Cache version missing: '+entry);
+          console.log('PASS: yellow result boxes; 7 wins, grey Hochdorf loss, yellow Ruswil win, dark future');
+          JS
