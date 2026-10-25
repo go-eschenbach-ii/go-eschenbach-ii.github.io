@@ -19,8 +19,8 @@
     // order. Later defeats must not be placed after all wins automatically.
     const confirmed=(Array.isArray(d?.recent_results)?d.recent_results:[])
       .filter(m=>m&&
-        (/FC\\s+Eschenbach\\s+II/i.test(String(m.home||''))||
-         /FC\\s+Eschenbach\\s+II/i.test(String(m.away||''))) &&
+        (/FC\s+Eschenbach\s+II/i.test(String(m.home||''))||
+         /FC\s+Eschenbach\s+II/i.test(String(m.away||''))) &&
         m.home_goals!=null&&m.away_goals!=null &&
         Number.isFinite(Number(m.home_goals))&&Number.isFinite(Number(m.away_goals))
       );
@@ -32,7 +32,7 @@
     const sorted=[...unique.values()]
       .sort((a,b)=>dateKey(a).localeCompare(dateKey(b))).slice(-played);
     const known=sorted.map(m=>{
-      const home=/FC\\s+Eschenbach\\s+II/i.test(String(m.home||''));
+      const home=/FC\s+Eschenbach\s+II/i.test(String(m.home||''));
       const goals=Number(home?m.home_goals:m.away_goals);
       const conceded=Number(home?m.away_goals:m.home_goals);
       return goals>conceded?'win':goals<conceded?'loss':'draw';
