@@ -68,15 +68,7 @@ function scorerNoteForMatch(match,auditMatches,ledgerMatches){
 
 function recentMatchHTML(match,auditMatches,ledgerMatches){
   const note=scorerNoteForMatch(match,auditMatches,ledgerMatches);
-  const home=String(match.home||'');
-  const away=String(match.away||'');
-  const homeGoals=Number(match.home_goals);
-  const awayGoals=Number(match.away_goals);
-  const isDefeat=match.home_goals!=null&&match.away_goals!=null
-    &&Number.isFinite(homeGoals)&&Number.isFinite(awayGoals)
-    &&((/FC\s+Eschenbach\s+II/i.test(home)&&homeGoals<awayGoals)
-      ||(/FC\s+Eschenbach\s+II/i.test(away)&&awayGoals<homeGoals));
-  return `<div class="match${isDefeat?' eschenbach-loss':''}"><div class="muted">${esc(match.date)} ${esc(match.time||'')}</div><div><strong>${esc(match.home)}</strong> – <strong>${esc(match.away)}</strong> ${match.home_goals!=null?`<span class="score">${match.home_goals}:${match.away_goals}</span>`:''}</div>${note?`<div class="muted">${esc(note)}</div>`:''}</div>`;
+  return `<div class="match"><div class="muted">${esc(match.date)} ${esc(match.time||'')}</div><div><strong>${esc(match.home)}</strong> – <strong>${esc(match.away)}</strong> ${match.home_goals!=null?`<span class="score">${match.home_goals}:${match.away_goals}</span>`:''}</div>${note?`<div class="muted">${esc(note)}</div>`:''}</div>`;
 }
 
 const fixtureKey=m=>[
