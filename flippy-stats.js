@@ -6,27 +6,47 @@
     const played=Math.max(0,Number(e.played)||0);
     const wins=Math.max(0,Math.min(played,Number(e.wins)||0));
     const draws=Math.max(0,Math.min(played-wins,Number(e.draws)||0));
-    const reportedLosses=Math.max(0,Number(e.losses)||0);
-    const losses=Math.max(0,Math.min(played-wins-draws,reportedLosses));
-    const accounted=wins+draws+losses;
-    const remainingPlayed=Math.max(0,played-accounted);
-
+    const losses=Math.max(0,Math.min(played-wins-draws,Number(e.losses)||0));
+    const remainingPlayed=Math.max(0,played-wins-draws-losses);
     const teamCount=Array.isArray(d?.standings)?d.standings.length:0;
-    const total=Math.max(
-      played,
-      teamCount>1?(teamCount-1)*2:0,
-      5
-    );
+    const total=Math.max(played,teamCount>1?(teamCount-1)*2:0,5);
 
-    // Die Balken werden bei jedem geladenen Bericht direkt aus den aktuellen
-    // Saisonwerten neu aufgebaut. Dadurch gilt immer:
-    // Sieg = gelb, Unentschieden = halb gelb/halb grau, Niederlage = grau.
-    // Nicht gespielte Partien bleiben ebenfalls grau.
-    const results=[
-      ...Array(wins).fill('win'),
-      ...Array(draws).fill('draw'),
-      ...Array(losses+remainingPlayed).fill('loss')
+    const dateKey=m=>{
+      const part=String(m.date||'').split('.');
+      return part.length===3?part[2]+part[1]+part[0]+' '+String(m.time||'00:00'):'';
+    };
+    // An actual rhombus corresponds to a real result, in chronological
+    // order. Later defeats must not be placed after all wins automatically.
+    const confirmed=(Array.isArray(d?.recent_results)?d.recent_results:[])
+      .filter(m=>m&&
+        (/FC\\s+Eschenbach\\s+II/i.test(String(m.home||''))||
+         /FC\\s+Eschenbach\\s+II/i.test(String(m.away||''))) &&
+        m.home_goals!=null&&m.away_goals!=null &&
+        Number.isFinite(Number(m.home_goals))&&Number.isFinite(Number(m.away_goals))
+      );
+    const unique=new Map();
+    for(const m of confirmed){
+      const key=[m.date,m.home,m.away].join('|').toLocaleLowerCase('de-CH');
+      unique.set(key,m);
+    }
+    const sorted=[...unique.values()]
+      .sort((a,b)=>dateKey(a).localeCompare(dateKey(b))).slice(-played);
+    const known=sorted.map(m=>{
+      const home=/FC\\s+Eschenbach\\s+II/i.test(String(m.home||''));
+      const goals=Number(home?m.home_goals:m.away_goals);
+      const conceded=Number(home?m.away_goals:m.home_goals);
+      return goals>conceded?'win':goals<conceded?'loss':'draw';
+    });
+    const counted=state=>known.filter(x=>x===state).length;
+    // A few older games may be absent from the "recent results" window.
+    // Fill only their missing totals, never double-count listed games.
+    const unknown=[
+      ...Array(Math.max(0,wins-counted('win'))).fill('win'),
+      ...Array(Math.max(0,draws-counted('draw'))).fill('draw'),
+      ...Array(Math.max(0,losses-counted('loss'))).fill('loss'),
+      ...Array(remainingPlayed).fill('loss')
     ];
+    const results=[...unknown,...known].slice(-played);
     while(results.length<total)results.push('future');
     return{results,total,wins,draws,losses:losses+remainingPlayed,played};
   }
