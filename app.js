@@ -28,6 +28,12 @@ function cleanScorerNoteText(value){
 
 function scorerNoteForMatch(match,auditMatches,ledgerMatches){
   if(!isEschenbachMatch(match))return readerNote(match.note);
+  // At zero Eschenbach goals there are no scorer details to display.
+  // In particular, suppress stale audit notes such as
+  // "keine Eschenbacher Torschützen" for the Hochdorf 0:3 defeat.
+  const eschenbachGoals=/FC\s+Eschenbach\s+II/i.test(String(match.home||''))
+    ?match.home_goals:match.away_goals;
+  if(eschenbachGoals!=null&&Number(eschenbachGoals)===0)return '';
 
   const opponent=/FC\s+Eschenbach\s+II/i.test(String(match.home||''))?String(match.away||''):String(match.home||'');
   const audit=(auditMatches||[]).find(a=>
