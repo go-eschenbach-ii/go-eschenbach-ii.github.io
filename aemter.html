@@ -44,11 +44,45 @@ function playerPortalMessage(message,failed=false){
  $('playerPortalContent').innerHTML='<div class="portal-card"><h2>Meine Teilnahme</h2><p class="'+(failed?'hint':'muted')+'">'+escape(message)+'</p><button class="btn small" id="portalRetry">Erneut laden</button></div>';
  $('portalRetry').onclick=refreshPlayer;
 }
+
+let playerVapidKey='';
+function vapidBytes(key){
+ const normalized=key.replace(/-/g,'+').replace(/_/g,'/');
+ const raw=atob(normalized+'='.repeat((4-normalized.length%4)%4));
+ return Uint8Array.from(raw,c=>c.charCodeAt(0));
+}
+function updatePlayerBadge(events){
+ const reminderDue=(events||[]).some(e=>e.reminderDue&&!e.answer?.status);
+ if('setAppBadge' in navigator && 'clearAppBadge' in navigator){
+  if(reminderDue)navigator.setAppBadge(1).catch(()=>{});
+  else navigator.clearAppBadge().catch(()=>{});
+ }
+}
+async function enablePlayerReminders(){
+ if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)){
+  alert('Push-Mitteilungen werden auf diesem Gerät nicht unterstützt. Auf dem iPhone muss GO Eschenbach II zuerst zum Home-Bildschirm hinzugefügt und von dort geöffnet werden.');
+  return;
+ }
+ try{
+  if(!playerVapidKey){alert('Push-Schlüssel noch nicht geladen. Bitte die Termine aktualisieren.');return}
+  const perm=await Notification.requestPermission();
+  if(perm!=='granted'){alert('Mitteilungen sind nicht erlaubt. Bitte in den iPhone-Einstellungen erlauben.');return}
+  const registration=await navigator.serviceWorker.register('./sw.js');
+  const ready=await navigator.serviceWorker.ready;
+  let sub=await ready.pushManager.getSubscription();
+  if(!sub)sub=await ready.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:vapidBytes(playerVapidKey)});
+  await playerRequest('player_push_subscribe',{subscription:sub.toJSON()});
+  alert('Erinnerungen sind aktiviert. Bei fehlender Antwort erhältst du eine Mitteilung und eine 1 auf dem App-Icon.');
+  refreshPlayer();
+ }catch(err){alert('Mitteilungen konnten nicht aktiviert werden: '+String(err.message||err))}
+}
+
 async function refreshPlayer(){
  if(playerFetching)return;
  playerFetching=true;
  try{
   const res=await playerRequest('player_view');
+  playerVapidKey=res.vapidPublicKey||'';updatePlayerBadge(res.events);
   const title='<div class="portal-card"><div class="portal-top"><div><h2 style="margin:0">Meine Teilnahme</h2><p class="muted" style="margin:6px 0 0">Hallo '+escape(res.player.name)+'! Bitte vor jedem Training und Match deine Teilnahme bestätigen.</p></div><button class="btn small" id="portalRefresh">↻</button></div></div>';
   const events=(res.events||[]).map(ev=>{
     const isMatch=ev.type==='match',a=ev.answer||{},yes=a.status==='yes',no=a.status==='no',open=a.status==='open';
@@ -60,11 +94,12 @@ async function refreshPlayer(){
       +'<strong>'+(isMatch?'🟠 Match gegen '+escape(ev.label):'🟡 Training')+'</strong><div class="muted" style="margin:7px 0 13px">'+escape(nice(ev.date))+(ev.time?' · '+escape(ev.time):'')+(ev.venue?' · '+escape(ev.venue):'')+'</div>'
       +'<div class="portal-row"><label><input type="radio" name="status-'+escape(ev.id)+'" value="yes" '+(yes?'checked':'')+'> Ja, ich nehme teil</label><label><input type="radio" name="status-'+escape(ev.id)+'" value="no" '+(no?'checked':'')+'> Nein</label><label><input type="radio" name="cal-'+escape(eventKey)+'-'+escape(p.id)+'" value="open" '+(open?'checked':'')+'> Offen</label></div>'
       +'<div class="reason-wrap" '+(no||open?'':'hidden')+'><label>Begründung bei Absage</label><select data-reason>'+reasons+'</select><div class="reason-other" '+((no||open)&&chosen==='Anderer Grund'?'':'hidden')+'><input type="text" data-custom-reason maxlength="180" placeholder="Individuellen Grund angeben" value="'+escape((no||open)&&!reasonKnown?a.reason:'')+'"></div></div>'
-      +'<div class="formrow" style="margin-top:12px"><button type="button" class="btn primary small" data-player-save="'+escape(ev.id)+'">Antwort speichern</button><span class="muted">'+(a.status?'Gespeichert: '+(yes?'Zusage':no?'Absage':'Offen'):'Noch keine Antwort')+'</span></div></div>';
+      +(ev.reminderDue&&!a.status?'<p class="muted" style="color:#bd2525;font-weight:850">⚠ Rückmeldung überfällig</p>':'')+'<div class="formrow" style="margin-top:12px"><button type="button" class="btn primary small" data-player-save="'+escape(ev.id)+'">Antwort speichern</button><span class="muted">'+(a.status?'Gespeichert: '+(yes?'Zusage':no?'Absage':'Offen'):'Noch keine Antwort')+'</span></div></div>';
   });
   const shown=events.slice(0,6).join('')+(events.length>6?'<details class="portal-card"><summary>Weitere '+(events.length-6)+' Termine anzeigen</summary>'+events.slice(6).join('')+'</details>':'');
-  $('playerPortalContent').innerHTML=title+(shown||'<div class="portal-card"><p class="muted">Aktuell sind keine künftigen Trainings oder Matches geplant.</p></div>')+'<p class="muted">Deine Angaben werden gemeinsam gespeichert und sind für den Trainer sichtbar.</p>'+(localStorage.getItem(TOKEN_KEY)?'<button id="switchTrainer" class="btn small">Zur Traineransicht wechseln</button>':'');
+  $('playerPortalContent').innerHTML=title+'<div class="portal-card"><button type="button" class="btn primary" id="enablePlayerPush">🔔 Erinnerungen aktivieren</button><p class="muted" style="margin:9px 0 0">Nur wenn die App auf deinem iPhone zum Home-Bildschirm hinzugefügt wurde und Mitteilungen erlaubt sind. Training: 4 Stunden vorher · Match: 5 Tage vorher. Eine bewusste Antwort (Ja, Nein oder Offen) verhindert die Erinnerung.</p></div>'+(shown||'<div class="portal-card"><p class="muted">Aktuell sind keine künftigen Trainings oder Matches geplant.</p></div>')+'<p class="muted">Deine Angaben werden gemeinsam gespeichert und sind für den Trainer sichtbar.</p>'+(localStorage.getItem(TOKEN_KEY)?'<button id="switchTrainer" class="btn small">Zur Traineransicht wechseln</button>':'');
   $('portalRefresh').onclick=refreshPlayer;
+  $('enablePlayerPush').onclick=enablePlayerReminders;
   if($('switchTrainer'))$('switchTrainer').onclick=()=>{localStorage.removeItem(PLAYER_TOKEN_KEY);location.reload()};
  }catch(err){playerPortalMessage('Daten konnten nicht geladen werden: '+String(err.message||err),true)}
  finally{playerFetching=false}
