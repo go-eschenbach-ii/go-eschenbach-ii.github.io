@@ -219,7 +219,7 @@ function calendarRoster(date,eventKey){
  return '<div class="calendar-roster" data-event-key="'+escape(eventKey)+'"><div class="calendar-roster-head"><strong>'+ (isMatch?'Match – Teilnahme und Aufgebot':'Training – Teilnahme')+'</strong><span class="muted">'+answered+' Ja · '+declined+' Nein · '+(all.length-answered-declined)+' Offen</span></div><p class="muted">Bei Ja oder Nein ankreuzen. Bei Nein ist eine Begründung erforderlich. '+(isMatch?'Aufgebot und Startelf legt der Trainer fest.':'')+'</p>'
  +'<div class="calendar-attendance-list">'+all.map(p=>{
   const ans=records[p.id]||{},yes=ans.status==='yes',no=ans.status==='no',lineup=lineups[p.id]||{};
-  const known=REASONS.includes(ans.reason),choice=known?ans.reason:'Anderer Grund';
+  const known=REASONS.includes(ans.reason),choice=known?ans.reason:(ans.reason?'Anderer Grund':'Krankheit');
   const reasonOptions=REASONS.map(o=>'<option value="'+escape(o)+'" '+(o===choice?'selected':'')+'>'+escape(o)+'</option>').join('');
   return '<div class="calendar-player" data-calendar-player="'+escape(p.id)+'">'
   +'<div class="calendar-player-top"><strong>'+escape(p.name)+'</strong><div class="calendar-player-choices"><label><input type="radio" name="cal-'+escape(eventKey)+'-'+escape(p.id)+'" value="yes" '+(yes?'checked':'')+'> Ja</label><label><input type="radio" name="cal-'+escape(eventKey)+'-'+escape(p.id)+'" value="no" '+(no?'checked':'')+'> Nein</label></div></div>'
