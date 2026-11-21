@@ -11,14 +11,14 @@
 <div style="max-width:900px;margin:10px auto 0;padding:0 12px"><a href="./" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#111;font-size:14px;font-weight:850;border:2px solid #111;padding:9px 13px;border-radius:10px;background:#fff;box-shadow:3px 3px 0 #111">← Zurück zu GO Eschenbach II</a></div><section id="playerPortal" class="portal-shell" style="display:none" aria-label="Spieler: Teilnahme bestätigen"><div id="playerPortalContent"></div></section><div id="syncStatus" class="sync-badge" hidden aria-live="polite"></div><div id="syncGate" class="sync-gate"><div class="sync-box"><h2>Ämtliplan gemeinsam nutzen</h2><p id="syncMessage">Verbindung zur gemeinsamen Datenbank wird hergestellt …</p><input id="syncCode" placeholder="Aktivierungscode (nur bei neuer Freischaltung)" autocomplete="off" hidden><div class="formrow"><button id="syncActivate" class="btn primary" hidden>Gerät freischalten</button><button id="syncRetry" class="btn" hidden>Erneut verbinden</button></div><p class="muted">Trainer verwalten die Planung hier. Spieler erhalten vom Trainer einen persönlichen Link, um ihre Teilnahme selbst zu bestätigen.</p></div></div><main class="wrap" style="visibility:hidden"><nav class="tabs" aria-label="Hauptnavigation"><button data-tab="plan" class="active">⚽ Ämtli</button><button data-tab="trainings">📅 Kalender</button><button data-tab="stats">📊 Statistik</button><button data-tab="settings">⚙️ Team</button></nav>
 <section id="plan"><div class="panel"><div class="section-top"><h2>Ämtli-Zuteilung</h2><span class="muted">Nächster Termin</span></div><div id="currentTraining"></div></div><details id="futureFold" class="panel fold-panel"><summary>Vorschau der nächsten Termine <span class="fold-caret">▾</span></summary><p class="muted">Die Zuteilungen werden automatisch vorausberechnet. Tippe auf ein Datum, um es anzusehen.</p><div class="future" id="future"></div><div style="margin-top:14px"><button class="btn small" data-goto="trainings">Kalender öffnen</button></div></details></section>
 <section id="trainings" class="hidden"><div class="panel calendar-panel"><div class="section-top"><h2>Teamkalender</h2><div class="formrow"><button class="btn small" id="openMatch" type="button">+ Match</button><button class="btn small" id="openRepeat" type="button">⚙ Trainingstage</button></div></div><p class="muted calendar-hint">Gelb = Training · Orange = Match · Rot = heute. Tag antippen, um die Spielerliste zu öffnen. Trainings kannst du dort hinzufügen oder entfernen.</p><div class="calendar-toolbar"><button class="btn small" id="prevMonth" aria-label="Vorheriger Monat">←</button><div class="calendar-title" id="calendarTitle"></div><button class="btn small" id="nextMonth" aria-label="Nächster Monat">→</button></div><div class="calendar-weekdays"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div><div id="dateManager" class="calendar-grid"></div><div class="calendar-legend"><span><i class="swatch training"></i>Training</span><span><i class="swatch match"></i>Match</span><span><i class="swatch today"></i>Heute</span><span><i class="swatch done"></i>Abgeschlossen</span></div><div class="formrow" style="margin-top:9px"><button class="btn small" id="jumpNextMatch" type="button">Zum nächsten Match</button></div><div class="muted" id="dateMessage"></div><div id="calendarSelection"></div></div>
-<dialog id="repeatDialog" class="repeat-dialog"><div class="dialog-top"><h2>Regelmässige Trainings</h2><button type="button" id="closeRepeat" class="btn small" aria-label="Schliessen">✕</button></div><p class="muted">Lege die Trainingstage und ihre Wiederholung fest.</p><div id="sub-repeat" class="repeat-body"><h2>Regelmässige Trainings</h2><p class="muted">Wähle die Wochentage und wie oft das Training stattfindet.</p><div class="weekdays" id="weekdayChecks"></div><div class="schedule-row"><div class="field"><label for="startDate">Trainings ab</label><input id="startDate" type="date"></div><div class="field"><label for="interval">Wiederholung</label><select id="interval"><option value="1">Jede Woche</option><option value="2">Alle 2 Wochen</option><option value="3">Alle 3 Wochen</option><option value="4">Alle 4 Wochen</option></select></div><div class="field"><label for="endDate">Bis (optional)</label><input id="endDate" type="date"></div><div class="field"><label for="previewCount">Vorschau</label><select id="previewCount"><option value="6">6 Trainings</option><option value="12">12 Trainings</option><option value="24">24 Trainings</option><option value="40">40 Trainings</option></select></div></div><div class="formrow" style="margin-top:14px"><button class="btn primary" id="saveSchedule">Wiederholung speichern</button><span id="scheduleMessage" class="muted"></span></div></div>
+<dialog id="repeatDialog" class="repeat-dialog"><div class="dialog-top"><h2>Regelmässige Trainings</h2><button type="button" id="closeRepeat" class="btn small" aria-label="Schliessen">✕</button></div><p class="muted">Lege die Trainingstage und ihre Wiederholung fest.</p><div id="sub-repeat" class="repeat-body"><h2>Regelmässige Trainings</h2><p class="muted">Wähle die Wochentage und wie oft das Training stattfindet.</p><div class="weekdays" id="weekdayChecks"></div><div class="schedule-row"><div class="field"><label for="startDate">Trainings ab</label><input id="startDate" type="date"></div><div class="field"><label for="trainingTime">Trainingsbeginn (für Erinnerung 4 Std. vorher)</label><input id="trainingTime" type="time"></div><div class="field"><label for="interval">Wiederholung</label><select id="interval"><option value="1">Jede Woche</option><option value="2">Alle 2 Wochen</option><option value="3">Alle 3 Wochen</option><option value="4">Alle 4 Wochen</option></select></div><div class="field"><label for="endDate">Bis (optional)</label><input id="endDate" type="date"></div><div class="field"><label for="previewCount">Vorschau</label><select id="previewCount"><option value="6">6 Trainings</option><option value="12">12 Trainings</option><option value="24">24 Trainings</option><option value="40">40 Trainings</option></select></div></div><div class="formrow" style="margin-top:14px"><button class="btn primary" id="saveSchedule">Wiederholung speichern</button><span id="scheduleMessage" class="muted"></span></div></div>
 </dialog></section>
 <dialog id="matchDialog" class="repeat-dialog"><div class="dialog-top"><h2>Match erfassen</h2><button type="button" id="closeMatch" class="btn small" aria-label="Schliessen">✕</button></div><div class="repeat-body"><div class="field"><label for="matchDate">Datum</label><input id="matchDate" type="date"></div><div class="field"><label for="matchOpponent">Gegner</label><input id="matchOpponent" placeholder="z.B. FC Ruswil III" maxlength="100"></div><div class="field"><label for="matchTime">Anspielzeit</label><input id="matchTime" type="time"></div><div class="field"><label for="matchVenue">Spielort</label><select id="matchVenue"><option value="Heim">Heimspiel</option><option value="Auswärts">Auswärtsspiel</option></select></div><div class="formrow" style="margin-top:12px"><button id="saveMatch" class="btn primary">Match speichern</button><button id="deleteMatch" class="btn danger" hidden>Match löschen</button></div></div></dialog>
 <section id="stats" class="hidden"><div class="panel"><h2>Ämtli-Statistik</h2><p class="muted">Gezählt werden abgeschlossene Trainings und Matches.</p><div class="toolbar" id="summary"></div><div class="scroll" style="margin-top:14px"><table class="stats"><thead id="statsHead"></thead><tbody id="statsBody"></tbody></table></div></div><details class="panel fold-panel"><summary>Abgeschlossene Termine <span class="fold-caret">▾</span></summary><div id="history"></div></details></section>
 <section id="settings" class="hidden"><div class="panel"><h2>Spieler</h2><p class="muted">Namen ändern oder Spieler ergänzen. Änderungen werden sofort gespeichert.</p><div id="playersEditor"></div><button id="addPlayer" class="btn">+ Spieler hinzufügen</button><p class="muted" style="margin-top:13px">Persönliche Zugangslinks erlauben jedem Spieler, seine Teilnahme selber zu bestätigen. Ein neuer Link ersetzt den bisherigen.</p><div id="playerLinkMessage" class="muted" aria-live="polite"></div></div><div class="panel"><h2>Sicherung</h2><p class="muted">Die Daten werden gemeinsam gespeichert. Hier kannst du zusätzlich eine Sicherung herunterladen oder importieren.</p><div class="formrow"><button class="btn" id="export">Sicherung herunterladen</button><label class="btn" for="import">Sicherung importieren</label><input type="file" id="import" accept=".json,application/json" class="hidden"></div><p><button class="btn danger" id="reset">Alle Daten zurücksetzen</button></p></div></section>
 <footer>GO Eschenbach II · Ämtli- und Einsatzplanung</footer></main>
 <script>
-(()=>{'use strict';const KEY='fce2-aemter-v1',W=['So','Mo','Di','Mi','Do','Fr','Sa'],$=id=>document.getElementById(id),escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const iso=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');const parse=s=>new Date(s+'T12:00:00');const now=iso(new Date());const defaultState=()=>({players:[{"id":"p1","name":"Leon"},{"id":"p2","name":"Mino"},{"id":"p3","name":"Noel"},{"id":"p4","name":"Jan"},{"id":"p5","name":"Louis"},{"id":"p6","name":"Joel"},{"id":"p7","name":"Tilman"},{"id":"p8","name":"Diego"},{"id":"p9","name":"Noe"},{"id":"p10","name":"Timo"},{"id":"p11","name":"Samuel"},{"id":"p12","name":"Luis"},{"id":"p13","name":"Fabio"},{"id":"p14","name":"Tim"},{"id":"p15","name":"Nico"},{"id":"p16","name":"Lenn"},{"id":"p17","name":"Luca"},{"id":"p18","name":"Riccardo"},{"id":"p19","name":"Ramon"},{"id":"p20","name":"Sandro"},{"id":"p21","name":"Giovanni"},{"id":"p22","name":"Nando"},{"id":"p23","name":"Dave"},{"id":"p24","name":"Gian"},{"id":"p25","name":"Tobias"},{"id":"p26","name":"Jannis"},{"id":"p27","name":"Noah"},{"id":"p28","name":"Livio"},{"id":"p29","name":"Mattia"},{"id":"p30","name":"Ilay"}],duties:[{id:'d0',name:'Ämtli'}],history:[],schedule:{start:now,weekdays:[4],interval:1,end:'',preview:12},absences:{},skipped:[],addedDates:[],matches:[],attendance:{},lineup:{}});let state;try{state=JSON.parse(localStorage.getItem(KEY));if(!state||!Array.isArray(state.players)||!Array.isArray(state.duties)||state.duties.length<1)throw Error('invalid')}catch{state=defaultState()}state.schedule=state.schedule||defaultState().schedule;state.absences=state.absences||{};state.skipped=state.skipped||[];state.history=state.history||[];state.addedDates=state.addedDates||[];state.duties=[{id:'d0',name:'Ämtli'}];state.matches=state.matches||[];state.attendance=state.attendance||{};state.lineup=state.lineup||{};let selected=null;let calendarMonth=parse(now);calendarMonth.setDate(1);let calendarFocus=null;const SYNC_URL='https://kfpxheegmeupnuzqjqqt.supabase.co/functions/v1/go-eschenbach-aemter-sync';
+(()=>{'use strict';const KEY='fce2-aemter-v1',W=['So','Mo','Di','Mi','Do','Fr','Sa'],$=id=>document.getElementById(id),escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const iso=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');const parse=s=>new Date(s+'T12:00:00');const now=iso(new Date());const defaultState=()=>({players:[{"id":"p1","name":"Leon"},{"id":"p2","name":"Mino"},{"id":"p3","name":"Noel"},{"id":"p4","name":"Jan"},{"id":"p5","name":"Louis"},{"id":"p6","name":"Joel"},{"id":"p7","name":"Tilman"},{"id":"p8","name":"Diego"},{"id":"p9","name":"Noe"},{"id":"p10","name":"Timo"},{"id":"p11","name":"Samuel"},{"id":"p12","name":"Luis"},{"id":"p13","name":"Fabio"},{"id":"p14","name":"Tim"},{"id":"p15","name":"Nico"},{"id":"p16","name":"Lenn"},{"id":"p17","name":"Luca"},{"id":"p18","name":"Riccardo"},{"id":"p19","name":"Ramon"},{"id":"p20","name":"Sandro"},{"id":"p21","name":"Giovanni"},{"id":"p22","name":"Nando"},{"id":"p23","name":"Dave"},{"id":"p24","name":"Gian"},{"id":"p25","name":"Tobias"},{"id":"p26","name":"Jannis"},{"id":"p27","name":"Noah"},{"id":"p28","name":"Livio"},{"id":"p29","name":"Mattia"},{"id":"p30","name":"Ilay"}],duties:[{id:'d0',name:'Ämtli'}],history:[],schedule:{start:now,weekdays:[4],interval:1,end:'',preview:12,time:''},absences:{},skipped:[],addedDates:[],matches:[],attendance:{},lineup:{}});let state;try{state=JSON.parse(localStorage.getItem(KEY));if(!state||!Array.isArray(state.players)||!Array.isArray(state.duties)||state.duties.length<1)throw Error('invalid')}catch{state=defaultState()}state.schedule=state.schedule||defaultState().schedule;state.absences=state.absences||{};state.skipped=state.skipped||[];state.history=state.history||[];state.addedDates=state.addedDates||[];state.duties=[{id:'d0',name:'Ämtli'}];state.matches=state.matches||[];state.attendance=state.attendance||{};state.lineup=state.lineup||{};let selected=null;let calendarMonth=parse(now);calendarMonth.setDate(1);let calendarFocus=null;const SYNC_URL='https://kfpxheegmeupnuzqjqqt.supabase.co/functions/v1/go-eschenbach-aemter-sync';
 const ACTIVATE_URL='https://kfpxheegmeupnuzqjqqt.supabase.co/functions/v1/match-comments-admin';
 const TOKEN_KEY='go-eschenbach-comment-admin-token';
 const PLAYER_TOKEN_KEY='go-eschenbach-aemter-player-token';
@@ -27,7 +27,7 @@ if(suppliedPlayerToken&&/^[a-f0-9]{64}$/.test(suppliedPlayerToken)){
  localStorage.setItem(PLAYER_TOKEN_KEY,suppliedPlayerToken);
  history.replaceState({},'',location.pathname);
 }
-const REASONS=['Krankheit','Verletzung','Arbeit','Schule / Ausbildung','Ferien','Privater Termin','Anderer Grund'];
+const REASONS=['Krankheit','Verletzung','Arbeit','Schule / Ausbildung','Ferien','Privater Termin','Arbeitsplan noch nicht bekannt','Noch in Abklärung','Anderer Grund'];
 let playerFetching=false;
 async function playerRequest(action,data={}){
  const token=localStorage.getItem(PLAYER_TOKEN_KEY);
@@ -51,16 +51,16 @@ async function refreshPlayer(){
   const res=await playerRequest('player_view');
   const title='<div class="portal-card"><div class="portal-top"><div><h2 style="margin:0">Meine Teilnahme</h2><p class="muted" style="margin:6px 0 0">Hallo '+escape(res.player.name)+'! Bitte vor jedem Training und Match deine Teilnahme bestätigen.</p></div><button class="btn small" id="portalRefresh">↻</button></div></div>';
   const events=(res.events||[]).map(ev=>{
-    const isMatch=ev.type==='match',a=ev.answer||{},yes=a.status==='yes',no=a.status==='no';
+    const isMatch=ev.type==='match',a=ev.answer||{},yes=a.status==='yes',no=a.status==='no',open=a.status==='open';
     const opts=REASONS.map(reason=>'<option value="'+escape(reason)+'" '+(reason===a.reason?'selected':'')+'>'+escape(reason)+'</option>').join('');
     const reasonKnown=REASONS.includes(a.reason);
     const chosen=reasonKnown?a.reason:(a.reason?'Anderer Grund':'Krankheit');
     const reasons=REASONS.map(reason=>'<option value="'+escape(reason)+'" '+(reason===chosen?'selected':'')+'>'+escape(reason)+'</option>').join('');
     return '<div class="portal-card '+(isMatch?'match-event':'training-event')+'" data-event-card="'+escape(ev.id)+'">'
       +'<strong>'+(isMatch?'🟠 Match gegen '+escape(ev.label):'🟡 Training')+'</strong><div class="muted" style="margin:7px 0 13px">'+escape(nice(ev.date))+(ev.time?' · '+escape(ev.time):'')+(ev.venue?' · '+escape(ev.venue):'')+'</div>'
-      +'<div class="portal-row"><label><input type="radio" name="status-'+escape(ev.id)+'" value="yes" '+(yes?'checked':'')+'> Ja, ich nehme teil</label><label><input type="radio" name="status-'+escape(ev.id)+'" value="no" '+(no?'checked':'')+'> Nein</label></div>'
-      +'<div class="reason-wrap" '+(no?'':'hidden')+'><label>Begründung bei Absage</label><select data-reason>'+reasons+'</select><div class="reason-other" '+(no&&chosen==='Anderer Grund'?'':'hidden')+'><input type="text" data-custom-reason maxlength="180" placeholder="Individuellen Grund angeben" value="'+escape(no&&!reasonKnown?a.reason:'')+'"></div></div>'
-      +'<div class="formrow" style="margin-top:12px"><button type="button" class="btn primary small" data-player-save="'+escape(ev.id)+'">Antwort speichern</button><span class="muted">'+(a.status?'Gespeichert: '+(yes?'Zusage':'Absage'):'Noch keine Antwort')+'</span></div></div>';
+      +'<div class="portal-row"><label><input type="radio" name="status-'+escape(ev.id)+'" value="yes" '+(yes?'checked':'')+'> Ja, ich nehme teil</label><label><input type="radio" name="status-'+escape(ev.id)+'" value="no" '+(no?'checked':'')+'> Nein</label><label><input type="radio" name="cal-'+escape(eventKey)+'-'+escape(p.id)+'" value="open" '+(open?'checked':'')+'> Offen</label></div>'
+      +'<div class="reason-wrap" '+(no||open?'':'hidden')+'><label>Begründung bei Absage</label><select data-reason>'+reasons+'</select><div class="reason-other" '+((no||open)&&chosen==='Anderer Grund'?'':'hidden')+'><input type="text" data-custom-reason maxlength="180" placeholder="Individuellen Grund angeben" value="'+escape((no||open)&&!reasonKnown?a.reason:'')+'"></div></div>'
+      +'<div class="formrow" style="margin-top:12px"><button type="button" class="btn primary small" data-player-save="'+escape(ev.id)+'">Antwort speichern</button><span class="muted">'+(a.status?'Gespeichert: '+(yes?'Zusage':no?'Absage':'Offen'):'Noch keine Antwort')+'</span></div></div>';
   });
   const shown=events.slice(0,6).join('')+(events.length>6?'<details class="portal-card"><summary>Weitere '+(events.length-6)+' Termine anzeigen</summary>'+events.slice(6).join('')+'</details>':'');
   $('playerPortalContent').innerHTML=title+(shown||'<div class="portal-card"><p class="muted">Aktuell sind keine künftigen Trainings oder Matches geplant.</p></div>')+'<p class="muted">Deine Angaben werden gemeinsam gespeichert und sind für den Trainer sichtbar.</p>'+(localStorage.getItem(TOKEN_KEY)?'<button id="switchTrainer" class="btn small">Zur Traineransicht wechseln</button>':'');
@@ -78,7 +78,7 @@ function startPlayerMode(){
 }
 $('playerPortal').addEventListener('change',e=>{
  const card=e.target.closest('[data-event-card]');if(!card)return;
- const no=card.querySelector('input[type=radio][value=no]')?.checked;
+ const no=card.querySelector('input[type=radio][value=no]')?.checked||card.querySelector('input[type=radio][value=open]')?.checked;
  const reasons=card.querySelector('.reason-wrap');
  if(reasons)reasons.hidden=!no;
  const custom=card.querySelector('.reason-other');
@@ -90,8 +90,8 @@ $('playerPortal').addEventListener('click',async e=>{
  const radio=card.querySelector('input[type=radio]:checked');if(!radio){alert('Bitte Ja oder Nein auswählen.');return}
  const status=radio.value;
  const reasonChoice=card.querySelector('[data-reason]')?.value||'';
- const reason=status==='no'?(reasonChoice==='Anderer Grund'?(card.querySelector('[data-custom-reason]')?.value||'').trim():reasonChoice):'';
- if(status==='no'&&!reason){alert('Bei einer Absage ist ein Grund erforderlich.');return}
+ const reason=status!=='yes'?(reasonChoice==='Anderer Grund'?(card.querySelector('[data-custom-reason]')?.value||'').trim():reasonChoice):'';
+ if(status!=='yes'&&!reason){alert('Bei Nein oder Offen ist ein Grund erforderlich.');return}
  b.disabled=true;b.textContent='Speichere …';
  try{await playerRequest('player_rsvp',{event_id:id,status,reason});await refreshPlayer()}
  catch(err){alert('Antwort nicht gespeichert: '+String(err.message||err));b.disabled=false;b.textContent='Antwort speichern'}
@@ -184,9 +184,9 @@ function allUpcomingEvents(){
 function eventTitle(ev){return ev.type==='match'?'Match: '+ev.match.opponent:'Training'}
 function eventAnswers(ev){return state.attendance[ev.attendanceKey]||{}}
 function eventCounts(ev){
- const records=eventAnswers(ev);let yes=0,no=0;
- state.players.forEach(p=>{const s=records[p.id]?.status;if(s==='yes')yes++;else if(s==='no')no++});
- return {yes,no,open:state.players.length-yes-no};
+ const records=eventAnswers(ev);let yes=0,no=0,open=0;
+ state.players.forEach(p=>{const s=records[p.id]?.status;if(s==='yes')yes++;else if(s==='no')no++;else if(s==='open')open++});
+ return {yes,no,open,pending:state.players.length-yes-no-open};
 }
 function planDates(){
  const items=allUpcomingEvents(),dates=items.map(e=>e.key),counts=baseCounts(),out={};
@@ -216,14 +216,15 @@ function calendarRoster(date,eventKey){
  const lineups=state.lineup[eventKey]||{};
  const answered=all.filter(p=>records[p.id]?.status==='yes').length;
  const declined=all.filter(p=>records[p.id]?.status==='no').length;
- return '<div class="calendar-roster" data-event-key="'+escape(eventKey)+'"><div class="calendar-roster-head"><strong>'+ (isMatch?'Match – Teilnahme und Aufgebot':'Training – Teilnahme')+'</strong><span class="muted">'+answered+' Ja · '+declined+' Nein · '+(all.length-answered-declined)+' Offen</span></div><p class="muted">Bei Ja oder Nein ankreuzen. Bei Nein ist eine Begründung erforderlich. '+(isMatch?'Aufgebot und Startelf legt der Trainer fest.':'')+'</p>'
+ const consciouslyOpen=all.filter(p=>records[p.id]?.status==='open').length;
+ return '<div class="calendar-roster" data-event-key="'+escape(eventKey)+'"><div class="calendar-roster-head"><strong>'+ (isMatch?'Match – Teilnahme und Aufgebot':'Training – Teilnahme')+'</strong><span class="muted">'+answered+' Ja · '+declined+' Nein · '+consciouslyOpen+' Offen · '+(all.length-answered-declined-consciouslyOpen)+' ohne Antwort</span></div><p class="muted">Bitte Ja, Nein oder Offen ankreuzen. Bei Nein und Offen ist eine Begründung erforderlich. '+(isMatch?'Aufgebot und Startelf legt der Trainer fest.':'')+'</p>'
  +'<div class="calendar-attendance-list">'+all.map(p=>{
-  const ans=records[p.id]||{},yes=ans.status==='yes',no=ans.status==='no',lineup=lineups[p.id]||{};
+  const ans=records[p.id]||{},yes=ans.status==='yes',no=ans.status==='no',open=ans.status==='open',lineup=lineups[p.id]||{};
   const known=REASONS.includes(ans.reason),choice=known?ans.reason:(ans.reason?'Anderer Grund':'Krankheit');
   const reasonOptions=REASONS.map(o=>'<option value="'+escape(o)+'" '+(o===choice?'selected':'')+'>'+escape(o)+'</option>').join('');
   return '<div class="calendar-player" data-calendar-player="'+escape(p.id)+'">'
-  +'<div class="calendar-player-top"><strong>'+escape(p.name)+'</strong><div class="calendar-player-choices"><label><input type="radio" name="cal-'+escape(eventKey)+'-'+escape(p.id)+'" value="yes" '+(yes?'checked':'')+'> Ja</label><label><input type="radio" name="cal-'+escape(eventKey)+'-'+escape(p.id)+'" value="no" '+(no?'checked':'')+'> Nein</label></div></div>'
-  +'<div class="calendar-player-reason" '+(no?'':'hidden')+'><select data-calendar-reason aria-label="Grund für '+escape(p.name)+'">'+reasonOptions+'</select><input type="text" data-calendar-custom placeholder="Eigener Grund" maxlength="180" value="'+escape(no&&!known?ans.reason||'':'')+'" '+(no&&choice==='Anderer Grund'?'':'hidden')+'></div>'
+  +'<div class="calendar-player-top"><strong>'+escape(p.name)+'</strong><div class="calendar-player-choices"><label><input type="radio" name="cal-'+escape(eventKey)+'-'+escape(p.id)+'" value="yes" '+(yes?'checked':'')+'> Ja</label><label><input type="radio" name="cal-'+escape(eventKey)+'-'+escape(p.id)+'" value="no" '+(no?'checked':'')+'> Nein</label><label><input type="radio" name="status-'+escape(ev.id)+'" value="open" '+(open?'checked':'')+'> Offen</label></div></div>'
+  +'<div class="calendar-player-reason" '+(no||open?'':'hidden')+'><select data-calendar-reason aria-label="Grund für '+escape(p.name)+'">'+reasonOptions+'</select><input type="text" data-calendar-custom placeholder="Eigener Grund" maxlength="180" value="'+escape((no||open)&&!known?ans.reason||'':'')+'" '+((no||open)&&choice==='Anderer Grund'?'':'hidden')+'></div>'
   +(isMatch?'<div class="calendar-player-lineup"><label><input type="checkbox" data-cal-squad="'+escape(p.id)+'" '+(lineup.squad?'checked':'')+'> Im Aufgebot</label><label><input type="checkbox" data-cal-start="'+escape(p.id)+'" '+(lineup.start?'checked':'')+'> Startelf</label></div>':'')
   +'</div>';
  }).join('')+'</div><div class="formrow calendar-roster-save"><button class="btn primary" type="button" data-save-roster="'+escape(eventKey)+'">Teilnahme speichern</button><span class="muted">Gemeinsam für alle Trainer gespeichert</span></div></div>';
@@ -247,7 +248,7 @@ function selectCalendarDate(date){
  html+='</div>';
  $('calendarSelection').innerHTML=html;
 }
-function renderCalendar(){const sc=state.schedule;$('weekdayChecks').innerHTML=[1,2,3,4,5,6,0].map(d=>`<label><input type="checkbox" data-day="${d}" ${sc.weekdays.includes(d)?'checked':''}>${W[d]}</label>`).join('');$('startDate').value=sc.start;$('interval').value=sc.interval;$('endDate').value=sc.end||'';$('previewCount').value=sc.preview||12}
+function renderCalendar(){const sc=state.schedule;$('weekdayChecks').innerHTML=[1,2,3,4,5,6,0].map(d=>`<label><input type="checkbox" data-day="${d}" ${sc.weekdays.includes(d)?'checked':''}>${W[d]}</label>`).join('');$('startDate').value=sc.start;$('trainingTime').value=sc.time||'';$('interval').value=sc.interval;$('endDate').value=sc.end||'';$('previewCount').value=sc.preview||12}
 
 function renderPlan(){
  const plan=planDates();
@@ -262,7 +263,7 @@ function renderPlan(){
   const details=isMatch?'<div class="muted">'+escape(ev.match.venue||'')+' · '+escape(ev.match.time||'Zeit offen')+'</div>':'';
   const roster=state.players.map(p=>{
    const answer=records[p.id]||{},status=answer.status||'',squad=!!lineup[p.id]?.squad,start=!!lineup[p.id]?.start;
-   const badge=status==='yes'?'Zusage':status==='no'?'Absage':'Offen';
+   const badge=status==='yes'?'Zusage':status==='no'?'Absage':status==='open'?'Offen':'Keine Antwort';
    const badgeClass=status||'open';
    const r=answer.reason?'<div class="attendance-reason">'+escape(answer.reason)+'</div>':'';
    const controls=isMatch?'<div class="lineup-actions"><label class="lineup-check"><input type="checkbox" data-squad="'+escape(p.id)+'" '+(squad?'checked':'')+'>Aufgebot</label><label class="lineup-check"><input type="checkbox" data-start="'+escape(p.id)+'" '+(start?'checked':'')+'>Startelf</label></div>':'';
@@ -270,7 +271,7 @@ function renderPlan(){
   }).join('');
   $('currentTraining').innerHTML='<div class="next-card '+(isMatch?'match-card':'')+'"><div class="toolbar"><span class="tag">'+upcomingLabel+'</span><span class="muted">'+escape(nice(ev.date))+'</span></div><div class="date-title">'+escape(eventTitle(ev))+'</div>'+details
    +'<div class="single-duty"><div class="single-duty-head '+(isMatch?'match-head':'')+'">Ämtli · 4 Spieler</div><div class="muted" style="margin:10px 14px">Eingeteilt werden nur Spieler mit Zusage'+(isMatch?' und Aufgebot':'')+'.</div><div class="assigned-four">'+(rows||'<p class="muted">Noch keine bestätigten Spieler verfügbar.</p>')+'</div></div>'
-   +'<div class="sectionline"><div class="toolbar"><strong>Teilnahmebestätigungen</strong><span class="muted">'+counts.yes+' Ja · '+counts.no+' Nein · '+counts.open+' Offen</span></div><details style="margin-top:12px" '+(isMatch?'open':'')+'><summary>Spielerliste und '+(isMatch?'Aufgebot':'Rückmeldungen')+'</summary><div class="attendance-list">'+roster+'</div></details></div>'
+   +'<div class="sectionline"><div class="toolbar"><strong>Teilnahmebestätigungen</strong><span class="muted">'+counts.yes+' Ja · '+counts.no+' Nein · '+counts.open+' Offen · '+counts.pending+' ohne Antwort</span></div><details style="margin-top:12px" '+(isMatch?'open':'')+'><summary>Spielerliste und '+(isMatch?'Aufgebot':'Rückmeldungen')+'</summary><div class="attendance-list">'+roster+'</div></details></div>'
    +'<div class="sectionline formrow"><button class="btn primary" id="complete" '+(a.length===4?'':'disabled')+'>'+upcomingLabel+' abschliessen</button>'+(isMatch?'':'<button class="btn small" id="skipTraining">Training fällt aus</button>')+'</div>'
    +'<p class="muted">Erst nach dem Abschluss zählen die vier Ämtli-Einsätze.</p></div>';
  }
@@ -368,7 +369,7 @@ $('calendarSelection').onchange=e=>{
  if(!roster)return;
  const row=input.closest('[data-calendar-player]');
  if(row){
-  const no=row.querySelector('input[type=radio][value=no]')?.checked;
+  const no=row.querySelector('input[type=radio][value=no]')?.checked||row.querySelector('input[type=radio][value=open]')?.checked;
   const reason=row.querySelector('.calendar-player-reason');
   if(reason)reason.hidden=!no;
   const custom=row.querySelector('[data-calendar-custom]');
@@ -402,8 +403,8 @@ $('calendarSelection').onclick=e=>{
    const selectedStatus=row.querySelector('input[type=radio]:checked')?.value;
    if(selectedStatus){
     const reasonChoice=row.querySelector('[data-calendar-reason]')?.value||'';
-    const reason=selectedStatus==='no'?(reasonChoice==='Anderer Grund'?(row.querySelector('[data-calendar-custom]')?.value||'').trim():reasonChoice):'';
-    if(selectedStatus==='no'&&!reason){alert('Bitte bei '+player(pid)+' einen Grund für die Absage angeben.');return}
+    const reason=selectedStatus!=='yes'?(reasonChoice==='Anderer Grund'?(row.querySelector('[data-calendar-custom]')?.value||'').trim():reasonChoice):'';
+    if(selectedStatus!=='yes'&&!reason){alert('Bitte bei '+player(pid)+' einen Grund für Nein oder Offen angeben.');return}
     changes.push({pid,status:selectedStatus,reason});
    }
    if(key.startsWith('m:')){
@@ -428,7 +429,7 @@ $('calendarSelection').onclick=e=>{
 
 };
 
-$('saveSchedule').onclick=()=>{const days=[...document.querySelectorAll('[data-day]:checked')].map(x=>Number(x.dataset.day)),start=$('startDate').value,end=$('endDate').value;if(!days.length||!start){alert('Bitte mindestens einen Trainingstag und ein Startdatum auswählen.');return}if(end&&end<start){alert('Das Enddatum darf nicht vor dem Startdatum liegen.');return}state.schedule={weekdays:days,start,interval:Number($('interval').value),end,preview:Number($('previewCount').value)};selected=null;save();render();$('repeatDialog').close();$('scheduleMessage').textContent='Gespeichert';setTimeout(()=>{$('scheduleMessage').textContent=''},2500)};
+$('saveSchedule').onclick=()=>{const days=[...document.querySelectorAll('[data-day]:checked')].map(x=>Number(x.dataset.day)),start=$('startDate').value,end=$('endDate').value;if(!days.length||!start){alert('Bitte mindestens einen Trainingstag und ein Startdatum auswählen.');return}if(end&&end<start){alert('Das Enddatum darf nicht vor dem Startdatum liegen.');return}state.schedule={weekdays:days,start,time:$('trainingTime').value,interval:Number($('interval').value),end,preview:Number($('previewCount').value)};selected=null;save();render();$('repeatDialog').close();$('scheduleMessage').textContent='Gespeichert';setTimeout(()=>{$('scheduleMessage').textContent=''},2500)};
 
 $('future').onclick=e=>{
  const b=e.target.closest('[data-select]');if(!b)return;
