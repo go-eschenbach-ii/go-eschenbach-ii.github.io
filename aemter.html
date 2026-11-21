@@ -8,7 +8,7 @@
 .fold-panel{padding:0;overflow:hidden}.fold-panel>summary{cursor:pointer;list-style:none;padding:16px 18px;font-size:17px;font-weight:950;display:flex;justify-content:space-between;align-items:center;gap:8px}.fold-panel>summary::-webkit-details-marker{display:none}.fold-panel>summary:focus-visible{outline:3px solid #f4c400;outline-offset:-4px}.fold-panel[open]>summary{border-bottom:2px solid #111;background:#fff7cb}.fold-panel>.muted,.fold-panel>.future,.fold-panel>#history,.fold-panel>div:last-child{margin:13px 15px}.fold-caret{display:inline-block;transition:transform .15s}.fold-panel[open] .fold-caret{transform:rotate(180deg)}.calendar-panel .section-top{margin-bottom:10px}.calendar-panel .section-top h2{margin-bottom:0}.calendar-hint{margin:0 0 18px}.repeat-dialog{border:3px solid #111;border-radius:16px;padding:20px;width:min(95vw,620px);max-height:min(90dvh,800px);overflow:auto;box-shadow:8px 8px 0 #f4c400;background:#fff}.repeat-dialog::backdrop{background:rgba(0,0,0,.65)}.repeat-dialog .dialog-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.repeat-dialog h2{margin:0;font-size:20px;font-weight:950}.repeat-dialog .weekdays{margin-top:17px}@media(max-width:500px){.fold-panel>summary{padding:13px;font-size:15px}.repeat-dialog{padding:13px}.repeat-dialog h2{font-size:18px}}
 .single-duty{border:2px solid #111;border-radius:14px;background:#fff;overflow:hidden;margin-top:16px;box-shadow:3px 4px 0 #f4c400}.single-duty-head{background:#111;color:#f4c400;font-weight:950;font-size:19px;padding:13px 15px}.single-duty>.muted{padding:0 15px}.assigned-four{padding:0 12px 12px}.assigned-player{display:flex;gap:10px;align-items:center;justify-content:space-between;border-top:1px solid #e5e5e5;padding:12px 3px}.assigned-player strong{font-size:16px}.player-number{display:inline-grid;place-items:center;width:25px;height:25px;background:#f4c400;color:#111;font-weight:900;border-radius:50%;margin-right:8px}.assigned-player .btn{flex-shrink:0}@media(max-width:380px){.assigned-player strong{font-size:14px}.assigned-player .btn{padding:6px;font-size:11px}}.sync-gate{position:fixed;inset:0;z-index:10000;background:rgba(15,15,15,.84);padding:22px;display:flex;align-items:center;justify-content:center}.sync-box{width:min(420px,100%);padding:22px;border:3px solid #111;border-radius:16px;background:#fff;box-shadow:6px 7px 0 #f4c400}.sync-box h2{margin:0 0 12px;font-size:23px}.sync-box p{line-height:1.5}.sync-box input{width:100%;margin:10px 0}.sync-gate[hidden]{display:none}.sync-badge{position:sticky;top:0;z-index:50;margin:8px auto 0;max-width:900px;padding:8px 14px;font-size:12px;font-weight:800;background:#fff8d4;border:1px solid #111}.sync-badge.error{background:#ffe0db}.sync-badge[hidden]{display:none}.daycell.match{background:#ffb75d;box-shadow:3px 3px 0 #d87b0a}.daycell.double{background:linear-gradient(135deg,#ffe680 0 49%,#ffb75d 50% 100%)}.calendar-legend .swatch.match{background:#ffb75d}.next-card.match-card{border-color:#d98400;box-shadow:5px 6px 0 #ffb75d}.answer-pill{font-size:12px;font-weight:800;padding:4px 8px;border-radius:40px}.answer-pill.yes{background:#ddf8df}.answer-pill.no{background:#ffe0d7}.answer-pill.open{background:#e9ebef}.attendance-list{display:grid;gap:5px;margin-top:10px}.attendance-line{display:grid;grid-template-columns:minmax(70px,1fr) auto;gap:10px;padding:8px 0;border-bottom:1px solid #e5e5e5;align-items:center}.attendance-reason{font-size:11px;color:#686b73}.lineup-check{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:750}.lineup-check input{accent-color:#111;width:18px;height:18px}.lineup-actions{display:flex;gap:10px;align-items:center}.single-duty-head.match-head{background:#a85800;color:#fff}.match-form-note{color:#686b73;font-size:12px}.portal-shell{max-width:560px;margin:16px auto;padding:10px 14px 45px}.portal-card{background:#fff;border:2px solid #111;border-radius:15px;padding:16px;margin:12px 0;box-shadow:4px 4px 0 #f4c400}.portal-row{display:flex;gap:10px;flex-wrap:wrap}.portal-card select,.portal-card input[type=text]{width:100%}.portal-card .btn{flex:1}.portal-card.match-event{border-left:8px solid #ed8b19}.portal-card.training-event{border-left:8px solid #f4c400}.portal-card .reason-wrap{margin-top:12px}.portal-top{display:flex;justify-content:space-between;gap:12px;align-items:center}@media(max-width:420px){.tabs button{font-size:10px}.lineup-actions{gap:5px}.attendance-line{font-size:13px}}</style></head><body>
 <header><div class="brand"><img src="logo-eschenbach-ii.svg?v=9" alt="Original-Logo GO Eschenbach II"><div><div class="eyebrow">IFV · 5. LIGA · GRUPPE 4</div><h1>GO Eschenbach II</h1><div style="font-size:13px;font-weight:700">Ämtliplan · Fair verteilt. Gemeinsam erledigt.</div></div></div></header>
-<div style="max-width:900px;margin:10px auto 0;padding:0 12px"><a href="./" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#111;font-size:14px;font-weight:850;border:2px solid #111;padding:9px 13px;border-radius:10px;background:#fff;box-shadow:3px 3px 0 #111">← Zurück zu GO Eschenbach II</a></div><div id="syncStatus" class="sync-badge" hidden aria-live="polite"></div><div id="syncGate" class="sync-gate"><div class="sync-box"><h2>Ämtliplan gemeinsam nutzen</h2><p id="syncMessage">Verbindung zur gemeinsamen Datenbank wird hergestellt …</p><input id="syncCode" placeholder="Aktivierungscode (nur bei neuer Freischaltung)" autocomplete="off" hidden><div class="formrow"><button id="syncActivate" class="btn primary" hidden>Gerät freischalten</button><button id="syncRetry" class="btn" hidden>Erneut verbinden</button></div><p class="muted">Die Ämtliplanung ist nur für freigeschaltete Trainergeräte bearbeitbar.</p></div></div><main class="wrap" style="visibility:hidden"><nav class="tabs" aria-label="Hauptnavigation"><button data-tab="plan" class="active">⚽ Ämtli</button><button data-tab="trainings">📅 Kalender</button><button data-tab="stats">📊 Statistik</button><button data-tab="settings">⚙️ Team</button></nav>
+<div style="max-width:900px;margin:10px auto 0;padding:0 12px"><a href="./" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#111;font-size:14px;font-weight:850;border:2px solid #111;padding:9px 13px;border-radius:10px;background:#fff;box-shadow:3px 3px 0 #111">← Zurück zu GO Eschenbach II</a></div><section id="playerPortal" class="portal-shell" style="display:none" aria-label="Spieler: Teilnahme bestätigen"><div id="playerPortalContent"></div></section><div id="syncStatus" class="sync-badge" hidden aria-live="polite"></div><div id="syncGate" class="sync-gate"><div class="sync-box"><h2>Ämtliplan gemeinsam nutzen</h2><p id="syncMessage">Verbindung zur gemeinsamen Datenbank wird hergestellt …</p><input id="syncCode" placeholder="Aktivierungscode (nur bei neuer Freischaltung)" autocomplete="off" hidden><div class="formrow"><button id="syncActivate" class="btn primary" hidden>Gerät freischalten</button><button id="syncRetry" class="btn" hidden>Erneut verbinden</button></div><p class="muted">Die Ämtliplanung ist nur für freigeschaltete Trainergeräte bearbeitbar.</p></div></div><main class="wrap" style="visibility:hidden"><nav class="tabs" aria-label="Hauptnavigation"><button data-tab="plan" class="active">⚽ Ämtli</button><button data-tab="trainings">📅 Kalender</button><button data-tab="stats">📊 Statistik</button><button data-tab="settings">⚙️ Team</button></nav>
 <section id="plan"><div class="panel"><div class="section-top"><h2>Ämtli-Zuteilung</h2><span class="muted">Nächster Termin</span></div><div id="currentTraining"></div></div><details id="futureFold" class="panel fold-panel"><summary>Vorschau der nächsten Termine <span class="fold-caret">▾</span></summary><p class="muted">Die Zuteilungen werden automatisch vorausberechnet. Tippe auf ein Datum, um es anzusehen.</p><div class="future" id="future"></div><div style="margin-top:14px"><button class="btn small" data-goto="trainings">Kalender öffnen</button></div></details></section>
 <section id="trainings" class="hidden"><div class="panel calendar-panel"><div class="section-top"><h2>Teamkalender</h2><div class="formrow"><button class="btn small" id="openMatch" type="button">+ Match</button><button class="btn small" id="openRepeat" type="button">⚙ Trainingstage</button></div></div><p class="muted calendar-hint">Gelb = Training · Orange = Match · Rot = heute. Tippe auf einen Tag, um Termine zu verwalten.</p><div class="calendar-toolbar"><button class="btn small" id="prevMonth" aria-label="Vorheriger Monat">←</button><div class="calendar-title" id="calendarTitle"></div><button class="btn small" id="nextMonth" aria-label="Nächster Monat">→</button></div><div class="calendar-weekdays"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div><div id="dateManager" class="calendar-grid"></div><div class="calendar-legend"><span><i class="swatch training"></i>Training</span><span><i class="swatch match"></i>Match</span><span><i class="swatch today"></i>Heute</span><span><i class="swatch done"></i>Abgeschlossen</span></div><div class="muted" id="dateMessage"></div><div id="calendarSelection"></div></div>
 <dialog id="repeatDialog" class="repeat-dialog"><div class="dialog-top"><h2>Regelmässige Trainings</h2><button type="button" id="closeRepeat" class="btn small" aria-label="Schliessen">✕</button></div><p class="muted">Lege die Trainingstage und ihre Wiederholung fest.</p><div id="sub-repeat" class="repeat-body"><h2>Regelmässige Trainings</h2><p class="muted">Wähle die Wochentage und wie oft das Training stattfindet.</p><div class="weekdays" id="weekdayChecks"></div><div class="schedule-row"><div class="field"><label for="startDate">Trainings ab</label><input id="startDate" type="date"></div><div class="field"><label for="interval">Wiederholung</label><select id="interval"><option value="1">Jede Woche</option><option value="2">Alle 2 Wochen</option><option value="3">Alle 3 Wochen</option><option value="4">Alle 4 Wochen</option></select></div><div class="field"><label for="endDate">Bis (optional)</label><input id="endDate" type="date"></div><div class="field"><label for="previewCount">Vorschau</label><select id="previewCount"><option value="6">6 Trainings</option><option value="12">12 Trainings</option><option value="24">24 Trainings</option><option value="40">40 Trainings</option></select></div></div><div class="formrow" style="margin-top:14px"><button class="btn primary" id="saveSchedule">Wiederholung speichern</button><span id="scheduleMessage" class="muted"></span></div></div>
@@ -21,6 +21,80 @@
 (()=>{'use strict';const KEY='fce2-aemter-v1',W=['So','Mo','Di','Mi','Do','Fr','Sa'],$=id=>document.getElementById(id),escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const iso=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');const parse=s=>new Date(s+'T12:00:00');const now=iso(new Date());const defaultState=()=>({players:[{"id":"p1","name":"Leon"},{"id":"p2","name":"Mino"},{"id":"p3","name":"Noel"},{"id":"p4","name":"Jan"},{"id":"p5","name":"Louis"},{"id":"p6","name":"Joel"},{"id":"p7","name":"Tilman"},{"id":"p8","name":"Diego"},{"id":"p9","name":"Noe"},{"id":"p10","name":"Timo"},{"id":"p11","name":"Samuel"},{"id":"p12","name":"Luis"},{"id":"p13","name":"Fabio"},{"id":"p14","name":"Tim"},{"id":"p15","name":"Nico"},{"id":"p16","name":"Lenn"},{"id":"p17","name":"Luca"},{"id":"p18","name":"Riccardo"},{"id":"p19","name":"Ramon"},{"id":"p20","name":"Sandro"},{"id":"p21","name":"Giovanni"},{"id":"p22","name":"Nando"},{"id":"p23","name":"Dave"},{"id":"p24","name":"Gian"},{"id":"p25","name":"Tobias"},{"id":"p26","name":"Jannis"},{"id":"p27","name":"Noah"},{"id":"p28","name":"Livio"},{"id":"p29","name":"Mattia"},{"id":"p30","name":"Ilay"}],duties:[{id:'d0',name:'Ämtli'}],history:[],schedule:{start:now,weekdays:[4],interval:1,end:'',preview:12},absences:{},skipped:[],addedDates:[],matches:[],attendance:{},lineup:{}});let state;try{state=JSON.parse(localStorage.getItem(KEY));if(!state||!Array.isArray(state.players)||!Array.isArray(state.duties)||state.duties.length<1)throw Error('invalid')}catch{state=defaultState()}state.schedule=state.schedule||defaultState().schedule;state.absences=state.absences||{};state.skipped=state.skipped||[];state.history=state.history||[];state.addedDates=state.addedDates||[];state.duties=[{id:'d0',name:'Ämtli'}];state.matches=state.matches||[];state.attendance=state.attendance||{};state.lineup=state.lineup||{};let selected=null;let calendarMonth=parse(now);calendarMonth.setDate(1);let calendarFocus=null;const SYNC_URL='https://kfpxheegmeupnuzqjqqt.supabase.co/functions/v1/go-eschenbach-aemter-sync';
 const ACTIVATE_URL='https://kfpxheegmeupnuzqjqqt.supabase.co/functions/v1/match-comments-admin';
 const TOKEN_KEY='go-eschenbach-comment-admin-token';
+const PLAYER_TOKEN_KEY='go-eschenbach-aemter-player-token';
+const suppliedPlayerToken=new URLSearchParams(location.search).get('zugang');
+if(suppliedPlayerToken&&/^[a-f0-9]{64}$/.test(suppliedPlayerToken)){
+ localStorage.setItem(PLAYER_TOKEN_KEY,suppliedPlayerToken);
+ history.replaceState({},'',location.pathname);
+}
+const REASONS=['Krankheit','Verletzung','Arbeit','Schule / Ausbildung','Ferien','Privater Termin','Anderer Grund'];
+let playerFetching=false;
+async function playerRequest(action,data={}){
+ const token=localStorage.getItem(PLAYER_TOKEN_KEY);
+ if(!token)throw Error('Kein Spielerzugang gespeichert');
+ const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),12000);
+ try{
+  const resp=await fetch(SYNC_URL,{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+token},body:JSON.stringify({action,...data}),signal:controller.signal,cache:'no-store'});
+  const json=await resp.json().catch(()=>({}));
+  if(!resp.ok)throw Error(json.error||('HTTP '+resp.status));
+  return json;
+ }finally{clearTimeout(timeout)}
+}
+function playerPortalMessage(message,failed=false){
+ $('playerPortalContent').innerHTML='<div class="portal-card"><h2>Meine Teilnahme</h2><p class="'+(failed?'hint':'muted')+'">'+escape(message)+'</p><button class="btn small" id="portalRetry">Erneut laden</button></div>';
+ $('portalRetry').onclick=refreshPlayer;
+}
+async function refreshPlayer(){
+ if(playerFetching)return;
+ playerFetching=true;
+ try{
+  const res=await playerRequest('player_view');
+  const title='<div class="portal-card"><div class="portal-top"><div><h2 style="margin:0">Meine Teilnahme</h2><p class="muted" style="margin:6px 0 0">Hallo '+escape(res.player.name)+'! Bitte vor jedem Training und Match deine Teilnahme bestätigen.</p></div><button class="btn small" id="portalRefresh">↻</button></div></div>';
+  const events=(res.events||[]).map(ev=>{
+    const isMatch=ev.type==='match',a=ev.answer||{},yes=a.status==='yes',no=a.status==='no';
+    const opts=REASONS.map(reason=>'<option value="'+escape(reason)+'" '+(reason===a.reason?'selected':'')+'>'+escape(reason)+'</option>').join('');
+    const reasonKnown=REASONS.includes(a.reason);
+    const chosen=reasonKnown?a.reason:(a.reason?'Anderer Grund':'Krankheit');
+    const reasons=REASONS.map(reason=>'<option value="'+escape(reason)+'" '+(reason===chosen?'selected':'')+'>'+escape(reason)+'</option>').join('');
+    return '<div class="portal-card '+(isMatch?'match-event':'training-event')+'" data-event-card="'+escape(ev.id)+'">'
+      +'<strong>'+(isMatch?'🟠 Match gegen '+escape(ev.label):'🟡 Training')+'</strong><div class="muted" style="margin:7px 0 13px">'+escape(nice(ev.date))+(ev.time?' · '+escape(ev.time):'')+(ev.venue?' · '+escape(ev.venue):'')+'</div>'
+      +'<div class="portal-row"><label><input type="radio" name="status-'+escape(ev.id)+'" value="yes" '+(yes?'checked':'')+'> Ja, ich nehme teil</label><label><input type="radio" name="status-'+escape(ev.id)+'" value="no" '+(no?'checked':'')+'> Nein</label></div>'
+      +'<div class="reason-wrap" '+(no?'':'hidden')+'><label>Begründung bei Absage</label><select data-reason>'+reasons+'</select><div class="reason-other" '+(no&&chosen==='Anderer Grund'?'':'hidden')+'><input type="text" data-custom-reason maxlength="180" placeholder="Individuellen Grund angeben" value="'+escape(no&&!reasonKnown?a.reason:'')+'"></div></div>'
+      +'<div class="formrow" style="margin-top:12px"><button type="button" class="btn primary small" data-player-save="'+escape(ev.id)+'">Antwort speichern</button><span class="muted">'+(a.status?'Gespeichert: '+(yes?'Zusage':'Absage'):'Noch keine Antwort')+'</span></div></div>';
+  }).join('');
+  $('playerPortalContent').innerHTML=title+(events||'<div class="portal-card"><p class="muted">Aktuell sind keine künftigen Trainings oder Matches geplant.</p></div>')+'<p class="muted">Deine Angaben werden gemeinsam gespeichert und sind für den Trainer sichtbar.</p>';
+  $('portalRefresh').onclick=refreshPlayer;
+ }catch(err){playerPortalMessage('Daten konnten nicht geladen werden: '+String(err.message||err),true)}
+ finally{playerFetching=false}
+}
+function startPlayerMode(){
+ syncBlocked=true;$('syncGate').hidden=true;$('syncStatus').hidden=true;
+ document.querySelector('main.wrap').style.display='none';
+ $('playerPortal').style.display='block';
+ playerPortalMessage('Deine Termine werden geladen …');
+ refreshPlayer();
+}
+$('playerPortal').addEventListener('change',e=>{
+ const card=e.target.closest('[data-event-card]');if(!card)return;
+ const no=card.querySelector('input[type=radio][value=no]')?.checked;
+ const reasons=card.querySelector('.reason-wrap');
+ if(reasons)reasons.hidden=!no;
+ const custom=card.querySelector('.reason-other');
+ if(custom)custom.hidden=card.querySelector('[data-reason]')?.value!=='Anderer Grund';
+});
+$('playerPortal').addEventListener('click',async e=>{
+ const b=e.target.closest('[data-player-save]');if(!b)return;
+ const card=b.closest('[data-event-card]'),id=b.dataset.playerSave;
+ const radio=card.querySelector('input[type=radio]:checked');if(!radio){alert('Bitte Ja oder Nein auswählen.');return}
+ const status=radio.value;
+ const reasonChoice=card.querySelector('[data-reason]')?.value||'';
+ const reason=status==='no'?(reasonChoice==='Anderer Grund'?(card.querySelector('[data-custom-reason]')?.value||'').trim():reasonChoice):'';
+ if(status==='no'&&!reason){alert('Bei einer Absage ist ein Grund erforderlich.');return}
+ b.disabled=true;b.textContent='Speichere …';
+ try{await playerRequest('player_rsvp',{event_id:id,status,reason});await refreshPlayer()}
+ catch(err){alert('Antwort nicht gespeichert: '+String(err.message||err));b.disabled=false;b.textContent='Antwort speichern'}
+});
+
 let revision=null,syncBlocked=true,writeQueue=Promise.resolve(),pending=0,lastSyncError='';
 const status=(msg,bad=false)=>{const x=$('syncStatus');x.textContent=msg;x.hidden=!msg;x.classList.toggle('error',bad)};
 const lock=(msg,activation=false)=>{$('syncGate').hidden=false;document.querySelector('main.wrap').style.visibility='hidden';$('syncMessage').textContent=msg;$('syncCode').hidden=!activation;$('syncActivate').hidden=!activation;$('syncRetry').hidden=activation};
@@ -295,7 +369,9 @@ $('syncActivate').onclick=async()=>{
  }catch(e){alert('Freischaltung fehlgeschlagen: '+String(e.message||e))}
  finally{$('syncActivate').disabled=false}
 };
-initialSync();setInterval(pollSync,12000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)pollSync()});
+if(localStorage.getItem(PLAYER_TOKEN_KEY))startPlayerMode();else initialSync();
+setInterval(pollSync,12000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(localStorage.getItem(PLAYER_TOKEN_KEY))refreshPlayer();else pollSync()}});
+
 })();
 </script></body></html>
