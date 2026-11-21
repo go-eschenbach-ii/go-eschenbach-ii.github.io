@@ -1,6 +1,6 @@
-const CACHE='liga4daily-v115';
+const CACHE='liga4daily-v116';
 const ASSETS=[
-  './','index.html','styles.css','stats-flip.css','theme-yellowblack.css','bottom-update.css',
+  './','index.html','aemter.html','styles.css','stats-flip.css','theme-yellowblack.css','bottom-update.css',
   'team-photo-source.css','match-tip.css','app-menu.css','mood-meter.css','scorer-hearts.css',
   'share-button.css','match-commentary.css','reader-comments.css','update-badge.css','urgent-alert.css','update-news.css','live-ticker.css','review-draft.css','install-app.css','app.js','app-analytics.js','flippy-stats.js',
   'theme-enhance.js','reader-cleanup.js','match-tip.js','app-menu.js','mood-meter.js',
