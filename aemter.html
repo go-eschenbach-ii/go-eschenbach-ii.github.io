@@ -106,7 +106,7 @@ function addMonth(base,delta){const d=new Date(base);d.setMonth(d.getMonth()+del
 function pad(n){return String(n).padStart(2,'0')}
 function cellDate(year,month,day){return `${year}-${pad(month+1)}-${pad(day)}`}
 function isSeriesDate(date){const sc=state.schedule,days=new Set((sc.weekdays||[]).map(Number));if(!sc.start||!days.size||date<sc.start)return false;if(sc.end&&date>sc.end)return false;const dt=parse(date),baseline=parse(sc.start);if(!days.has(dt.getDay()))return false;const diff=Math.floor((dt-baseline)/86400000);if(diff<0)return false;return Math.floor(diff/7)%Number(sc.interval||1)===0}
-function dayInfo(date){const done=state.history.some(h=>h.date===date),extra=state.addedDates.includes(date),series=isSeriesDate(date),removed=state.skipped.includes(date),today=date===now,active=!done&&(series||extra)&&!removed;return{date,done,extra,series,removed,today,active}}
+function dayInfo(date){const done=state.history.some(h=>h.date===date&&h.type!=='match'),extra=state.addedDates.includes(date),series=isSeriesDate(date),removed=state.skipped.includes(date),today=date===now,active=!done&&(series||extra)&&!removed;return{date,done,extra,series,removed,today,active}}
 
 function selectCalendarDate(date){
  calendarFocus=date;
@@ -172,17 +172,118 @@ function renderDateManager(){
 
 function activateTab(tab){document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));['plan','trainings','stats','settings'].forEach(x=>$(x).classList.toggle('hidden',x!==tab));window.scrollTo({top:0,behavior:'instant'})}
 function renderStats(){const c=baseCounts();$('summary').innerHTML=`<span class="tag">${state.history.length} Trainings abgeschlossen</span><span class="tag">${state.history.reduce((n,h)=>n+h.assignments.length,0)} Einsätze</span>`;$('statsHead').innerHTML='<tr><th>Spieler</th><th>Ämtli-Einsätze</th></tr>';$('statsBody').innerHTML=state.players.map(p=>`<tr><td>${escape(p.name)}</td><td><strong>${c[p.id].total}</strong></td></tr>`).join('')}
-function renderSettings(){$('playersEditor').innerHTML=state.players.map((p,i)=>`<div class="listrow"><span class="tag">${i+1}</span><input data-player="${escape(p.id)}" value="${escape(p.name)}" aria-label="Spieler ${i+1}"><button class="btn small danger" data-remove="${escape(p.id)}">×</button></div>`).join('');}
+function renderSettings(){$('playersEditor').innerHTML=state.players.map((p,i)=>'<div class="listrow"><span class="tag">'+(i+1)+'</span><input data-player="'+escape(p.id)+'" value="'+escape(p.name)+'" aria-label="Spieler '+(i+1)+'"><button class="btn small" data-link="'+escape(p.id)+'">Link</button><button class="btn small danger" data-remove="'+escape(p.id)+'">×</button></div>').join('')}
 function render(){renderCalendar();renderPlan();renderDateManager();renderStats();renderSettings()}function markAbsent(id){if(!selected||!id)return;state.absences[selected]=[...new Set([...(state.absences[selected]||[]),id])];save();renderPlan()}document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>activateTab(b.dataset.tab)));document.querySelectorAll('[data-goto]').forEach(b=>b.addEventListener('click',()=>activateTab(b.dataset.goto)));
 $('openRepeat').onclick=()=>$('repeatDialog').showModal();$('closeRepeat').onclick=()=>$('repeatDialog').close();$('repeatDialog').addEventListener('click',e=>{if(e.target===$('repeatDialog'))$('repeatDialog').close()});
 $('prevMonth').onclick=()=>{calendarMonth=addMonth(calendarMonth,-1);renderDateManager()};
 $('nextMonth').onclick=()=>{calendarMonth=addMonth(calendarMonth,1);renderDateManager()};
-$('dateManager').onclick=e=>{const b=e.target.closest('[data-day]');if(!b)return;const d=b.dataset.day;calendarFocus=d;const info=dayInfo(d);if(info.done){selectCalendarDate(d);return}if(d<now){selectCalendarDate(d);$('dateMessage').textContent='Vergangene Tage können nicht mehr neu geplant werden.';setTimeout(()=>{$('dateMessage').textContent=''},2500);renderDateManager();return}if(info.active){if(info.extra&&!info.series)state.addedDates=state.addedDates.filter(x=>x!==d);else if(!state.skipped.includes(d))state.skipped=[...state.skipped,d];delete state.absences[d];$('dateMessage').textContent='Training entfernt.'}else if(info.removed){state.skipped=state.skipped.filter(x=>x!==d);$('dateMessage').textContent='Training wieder aktiviert.'}else{if(!state.addedDates.includes(d))state.addedDates.push(d);state.skipped=state.skipped.filter(x=>x!==d);$('dateMessage').textContent='Training hinzugefügt.'}if(!selected||selected===d)selected=null;save();render();selectCalendarDate(d);setTimeout(()=>{$('dateMessage').textContent=''},2200)};
-$('calendarSelection').onclick=e=>{const b=e.target.closest('[data-open-plan]');if(!b)return;selected=b.dataset.openPlan;activateTab('plan');renderPlan()};
+
+let editingMatchId=null;
+function showMatchEditor(id=null,date=now){
+ const m=(state.matches||[]).find(x=>x.id===id);
+ editingMatchId=m?m.id:null;
+ $('matchDate').value=m?.date||date;
+ $('matchOpponent').value=m?.opponent||'';
+ $('matchTime').value=m?.time||'';
+ $('matchVenue').value=m?.venue||'Heim';
+ $('deleteMatch').hidden=!m;
+ $('matchDialog').showModal();
+}
+$('openMatch').onclick=()=>showMatchEditor(null,calendarFocus||now);
+$('closeMatch').onclick=()=>$('matchDialog').close();
+$('matchDialog').addEventListener('click',e=>{if(e.target===$('matchDialog'))$('matchDialog').close()});
+$('saveMatch').onclick=()=>{
+ const date=$('matchDate').value,opponent=$('matchOpponent').value.trim(),time=$('matchTime').value,venue=$('matchVenue').value;
+ if(!date||!opponent){alert('Bitte Datum und Gegner angeben.');return}
+ if(editingMatchId){
+  const match=state.matches.find(x=>x.id===editingMatchId);
+  if(!match)return;
+  if(state.history.some(h=>h.matchId===match.id)){alert('Abgeschlossene Matches können nicht mehr geändert werden.');return}
+  Object.assign(match,{date,opponent,time,venue});
+ }else state.matches.push({id:'m'+crypto.randomUUID().replaceAll('-',''),date,opponent,time,venue});
+ calendarMonth=parse(date);calendarMonth.setDate(1);calendarFocus=date;
+ save();render();$('matchDialog').close();
+};
+$('deleteMatch').onclick=()=>{
+ if(!editingMatchId)return;
+ if(state.history.some(h=>h.matchId===editingMatchId)){alert('Ein abgeschlossenes Match kann nicht gelöscht werden.');return}
+ if(!confirm('Match wirklich löschen?'))return;
+ state.matches=state.matches.filter(m=>m.id!==editingMatchId);
+ delete state.attendance['m:'+editingMatchId];delete state.lineup['m:'+editingMatchId];
+ editingMatchId=null;save();render();$('matchDialog').close();
+};
+$('dateManager').onclick=e=>{
+ const el=e.target.closest('[data-day]');if(!el)return;
+ calendarFocus=el.dataset.day;selectCalendarDate(calendarFocus);
+};
+$('calendarSelection').onclick=e=>{
+ const btn=e.target.closest('button');if(!btn)return;
+ if(btn.dataset.openPlan){
+  selected=btn.dataset.openPlan;activateTab('plan');renderPlan();return;
+ }
+ if(btn.dataset.addMatch){showMatchEditor(null,btn.dataset.addMatch);return}
+ if(btn.dataset.editMatch){showMatchEditor(btn.dataset.editMatch);return}
+ if(btn.dataset.trainingToggle){
+  const d=btn.dataset.trainingToggle;
+  if(d<now){alert('Vergangene Trainings können hier nicht geändert werden.');return}
+  const info=dayInfo(d);
+  if(info.active){
+   if(state.addedDates.includes(d)&&!info.series)state.addedDates=state.addedDates.filter(x=>x!==d);
+   else state.skipped=[...new Set([...state.skipped,d])];
+   delete state.absences[d];
+  }else{
+   state.skipped=state.skipped.filter(x=>x!==d);
+   if(!isSeriesDate(d)&&!state.addedDates.includes(d))state.addedDates.push(d);
+  }
+  save();render();selectCalendarDate(d);
+ }
+};
+
 $('saveSchedule').onclick=()=>{const days=[...document.querySelectorAll('[data-day]:checked')].map(x=>Number(x.dataset.day)),start=$('startDate').value,end=$('endDate').value;if(!days.length||!start){alert('Bitte mindestens einen Trainingstag und ein Startdatum auswählen.');return}if(end&&end<start){alert('Das Enddatum darf nicht vor dem Startdatum liegen.');return}state.schedule={weekdays:days,start,interval:Number($('interval').value),end,preview:Number($('previewCount').value)};selected=null;save();render();$('repeatDialog').close();$('scheduleMessage').textContent='Gespeichert';setTimeout(()=>{$('scheduleMessage').textContent=''},2500)};
-$('future').onclick=e=>{const b=e.target.closest('[data-select]');if(b){selected=b.dataset.select;renderPlan();activateTab('plan')}};$('currentTraining').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.absent){markAbsent(b.dataset.absent);return}if(b.dataset.present){state.absences[selected]=(state.absences[selected]||[]).filter(id=>id!==b.dataset.present);save();renderPlan();return}if(b.id==='complete'){const a=planDates().out[selected]||[];if(a.length!==4)return;if(!confirm(`Training vom ${nice(selected)} abschliessen? Die vier Einsätze werden nun gezählt.`))return;state.history.push({id:'h'+Date.now(),date:selected,assignments:a.map(x=>({...x}))});delete state.absences[selected];selected=null;save();render();return}if(b.id==='skipTraining'){if(!confirm(`Training vom ${nice(selected)} als ausgefallen markieren? Es werden keine Einsätze gezählt.`))return;state.skipped.push(selected);delete state.absences[selected];selected=null;save();render()}};
-$('history').onclick=e=>{const b=e.target.closest('[data-undo]');if(!b)return;const h=state.history.find(x=>x.id===b.dataset.undo);if(h&&confirm(`Abschluss vom ${nice(h.date)} rückgängig machen?`)){state.history=state.history.filter(x=>x.id!==h.id);state.skipped=state.skipped.filter(x=>x!==h.date);save();render()}};
-$('playersEditor').onchange=e=>{const x=state.players.find(p=>p.id===e.target.dataset.player);if(x){x.name=e.target.value.trim()||x.name;save();render()}};$('playersEditor').onclick=e=>{const b=e.target.closest('[data-remove]');if(!b)return;const p=state.players.find(x=>x.id===b.dataset.remove);if(state.players.length<=4){alert('Mindestens vier Spieler sind nötig.');return}if(p&&confirm(`${p.name} aus dem Team entfernen?`)){state.players=state.players.filter(x=>x.id!==p.id);Object.keys(state.absences).forEach(d=>state.absences[d]=state.absences[d].filter(x=>x!==p.id));save();render()}};$('addPlayer').onclick=()=>{state.players.push({id:'p'+Date.now()+Math.random().toString(36).slice(2,5),name:'Spieler '+(state.players.length+1)});save();render()};$('export').onclick=()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='eschenbach-ii-aemter-sicherung.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};$('import').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const s=JSON.parse(await f.text());if(!Array.isArray(s.players)||s.players.length<4||!Array.isArray(s.history))throw Error('Ungültiges Format');if(!confirm('Bestehende Daten durch diese Sicherung ersetzen?'))return;state={...defaultState(),...s,absences:s.absences||{},skipped:s.skipped||[],addedDates:s.addedDates||[],matches:s.matches||[],attendance:s.attendance||{},lineup:s.lineup||{},duties:[{id:'d0',name:'Ämtli'}]};selected=null;save();render()}catch(err){alert('Import fehlgeschlagen: '+err.message)}finally{e.target.value=''}};$('reset').onclick=()=>{if(confirm('Wirklich sämtliche Daten löschen?')){state=defaultState();selected=null;save();render()}};
+
+$('future').onclick=e=>{
+ const b=e.target.closest('[data-select]');if(!b)return;
+ selected=b.dataset.select;activateTab('plan');renderPlan();
+};
+$('currentTraining').onchange=e=>{
+ const el=e.target;
+ if(!el.dataset.squad&&!el.dataset.start)return;
+ const plan=planDates(),ev=plan.items.find(x=>x.key===selected);
+ if(!ev||ev.type!=='match')return;
+ const pid=el.dataset.squad||el.dataset.start,key=ev.attendanceKey;
+ state.lineup[key]=state.lineup[key]||{};
+ const row={...(state.lineup[key][pid]||{squad:false,start:false})};
+ if(el.dataset.start){row.start=el.checked;if(el.checked)row.squad=true}
+ if(el.dataset.squad){row.squad=el.checked;if(!el.checked)row.start=false}
+ state.lineup[key][pid]=row;save();renderPlan();
+};
+$('currentTraining').onclick=e=>{
+ const b=e.target.closest('button');if(!b)return;
+ const plan=planDates(),ev=plan.items.find(x=>x.key===selected);
+ if(!ev)return;
+ if(b.id==='complete'){
+  const assignments=plan.out[selected]||[];
+  if(assignments.length!==4)return;
+  if(!confirm(eventTitle(ev)+' vom '+nice(ev.date)+' abschliessen? Die vier Ämtli-Einsätze werden gezählt.'))return;
+  state.history.push({id:'h'+Date.now(),date:ev.date,type:ev.type,matchId:ev.match?.id||null,assignments:assignments.map(x=>({...x}))});
+  selected=null;save();render();return;
+ }
+ if(b.id==='skipTraining'&&ev.type==='training'){
+  if(!confirm('Training am '+nice(ev.date)+' als ausgefallen markieren?'))return;
+  state.skipped=[...new Set([...state.skipped,ev.date])];selected=null;save();render();
+ }
+};
+$('history').onclick=e=>{
+ const b=e.target.closest('[data-undo]');if(!b)return;
+ const h=state.history.find(x=>x.id===b.dataset.undo);
+ if(h&&confirm('Abschluss am '+nice(h.date)+' rückgängig machen?')){
+  state.history=state.history.filter(x=>x.id!==h.id);
+  if(h.type!=='match')state.skipped=state.skipped.filter(x=>x!==h.date);
+  save();render();
+ }
+};
+
+$('playersEditor').onchange=e=>{const x=state.players.find(p=>p.id===e.target.dataset.player);if(x){x.name=e.target.value.trim()||x.name;save();render()}};$('playersEditor').onclick=async e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.link){if(!confirm('Persönlichen Zugangslink erstellen oder erneuern? Ein bisheriger Link für diesen Spieler wird dadurch ungültig.'))return;try{const r=await syncRequest('issue_player_link',{player_id:b.dataset.link});const link=r.link;try{await navigator.clipboard.writeText(link);$('playerLinkMessage').textContent='Link für '+player(b.dataset.link)+' kopiert. Bitte an den Spieler senden.'}catch{$('playerLinkMessage').textContent='Link für '+player(b.dataset.link)+': '+link;window.prompt('Link kopieren:',link)}}catch(err){alert('Link konnte nicht erstellt werden: '+err.message)}return}if(!b.dataset.remove)return;const p=state.players.find(x=>x.id===b.dataset.remove);if(state.players.length<=4){alert('Mindestens vier Spieler sind nötig.');return}if(p&&confirm(`${p.name} aus dem Team entfernen?`)){state.players=state.players.filter(x=>x.id!==p.id);Object.keys(state.absences).forEach(d=>state.absences[d]=state.absences[d].filter(x=>x!==p.id));save();render()}};$('addPlayer').onclick=()=>{state.players.push({id:'p'+Date.now()+Math.random().toString(36).slice(2,5),name:'Spieler '+(state.players.length+1)});save();render()};$('export').onclick=()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='eschenbach-ii-aemter-sicherung.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};$('import').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const s=JSON.parse(await f.text());if(!Array.isArray(s.players)||s.players.length<4||!Array.isArray(s.history))throw Error('Ungültiges Format');if(!confirm('Bestehende Daten durch diese Sicherung ersetzen?'))return;state={...defaultState(),...s,absences:s.absences||{},skipped:s.skipped||[],addedDates:s.addedDates||[],matches:s.matches||[],attendance:s.attendance||{},lineup:s.lineup||{},duties:[{id:'d0',name:'Ämtli'}]};selected=null;save();render()}catch(err){alert('Import fehlgeschlagen: '+err.message)}finally{e.target.value=''}};$('reset').onclick=()=>{if(confirm('Wirklich sämtliche Daten löschen?')){state=defaultState();selected=null;save();render()}};
 // Migrationshinweis: v1 hatte ein einzelnes Entwurfsdatum; bestätigte Trainings bleiben erhalten.
 $('syncRetry').onclick=initialSync;
 $('syncActivate').onclick=async()=>{
