@@ -61,8 +61,9 @@ async function refreshPlayer(){
       +'<div class="portal-row"><label><input type="radio" name="status-'+escape(ev.id)+'" value="yes" '+(yes?'checked':'')+'> Ja, ich nehme teil</label><label><input type="radio" name="status-'+escape(ev.id)+'" value="no" '+(no?'checked':'')+'> Nein</label></div>'
       +'<div class="reason-wrap" '+(no?'':'hidden')+'><label>Begründung bei Absage</label><select data-reason>'+reasons+'</select><div class="reason-other" '+(no&&chosen==='Anderer Grund'?'':'hidden')+'><input type="text" data-custom-reason maxlength="180" placeholder="Individuellen Grund angeben" value="'+escape(no&&!reasonKnown?a.reason:'')+'"></div></div>'
       +'<div class="formrow" style="margin-top:12px"><button type="button" class="btn primary small" data-player-save="'+escape(ev.id)+'">Antwort speichern</button><span class="muted">'+(a.status?'Gespeichert: '+(yes?'Zusage':'Absage'):'Noch keine Antwort')+'</span></div></div>';
-  }).join('');
-  $('playerPortalContent').innerHTML=title+(events||'<div class="portal-card"><p class="muted">Aktuell sind keine künftigen Trainings oder Matches geplant.</p></div>')+'<p class="muted">Deine Angaben werden gemeinsam gespeichert und sind für den Trainer sichtbar.</p>'+(localStorage.getItem(TOKEN_KEY)?'<button id="switchTrainer" class="btn small">Zur Traineransicht wechseln</button>':'');
+  });
+  const shown=events.slice(0,6).join('')+(events.length>6?'<details class="portal-card"><summary>Weitere '+(events.length-6)+' Termine anzeigen</summary>'+events.slice(6).join('')+'</details>':'');
+  $('playerPortalContent').innerHTML=title+(shown||'<div class="portal-card"><p class="muted">Aktuell sind keine künftigen Trainings oder Matches geplant.</p></div>')+'<p class="muted">Deine Angaben werden gemeinsam gespeichert und sind für den Trainer sichtbar.</p>'+(localStorage.getItem(TOKEN_KEY)?'<button id="switchTrainer" class="btn small">Zur Traineransicht wechseln</button>':'');
   $('portalRefresh').onclick=refreshPlayer;
   if($('switchTrainer'))$('switchTrainer').onclick=()=>{localStorage.removeItem(PLAYER_TOKEN_KEY);location.reload()};
  }catch(err){playerPortalMessage('Daten konnten nicht geladen werden: '+String(err.message||err),true)}
@@ -96,7 +97,7 @@ $('playerPortal').addEventListener('click',async e=>{
  catch(err){alert('Antwort nicht gespeichert: '+String(err.message||err));b.disabled=false;b.textContent='Antwort speichern'}
 });
 
-let revision=null,syncBlocked=true,writeQueue=Promise.resolve(),pending=0,lastSyncError='';
+let revision=null,syncBlocked=true,writeQueue=Promise.resolve(),pending=0,lastSyncError='',baseline=null;
 const status=(msg,bad=false)=>{const x=$('syncStatus');x.textContent=msg;x.hidden=!msg;x.classList.toggle('error',bad)};
 const lock=(msg,activation=false)=>{$('syncGate').hidden=false;document.querySelector('main.wrap').style.visibility='hidden';$('syncMessage').textContent=msg;$('syncCode').hidden=!activation;$('syncActivate').hidden=!activation;$('syncRetry').hidden=activation};
 const unlock=()=>{$('syncGate').hidden=true;document.querySelector('main.wrap').style.visibility='visible'};
@@ -106,6 +107,12 @@ async function syncRequest(action,extras={}){
  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),12000);
  try{const res=await fetch(SYNC_URL,{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+token},body:JSON.stringify({action,...extras}),signal:controller.signal,cache:'no-store'});const data=await res.json().catch(()=>({}));if(!res.ok)throw Error(data.error||('HTTP '+res.status));return data;}finally{clearTimeout(timeout)}
 }
+
+const stableData=o=>{
+ if(Array.isArray(o))return '['+o.map(stableData).join(',')+']';
+ if(o&&typeof o==='object')return '{'+Object.keys(o).filter(k=>k!=='attendance').sort().map(k=>JSON.stringify(k)+':'+stableData(o[k])).join(',')+'}';
+ return JSON.stringify(o);
+};
 const save=()=>{
  localStorage.setItem(KEY,JSON.stringify(state));
  if(syncBlocked)return;
@@ -113,8 +120,27 @@ const save=()=>{
  pending++;
  writeQueue=writeQueue.then(async()=>{
   if(syncBlocked)return;
-  try{const r=await syncRequest('save',{revision,content:snapshot});revision=r.revision;status('✓ Gemeinsamer Stand gespeichert');}
-  catch(e){syncBlocked=true;lastSyncError=String(e.message||e);status('Synchronisierung gestoppt: '+lastSyncError,true);lock(lastSyncError==='conflict'?'Ein anderer Trainer hat Daten geändert. Bitte neu laden. Deine lokalen Änderungen bleiben auf diesem Gerät erhalten.':'Speicherung fehlgeschlagen. Bitte Verbindung prüfen und erneut verbinden.');}
+  try{
+   snapshot.attendance=JSON.parse(JSON.stringify(state.attendance||{}));
+   let result;
+   try{result=await syncRequest('save',{revision,content:snapshot})}
+   catch(err){
+    if(String(err.message||err)!=='conflict')throw err;
+    const remote=await syncRequest('load');
+    if(!baseline||stableData(remote.content)!==stableData(baseline))throw err;
+    snapshot.attendance=remote.content.attendance||{};
+    state.attendance=JSON.parse(JSON.stringify(snapshot.attendance));
+    result=await syncRequest('save',{revision:remote.revision,content:snapshot});
+   }
+   revision=result.revision;baseline=JSON.parse(JSON.stringify(snapshot));
+   status('✓ Gemeinsamer Stand gespeichert');
+  }catch(err){
+   syncBlocked=true;lastSyncError=String(err.message||err);
+   status('Synchronisierung gestoppt: '+lastSyncError,true);
+   lock(lastSyncError==='conflict'
+    ?'Die Daten wurden gleichzeitig geändert. Bitte neu laden. Deine lokalen Änderungen bleiben vorerst auf diesem Gerät.'
+    :'Speicherung fehlgeschlagen. Bitte Verbindung prüfen und erneut verbinden.');
+  }
  }).finally(()=>{pending=Math.max(0,pending-1)});
 };
 async function initialSync(){
@@ -137,12 +163,12 @@ async function initialSync(){
    const init=await syncRequest('save',{revision,content:state});
    revision=init.revision;
   }
-  syncBlocked=false;selected=null;render();unlock();status('✓ Gemeinsamer Stand geladen');
+  baseline=JSON.parse(JSON.stringify(state));syncBlocked=false;selected=null;render();unlock();status('✓ Gemeinsamer Stand geladen');
  }catch(e){const error=String(e.message||e);lock(error==='unauthorized'?'Dieses Gerät ist nicht freigeschaltet. Bitte einen neuen Aktivierungscode verwenden.':'Verbindung fehlgeschlagen: '+error,error==='unauthorized');status('Keine Verbindung zur gemeinsamen Datenbank',true)}
 }
 async function pollSync(){
  if(syncBlocked||pending!==0)return;
- try{const r=await syncRequest('load');if(r.revision!==revision){revision=r.revision;state={...defaultState(),...r.content,duties:[{id:'d0',name:'Ämtli'}],matches:r.content.matches||[],attendance:r.content.attendance||{},lineup:r.content.lineup||{}};localStorage.setItem(KEY,JSON.stringify(state));selected=null;render();status('✓ Änderungen eines anderen Trainers übernommen')}}
+ try{const r=await syncRequest('load');if(r.revision!==revision){revision=r.revision;state={...defaultState(),...r.content,duties:[{id:'d0',name:'Ämtli'}],matches:r.content.matches||[],attendance:r.content.attendance||{},lineup:r.content.lineup||{}};baseline=JSON.parse(JSON.stringify(state));localStorage.setItem(KEY,JSON.stringify(state));render();status('✓ Änderungen eines anderen Trainers übernommen')}}
  catch(e){status('Verbindung unterbrochen – automatische Aktualisierung nicht möglich',true)}
 }
 const player=id=>state.players.find(p=>p.id===id)?.name||'Unbekannt';const duty=id=>'Ämtli';const nice=s=>new Intl.DateTimeFormat('de-CH',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}).format(parse(s));const short=s=>new Intl.DateTimeFormat('de-CH',{weekday:'short',day:'2-digit',month:'2-digit',year:'2-digit'}).format(parse(s));
