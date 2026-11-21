@@ -71,78 +71,105 @@ async function pollSync(){
  catch(e){status('Verbindung unterbrochen – automatische Aktualisierung nicht möglich',true)}
 }
 const player=id=>state.players.find(p=>p.id===id)?.name||'Unbekannt';const duty=id=>'Ämtli';const nice=s=>new Intl.DateTimeFormat('de-CH',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}).format(parse(s));const short=s=>new Intl.DateTimeFormat('de-CH',{weekday:'short',day:'2-digit',month:'2-digit',year:'2-digit'}).format(parse(s));
-function scheduledDates(){const sc=state.schedule,days=new Set(sc.weekdays.map(Number)),result=new Set();const limit=Number(sc.preview)||12,until=sc.end||'9999-12-31';if(sc.start&&days.size){const baseline=parse(sc.start),cursor=new Date(Math.max(parse(sc.start).getTime(),parse(now).getTime()));for(let i=0;i<1500&&result.size<limit+state.skipped.length+3;i++){const d=iso(cursor);if(d>until)break;const diff=Math.round((cursor-baseline)/86400000),week=Math.floor(diff/7);if(d>=sc.start&&days.has(cursor.getDay())&&week%Number(sc.interval||1)===0)result.add(d);cursor.setDate(cursor.getDate()+1)}}state.addedDates.forEach(d=>{if(d>=now)result.add(d)});return [...result].filter(d=>d>=now&&!state.skipped.includes(d)&&!state.history.some(h=>h.date===d)).sort().slice(0,limit)}
+function scheduledDates(){const sc=state.schedule,days=new Set(sc.weekdays.map(Number)),result=new Set();const limit=Number(sc.preview)||12,until=sc.end||'9999-12-31';if(sc.start&&days.size){const baseline=parse(sc.start),cursor=new Date(Math.max(parse(sc.start).getTime(),parse(now).getTime()));for(let i=0;i<1500&&result.size<limit+state.skipped.length+3;i++){const d=iso(cursor);if(d>until)break;const diff=Math.round((cursor-baseline)/86400000),week=Math.floor(diff/7);if(d>=sc.start&&days.has(cursor.getDay())&&week%Number(sc.interval||1)===0)result.add(d);cursor.setDate(cursor.getDate()+1)}}state.addedDates.forEach(d=>{if(d>=now)result.add(d)});return [...result].filter(d=>d>=now&&!state.skipped.includes(d)&&!state.history.some(h=>h.date===d&&h.type!=='match')).sort().slice(0,limit)}
 function scheduleSeriesDates(){const sc=state.schedule,days=new Set(sc.weekdays.map(Number)),result=[];if(!sc.start||!days.size)return result;let cursor=parse(Math.max(now,sc.start));const baseline=parse(sc.start),limit=(Number(sc.preview)||12)+25;for(let i=0;i<1500&&result.length<limit;i++){const d=iso(cursor);if(sc.end&&d>sc.end)break;const diff=Math.round((cursor-baseline)/86400000);if(d>=sc.start&&days.has(cursor.getDay())&&Math.floor(diff/7)%Number(sc.interval||1)===0)result.push(d);cursor.setDate(cursor.getDate()+1)}return result}
 function baseCounts(){const c={};state.players.forEach(p=>c[p.id]={total:0,by:{},last:-1});[...state.history].sort((a,b)=>a.date.localeCompare(b.date)).forEach((h,i)=>h.assignments.forEach(a=>{if(!c[a.playerId])return;c[a.playerId].total++;c[a.playerId].by[a.dutyId]=(c[a.playerId].by[a.dutyId]||0)+1;c[a.playerId].last=i}));return c}
-function planDates(){
-  const dates=scheduledDates(),counts=baseCounts(),out={};
-  const oldSessions=state.history.length;
-  dates.forEach((date,ix)=>{
-    const dutyItem=state.duties[0];
-    const absent=new Set(state.absences[date]||[]),assignments=[];
-    const candidates=state.players.filter(p=>!absent.has(p.id));
-    candidates.sort((p,q)=>{
-      const a=counts[p.id],b=counts[q.id];
-      return a.total-b.total
-        ||a.last-b.last
-        ||state.players.findIndex(x=>x.id===p.id)-state.players.findIndex(x=>x.id===q.id);
-    });
-    for(const pick of candidates.slice(0,4)){
-      assignments.push({dutyId:dutyItem.id,playerId:pick.id});
-      counts[pick.id].total++;
-      counts[pick.id].by[dutyItem.id]=(counts[pick.id].by[dutyItem.id]||0)+1;
-      counts[pick.id].last=oldSessions+ix;
-    }
-    out[date]=assignments;
-  });
-  return {dates,out};
+
+function allUpcomingEvents(){
+  const trainings=scheduledDates().map(d=>({key:d,date:d,type:'training',title:'Training',attendanceKey:'t:'+d}));
+  const matches=state.matches.filter(m=>m.date>=now&&!state.history.some(h=>h.matchId===m.id)).map(m=>({key:'match:'+m.id,date:m.date,type:'match',title:'Match gegen '+m.opponent,attendanceKey:'m:'+m.id,match:m}));
+  return [...trainings,...matches].sort((a,b)=>a.date.localeCompare(b.date)||(a.type==='match'?-1:1));
 }
+function eventTitle(ev){return ev.type==='match'?'Match: '+ev.match.opponent:'Training'}
+function eventAnswers(ev){return state.attendance[ev.attendanceKey]||{}}
+function eventCounts(ev){
+ const records=eventAnswers(ev);let yes=0,no=0;
+ state.players.forEach(p=>{const s=records[p.id]?.status;if(s==='yes')yes++;else if(s==='no')no++});
+ return {yes,no,open:state.players.length-yes-no};
+}
+function planDates(){
+ const items=allUpcomingEvents(),dates=items.map(e=>e.key),counts=baseCounts(),out={};
+ items.forEach((ev,ix)=>{
+  const records=eventAnswers(ev),lineup=state.lineup[ev.attendanceKey]||{};
+  const absent=new Set(state.absences[ev.date]||[]);
+  const candidates=state.players.filter(p=>records[p.id]?.status==='yes'&&!absent.has(p.id)&&(ev.type!=='match'||lineup[p.id]?.squad));
+  candidates.sort((a,b)=>counts[a.id].total-counts[b.id].total||counts[a.id].last-counts[b.id].last||state.players.indexOf(a)-state.players.indexOf(b));
+  const assignments=candidates.slice(0,4).map(p=>({dutyId:'d0',playerId:p.id}));
+  assignments.forEach(a=>{counts[a.playerId].total++;counts[a.playerId].last=state.history.length+ix});
+  out[ev.key]=assignments;
+ });
+ return {dates,items,out};
+}
+
 function monthName(d){return new Intl.DateTimeFormat('de-CH',{month:'long',year:'numeric'}).format(d)}
 function addMonth(base,delta){const d=new Date(base);d.setMonth(d.getMonth()+delta);d.setDate(1);return d}
 function pad(n){return String(n).padStart(2,'0')}
 function cellDate(year,month,day){return `${year}-${pad(month+1)}-${pad(day)}`}
 function isSeriesDate(date){const sc=state.schedule,days=new Set((sc.weekdays||[]).map(Number));if(!sc.start||!days.size||date<sc.start)return false;if(sc.end&&date>sc.end)return false;const dt=parse(date),baseline=parse(sc.start);if(!days.has(dt.getDay()))return false;const diff=Math.floor((dt-baseline)/86400000);if(diff<0)return false;return Math.floor(diff/7)%Number(sc.interval||1)===0}
 function dayInfo(date){const done=state.history.some(h=>h.date===date),extra=state.addedDates.includes(date),series=isSeriesDate(date),removed=state.skipped.includes(date),today=date===now,active=!done&&(series||extra)&&!removed;return{date,done,extra,series,removed,today,active}}
-function selectCalendarDate(date){calendarFocus=date;const info=dayInfo(date);let status='Kein Training geplant';let action='Für diesen Tag ein Training hinzufügen';if(info.done){status='Training abgeschlossen';action='Das Training ist bereits abgeschlossen.'}else if(info.active){status=info.extra&&!info.series?'Zusätzliches Training':'Training geplant';action='Tippe nochmals auf den Tag, um das Training zu entfernen.'}else if(info.removed){status='Training entfernt';action='Tippe nochmals auf den Tag, um das Training wieder zu aktivieren.'} $('calendarSelection').innerHTML=`<div class="calendar-selection"><strong>${escape(nice(date))}</strong><div class="muted">${status}. ${action}</div>${(info.active||info.done)?`<div class="actions"><button class="btn small" data-open-plan="${date}">Ämter ansehen</button></div>`:''}</div>`}
-function renderCalendar(){const sc=state.schedule;$('weekdayChecks').innerHTML=[1,2,3,4,5,6,0].map(d=>`<label><input type="checkbox" data-day="${d}" ${sc.weekdays.includes(d)?'checked':''}>${W[d]}</label>`).join('');$('startDate').value=sc.start;$('interval').value=sc.interval;$('endDate').value=sc.end||'';$('previewCount').value=sc.preview||12}
-function renderPlan(){
-  const p=planDates();
-  if(!p.dates.includes(selected))selected=p.dates[0]||null;
-  const date=selected,assignments=p.out[date]||[],absent=state.absences[date]||[];
-  let html='';
-  if(!date){
-    html='<div class="hint">Keine anstehenden Trainings vorhanden. Wähle im Kalender einen Trainingstag oder lege eine Wiederholung fest.</div>';
-  }else{
-    const selectedDuty=state.duties[0];
-    html=`<div class="next-card">
-      <div class="toolbar"><span class="tag">${date===p.dates[0]?'NÄCHSTES TRAINING':'AUSGEWÄHLTES TRAINING'}</span><span class="muted">${p.dates.indexOf(date)+1}. von ${p.dates.length}</span></div>
-      <div class="date-title">${escape(nice(date))}</div>
-      <div class="single-duty">
-        <div class="single-duty-head">${escape(selectedDuty.name)}</div>
-        <div class="muted" style="margin:10px 0 12px">Dieses Ämtli übernehmen vier Spieler gemeinsam.</div>
-        <div class="assigned-four">${assignments.map((a,i)=>`<div class="assigned-player"><div><span class="player-number">${i+1}</span> <strong>${escape(player(a.playerId))}</strong></div><button class="btn small" data-absent="${escape(a.playerId)}">Verhindert</button></div>`).join('')}
-        ${assignments.length<4?'<div class="hint">Es sind weniger als vier Spieler verfügbar.</div>':''}
-        </div>
-      </div>
-      <div class="sectionline toolbar">
-        <div class="formrow"><button class="btn primary" id="complete" ${assignments.length===4?'':'disabled'}>Training abschliessen</button><button class="btn small" id="skipTraining">Training fällt aus</button></div>
-        <span class="muted">Vier Einsätze werden nach Abschluss gezählt.</span>
-      </div>
-      ${absent.length?`<div class="sectionline"><strong>Verhindert an diesem Datum:</strong><div class="formrow" style="margin-top:9px">${absent.map(id=>`<button class="btn small" data-present="${escape(id)}">${escape(player(id))} ×</button>`).join('')}</div></div>`:''}
-    </div>`;
-  }
-  $('currentTraining').innerHTML=html;
-  $('future').innerHTML=p.dates.map((d,i)=>{
-    const a=p.out[d]||[];
-    const dutyName='Ämtli';
-    return `<div class="future-item ${d===selected?'isselected':''}">
-      <div class="future-head"><div><span class="tag">${i===0?'NÄCHSTES':'TRAINING '+(i+1)}</span><strong style="display:block;margin-top:6px">${escape(short(d))}</strong><div style="margin-top:6px;font-weight:900">${escape(dutyName)}</div></div><button class="btn small" data-select="${d}">${d===selected?'Ausgewählt':'Ämtli ansehen'}</button></div>
-      <details><summary>Vier Spieler anzeigen</summary><div class="mini-list">${a.map((x,j)=>`<div class="mini-line"><span>Spieler ${j+1}</span><strong>${escape(player(x.playerId))}</strong></div>`).join('')}</div></details>
-    </div>`;
-  }).join('')||'<p class="muted">Keine zukünftigen Trainings vorhanden.</p>';
-  $('history').innerHTML=state.history.length?[...state.history].sort((a,b)=>b.date.localeCompare(a.date)).map(h=>`<div class="historyitem"><div class="toolbar"><strong>${escape(nice(h.date))}</strong><button class="btn small" data-undo="${escape(h.id)}">Rückgängig</button></div><div class="muted" style="margin-top:7px">${h.assignments.map(a=>escape(duty(a.dutyId))+': '+escape(player(a.playerId))).join(' · ')}</div></div>`).join(''):'<p class="muted">Noch keine Trainings abgeschlossen.</p>';
+
+function selectCalendarDate(date){
+ calendarFocus=date;
+ const info=dayInfo(date),ms=state.matches.filter(m=>m.date===date),past=date<now;
+ let html='<div class="calendar-selection"><strong>'+escape(nice(date))+'</strong><div class="actions">';
+ if(info.active)html+='<button class="btn small" data-open-plan="'+date+'">Training / Ämtli</button>';
+ if(!past&&!info.done)html+='<button class="btn small" data-training-toggle="'+date+'">'+(info.active?'Training entfernen':'Training hinzufügen')+'</button>';
+ ms.forEach(m=>{html+='<button class="btn small" data-open-plan="match:'+escape(m.id)+'">Match: '+escape(m.opponent)+'</button><button class="btn small" data-edit-match="'+escape(m.id)+'">Bearbeiten</button>'});
+ if(!past)html+='<button class="btn small primary" data-add-match="'+date+'">+ Match</button>';
+ html+='</div></div>';
+ $('calendarSelection').innerHTML=html;
 }
-function renderDateManager(){const viewYear=calendarMonth.getFullYear(),viewMonth=calendarMonth.getMonth();$('calendarTitle').textContent=monthName(calendarMonth);const firstWeekday=(new Date(viewYear,viewMonth,1).getDay()+6)%7;const daysInMonth=new Date(viewYear,viewMonth+1,0).getDate();const prevDays=new Date(viewYear,viewMonth,0).getDate();const cells=[];for(let i=firstWeekday-1;i>=0;i--){const day=prevDays-i;const month=viewMonth===0?11:viewMonth-1;const year=viewMonth===0?viewYear-1:viewYear;const date=cellDate(year,month,day);cells.push({date,outside:true})}for(let day=1;day<=daysInMonth;day++){cells.push({date:cellDate(viewYear,viewMonth,day),outside:false})}while(cells.length<42){const index=cells.length-(firstWeekday+daysInMonth)+1;const month=viewMonth===11?0:viewMonth+1;const year=viewMonth===11?viewYear+1:viewYear;cells.push({date:cellDate(year,month,index),outside:true})}$('dateManager').innerHTML=cells.map(({date,outside})=>{const info=dayInfo(date);const label=info.done?'Erledigt':info.active?'Training':info.removed?'Entfernt':info.today?'Heute':'';const marker='';return `<button type="button" class="daycell ${outside?'outside':''} ${info.active?'training':''} ${info.today?'today':''} ${info.done?'done':''} ${calendarFocus===date?'selectedday':''}" data-day="${date}" aria-label="${escape(nice(date))}${label?`, ${label}`:''}"><span class="daynum">${date.slice(-2).replace(/^0/,'')}</span><span class="daymeta">${marker}</span></button>`}).join('');if(calendarFocus)selectCalendarDate(calendarFocus);else $('calendarSelection').innerHTML='<div class="calendar-selection"><strong>Kalender bedienen</strong><div class="muted">Tippe auf einen Tag. So kannst du Trainings hinzufügen, entfernen oder wieder aktivieren.</div></div>'}
+
+function renderCalendar(){const sc=state.schedule;$('weekdayChecks').innerHTML=[1,2,3,4,5,6,0].map(d=>`<label><input type="checkbox" data-day="${d}" ${sc.weekdays.includes(d)?'checked':''}>${W[d]}</label>`).join('');$('startDate').value=sc.start;$('interval').value=sc.interval;$('endDate').value=sc.end||'';$('previewCount').value=sc.preview||12}
+
+function renderPlan(){
+ const plan=planDates();
+ if(!plan.dates.includes(selected))selected=plan.dates[0]||null;
+ const ev=plan.items.find(e=>e.key===selected);
+ if(!ev){$('currentTraining').innerHTML='<div class="hint">Noch kein zukünftiger Termin vorhanden. Erstelle im Kalender Trainings oder Matches.</div>'}
+ else{
+  const counts=eventCounts(ev),a=plan.out[ev.key]||[],records=eventAnswers(ev),lineup=state.lineup[ev.attendanceKey]||{};
+  const isMatch=ev.type==='match';
+  const rows=a.map((x,i)=>'<div class="assigned-player"><div><span class="player-number">'+(i+1)+'</span><strong>'+escape(player(x.playerId))+'</strong></div></div>').join('');
+  const upcomingLabel=isMatch?'MATCH':'TRAINING';
+  const details=isMatch?'<div class="muted">'+escape(ev.match.venue||'')+' · '+escape(ev.match.time||'Zeit offen')+'</div>':'';
+  const roster=state.players.map(p=>{
+   const answer=records[p.id]||{},status=answer.status||'',squad=!!lineup[p.id]?.squad,start=!!lineup[p.id]?.start;
+   const badge=status==='yes'?'Zusage':status==='no'?'Absage':'Offen';
+   const badgeClass=status||'open';
+   const r=answer.reason?'<div class="attendance-reason">'+escape(answer.reason)+'</div>':'';
+   const controls=isMatch?'<div class="lineup-actions"><label class="lineup-check"><input type="checkbox" data-squad="'+escape(p.id)+'" '+(squad?'checked':'')+'>Aufgebot</label><label class="lineup-check"><input type="checkbox" data-start="'+escape(p.id)+'" '+(start?'checked':'')+'>Startelf</label></div>':'';
+   return '<div class="attendance-line"><div><strong>'+escape(p.name)+'</strong> <span class="answer-pill '+badgeClass+'">'+badge+'</span>'+r+'</div>'+controls+'</div>'
+  }).join('');
+  $('currentTraining').innerHTML='<div class="next-card '+(isMatch?'match-card':'')+'"><div class="toolbar"><span class="tag">'+upcomingLabel+'</span><span class="muted">'+escape(nice(ev.date))+'</span></div><div class="date-title">'+escape(eventTitle(ev))+'</div>'+details
+   +'<div class="single-duty"><div class="single-duty-head '+(isMatch?'match-head':'')+'">Ämtli · 4 Spieler</div><div class="muted" style="margin:10px 14px">Eingeteilt werden nur Spieler mit Zusage'+(isMatch?' und Aufgebot':'')+'.</div><div class="assigned-four">'+(rows||'<p class="muted">Noch keine bestätigten Spieler verfügbar.</p>')+'</div></div>'
+   +'<div class="sectionline"><div class="toolbar"><strong>Teilnahmebestätigungen</strong><span class="muted">'+counts.yes+' Ja · '+counts.no+' Nein · '+counts.open+' Offen</span></div><details style="margin-top:12px" '+(isMatch?'open':'')+'><summary>Spielerliste und '+(isMatch?'Aufgebot':'Rückmeldungen')+'</summary><div class="attendance-list">'+roster+'</div></details></div>'
+   +'<div class="sectionline formrow"><button class="btn primary" id="complete" '+(a.length===4?'':'disabled')+'>'+upcomingLabel+' abschliessen</button>'+(isMatch?'':'<button class="btn small" id="skipTraining">Training fällt aus</button>')+'</div>'
+   +'<p class="muted">Erst nach dem Abschluss zählen die vier Ämtli-Einsätze.</p></div>';
+ }
+ $('future').innerHTML=plan.items.map((e,i)=>{
+  const a=plan.out[e.key]||[],c=eventCounts(e);
+  return '<div class="future-item"><div class="future-head"><div><span class="tag">'+(e.type==='match'?'MATCH':'TRAINING')+'</span><strong style="display:block;margin-top:6px">'+escape(short(e.date))+'</strong><div style="margin-top:6px;font-weight:900">'+escape(eventTitle(e))+'</div><div class="muted">'+c.yes+' Zusagen · '+c.open+' offen</div></div><button class="btn small" data-select="'+escape(e.key)+'">Ansehen</button></div><details><summary>Ämtli: 4 Spieler</summary><div class="mini-list">'+a.map((x,j)=>'<div class="mini-line"><span>'+(j+1)+'</span><strong>'+escape(player(x.playerId))+'</strong></div>').join('')+'</div></details></div>'
+ }).join('')||'<p class="muted">Keine zukünftigen Termine geplant.</p>';
+ $('history').innerHTML=state.history.length?[...state.history].sort((a,b)=>b.date.localeCompare(a.date)).map(h=>'<div class="historyitem"><div class="toolbar"><strong>'+escape(nice(h.date))+' · '+(h.type==='match'?'Match':'Training')+'</strong><button class="btn small" data-undo="'+escape(h.id)+'">Rückgängig</button></div><div class="muted">'+h.assignments.map(a=>escape(player(a.playerId))).join(' · ')+'</div></div>').join(''):'<p class="muted">Noch keine abgeschlossenen Termine.</p>';
+}
+
+
+function renderDateManager(){
+ const year=calendarMonth.getFullYear(),month=calendarMonth.getMonth();
+ $('calendarTitle').textContent=monthName(calendarMonth);
+ const first=(new Date(year,month,1).getDay()+6)%7;
+ const dim=new Date(year,month+1,0).getDate(),cells=[];
+ for(let n=0;n<42;n++){
+  const day=n-first+1,dt=new Date(year,month,day),date=iso(dt),out=dt.getMonth()!==month,info=dayInfo(date);
+  const match=state.matches.some(m=>m.date===date),doneMatch=state.history.some(h=>h.date===date&&h.type==='match');
+  const label=(match?'Match ':'')+(info.active?'Training ':'')+(info.today?'Heute':'');
+  cells.push('<button type="button" class="daycell '+(out?'outside ':'')+(match?'match ':'')+(match&&info.active?'double ':'')+(!match&&info.active?'training ':'')+(info.today?'today ':'')+(info.done||doneMatch?'done ':'')+'" data-day="'+date+'" aria-label="'+escape(nice(date)+' '+label)+'"><span class="daynum">'+dt.getDate()+'</span></button>');
+ }
+ $('dateManager').innerHTML=cells.join('');
+ if(calendarFocus)selectCalendarDate(calendarFocus);else $('calendarSelection').innerHTML='<p class="muted">Tag auswählen, um Training oder Match zu verwalten.</p>';
+}
+
 function activateTab(tab){document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));['plan','trainings','stats','settings'].forEach(x=>$(x).classList.toggle('hidden',x!==tab));window.scrollTo({top:0,behavior:'instant'})}
 function renderStats(){const c=baseCounts();$('summary').innerHTML=`<span class="tag">${state.history.length} Trainings abgeschlossen</span><span class="tag">${state.history.reduce((n,h)=>n+h.assignments.length,0)} Einsätze</span>`;$('statsHead').innerHTML='<tr><th>Spieler</th><th>Ämtli-Einsätze</th></tr>';$('statsBody').innerHTML=state.players.map(p=>`<tr><td>${escape(p.name)}</td><td><strong>${c[p.id].total}</strong></td></tr>`).join('')}
 function renderSettings(){$('playersEditor').innerHTML=state.players.map((p,i)=>`<div class="listrow"><span class="tag">${i+1}</span><input data-player="${escape(p.id)}" value="${escape(p.name)}" aria-label="Spieler ${i+1}"><button class="btn small danger" data-remove="${escape(p.id)}">×</button></div>`).join('');}
