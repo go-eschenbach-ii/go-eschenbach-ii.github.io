@@ -88,8 +88,8 @@ async function refreshPlayer(){
     const isMatch=ev.type==='match',a=ev.answer||{},yes=a.status==='yes',no=a.status==='no',open=a.status==='open';
     const opts=REASONS.map(reason=>'<option value="'+escape(reason)+'" '+(reason===a.reason?'selected':'')+'>'+escape(reason)+'</option>').join('');
     const reasonKnown=REASONS.includes(a.reason);
-    const chosen=reasonKnown?a.reason:(a.reason?'Anderer Grund':'Krankheit');
-    const reasons=REASONS.map(reason=>'<option value="'+escape(reason)+'" '+(reason===chosen?'selected':'')+'>'+escape(reason)+'</option>').join('');
+    const chosen=reasonKnown?a.reason:(a.reason?'Anderer Grund':'');
+    const reasons='<option value="">Grund auswählen</option>'+REASONS.map(reason=>'<option value="'+escape(reason)+'" '+(reason===chosen?'selected':'')+'>'+escape(reason)+'</option>').join('');
     return '<div class="portal-card '+(isMatch?'match-event':'training-event')+'" data-event-card="'+escape(ev.id)+'">'
       +'<strong>'+(isMatch?'🟠 Match gegen '+escape(ev.label):'🟡 Training')+'</strong><div class="muted" style="margin:7px 0 13px">'+escape(nice(ev.date))+(ev.time?' · '+escape(ev.time):'')+(ev.venue?' · '+escape(ev.venue):'')+'</div>'
       +'<div class="portal-row"><label><input type="radio" name="status-'+escape(ev.id)+'" value="yes" '+(yes?'checked':'')+'> Ja, ich nehme teil</label><label><input type="radio" name="status-'+escape(ev.id)+'" value="no" '+(no?'checked':'')+'> Nein</label><label><input type="radio" name="cal-'+escape(eventKey)+'-'+escape(p.id)+'" value="open" '+(open?'checked':'')+'> Offen</label></div>'
@@ -255,8 +255,8 @@ function calendarRoster(date,eventKey){
  return '<div class="calendar-roster" data-event-key="'+escape(eventKey)+'"><div class="calendar-roster-head"><strong>'+ (isMatch?'Match – Teilnahme und Aufgebot':'Training – Teilnahme')+'</strong><span class="muted">'+answered+' Ja · '+declined+' Nein · '+consciouslyOpen+' Offen · '+(all.length-answered-declined-consciouslyOpen)+' ohne Antwort</span></div><p class="muted">Bitte Ja, Nein oder Offen ankreuzen. Bei Nein und Offen ist eine Begründung erforderlich. '+(isMatch?'Aufgebot und Startelf legt der Trainer fest.':'')+'</p>'
  +'<div class="calendar-attendance-list">'+all.map(p=>{
   const ans=records[p.id]||{},yes=ans.status==='yes',no=ans.status==='no',open=ans.status==='open',lineup=lineups[p.id]||{};
-  const known=REASONS.includes(ans.reason),choice=known?ans.reason:(ans.reason?'Anderer Grund':'Krankheit');
-  const reasonOptions=REASONS.map(o=>'<option value="'+escape(o)+'" '+(o===choice?'selected':'')+'>'+escape(o)+'</option>').join('');
+  const known=REASONS.includes(ans.reason),choice=known?ans.reason:(ans.reason?'Anderer Grund':'');
+  const reasonOptions='<option value="">Grund auswählen</option>'+REASONS.map(o=>'<option value="'+escape(o)+'" '+(o===choice?'selected':'')+'>'+escape(o)+'</option>').join('');
   return '<div class="calendar-player" data-calendar-player="'+escape(p.id)+'">'
   +'<div class="calendar-player-top"><strong>'+escape(p.name)+'</strong><div class="calendar-player-choices"><label><input type="radio" name="cal-'+escape(eventKey)+'-'+escape(p.id)+'" value="yes" '+(yes?'checked':'')+'> Ja</label><label><input type="radio" name="cal-'+escape(eventKey)+'-'+escape(p.id)+'" value="no" '+(no?'checked':'')+'> Nein</label><label><input type="radio" name="status-'+escape(ev.id)+'" value="open" '+(open?'checked':'')+'> Offen</label></div></div>'
   +'<div class="calendar-player-reason" '+(no||open?'':'hidden')+'><select data-calendar-reason aria-label="Grund für '+escape(p.name)+'">'+reasonOptions+'</select><input type="text" data-calendar-custom placeholder="Eigener Grund" maxlength="180" value="'+escape((no||open)&&!known?ans.reason||'':'')+'" '+((no||open)&&choice==='Anderer Grund'?'':'hidden')+'></div>'
