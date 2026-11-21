@@ -362,6 +362,21 @@ $('dateManager').onclick=e=>{
  calendarFocus=el.dataset.day;selectCalendarDate(calendarFocus);
  $('calendarSelection').scrollIntoView({behavior:'smooth',block:'start'});
 };
+
+$('calendarSelection').onchange=e=>{
+ const input=e.target,roster=input.closest('[data-event-key]');
+ if(!roster)return;
+ const row=input.closest('[data-calendar-player]');
+ if(row){
+  const no=row.querySelector('input[type=radio][value=no]')?.checked;
+  const reason=row.querySelector('.calendar-player-reason');
+  if(reason)reason.hidden=!no;
+  const custom=row.querySelector('[data-calendar-custom]');
+  if(custom)custom.hidden=!no||row.querySelector('[data-calendar-reason]')?.value!=='Anderer Grund';
+  if(input.dataset.calStart&&input.checked){const squad=row.querySelector('[data-cal-squad]');if(squad)squad.checked=true}
+  if(input.dataset.calSquad&&!input.checked){const start=row.querySelector('[data-cal-start]');if(start)start.checked=false}
+ }
+};
 $('calendarSelection').onclick=e=>{
  const btn=e.target.closest('button');if(!btn)return;
  if(btn.dataset.openPlan){
@@ -369,6 +384,46 @@ $('calendarSelection').onclick=e=>{
  }
  if(btn.dataset.addMatch){showMatchEditor(null,btn.dataset.addMatch);return}
  if(btn.dataset.editMatch){showMatchEditor(btn.dataset.editMatch);return}
+ if(btn.dataset.saveRoster){
+  const key=btn.dataset.saveRoster,roster=btn.closest('[data-event-key]');
+  if(!roster)return;
+  if(key.startsWith('t:')){
+   const date=key.slice(2);
+   if(!dayInfo(date).active){
+    if(date<now){alert('Vergangene Tage können nicht als neues Training gespeichert werden.');return}
+    if(!confirm('Für diesen Tag ist kein Training eingetragen. Als Training hinzufügen und Teilnahmen speichern?'))return;
+    state.skipped=state.skipped.filter(d=>d!==date);
+    if(!isSeriesDate(date)&&!state.addedDates.includes(date))state.addedDates.push(date);
+   }
+  }
+  const changes=[],lineupChanges=[];
+  for(const row of roster.querySelectorAll('[data-calendar-player]')){
+   const pid=row.dataset.calendarPlayer;
+   const selectedStatus=row.querySelector('input[type=radio]:checked')?.value;
+   if(selectedStatus){
+    const reasonChoice=row.querySelector('[data-calendar-reason]')?.value||'';
+    const reason=selectedStatus==='no'?(reasonChoice==='Anderer Grund'?(row.querySelector('[data-calendar-custom]')?.value||'').trim():reasonChoice):'';
+    if(selectedStatus==='no'&&!reason){alert('Bitte bei '+player(pid)+' einen Grund für die Absage angeben.');return}
+    changes.push({pid,status:selectedStatus,reason});
+   }
+   if(key.startsWith('m:')){
+    const start=!!row.querySelector('[data-cal-start]')?.checked,squad=!!row.querySelector('[data-cal-squad]')?.checked||start;
+    lineupChanges.push({pid,squad,start});
+   }
+  }
+  if(!changes.length&&!lineupChanges.some(x=>x.squad||x.start)){
+   alert('Bitte zuerst für mindestens einen Spieler Ja oder Nein ankreuzen.');return;
+  }
+  state.attendance[key]=state.attendance[key]||{};
+  for(const c of changes)state.attendance[key][c.pid]={status:c.status,reason:c.reason,updatedAt:new Date().toISOString()};
+  if(key.startsWith('m:')){
+   state.lineup[key]=state.lineup[key]||{};
+   for(const c of lineupChanges)state.lineup[key][c.pid]={squad:c.squad,start:c.start};
+  }
+  save();render();selectCalendarDate(calendarFocus);
+  $('dateMessage').textContent='Teilnahmen gespeichert.';
+  return;
+ }
  if(btn.dataset.trainingToggle){toggleTrainingDate(btn.dataset.trainingToggle);return}
 
 };
