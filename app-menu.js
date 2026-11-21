@@ -32,6 +32,12 @@
       item.dataset.menuIndex=String(index);
       nav.appendChild(item);
     });
+    const dutiesLink=document.createElement("a");
+    dutiesLink.className="app-menu-link";
+    dutiesLink.href="aemter.html";
+    dutiesLink.textContent="⚽ Ämterplanung";
+    dutiesLink.style.cssText="display:block;text-decoration:none;background:#f4c400;color:#111;font-weight:900;border:2px solid #111;margin-top:8px";
+    nav.appendChild(dutiesLink);
   };
 
   const scheduleRebuild=()=>{
